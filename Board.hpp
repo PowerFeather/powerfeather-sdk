@@ -34,7 +34,7 @@ public:
     // enable 3V3 by default
     // enable 5V by default
 
-    Board(uint16_t batteryCapacity, uint16_t maxChargeCurrent = 100);
+    Board(uint16_t batteryCapacity, uint16_t maxInputCurrent = 500, uint16_t maxChargeCurrent = 100);
 
     // By default, 3V3 is enabled even in sleep.
     // This allows the application to disable it before going to deep sleep.
@@ -80,7 +80,7 @@ public:
     */
     // Exit gauge shutdown mode. GetBatteryLevel, GetBatteryHealth, and
     // GetBatteryTimeLeft will not work if gauge is shutdown.
-    bool ShutdownGauge(bool enable);
+    void EnableGauge(bool enable);
 
     // Charge left in the battery expressed as fraction of the battery capacity.
     // 0 - if no battery capacity left, or no battery, or gauge is shutdown
@@ -93,4 +93,7 @@ public:
     // Estimate the time left for charging the battery or discharging the battery given
     // the current draw/charge rate.
     float EstimateBatteryTimeLeft();
+
+private:
+    uint16_t _batteryCapacity;
 };
