@@ -17,7 +17,7 @@ Board::Board(uint16_t batteryCapacity, uint16_t maxInputCurrent, uint16_t maxCha
     pinMode(CE, OPEN_DRAIN);
 
     // Input-Output
-    pinMode(EN, INPUT | OUTPUT |OPEN_DRAIN);
+    pinMode(EN, INPUT | OUTPUT | OPEN_DRAIN);
 
     /**
      * Initialize communication peripherals
