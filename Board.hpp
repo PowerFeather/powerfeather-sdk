@@ -5,6 +5,7 @@
 class Board
 {
 public:
+
     // Initialize the board
     // batteryCapacity - advertised capacity of the battery
     // chargeRate - charge rate of the battery expressed as fraction of the capacity, 
