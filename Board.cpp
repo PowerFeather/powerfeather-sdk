@@ -11,6 +11,8 @@ Board::Board(uint16_t batteryCapacity, uint16_t maxInputCurrent, uint16_t maxCha
      * Initialize pins
     */
     // Input
+    pinMode(VDD_TYPE, INPUT);
+    pinMode(INT, INPUT);
 
     // Output
     pinMode(ENABLE_3V3, OPEN_DRAIN);
@@ -18,6 +20,7 @@ Board::Board(uint16_t batteryCapacity, uint16_t maxInputCurrent, uint16_t maxCha
 
     // Input-Output
     pinMode(EN, INPUT | OUTPUT | OPEN_DRAIN);
+    pinMode(GPOUT, INPUT | OUTPUT | OPEN_DRAIN);
 
     /**
      * Initialize communication peripherals
