@@ -1,3 +1,6 @@
 [submodule "3rdparty/arduino-esp32"]
 	path = 3rdparty/arduino-esp32
 	url = https://github.com/powerfeather/arduino-esp32.git
+[submodule "3rdparty/sparkfun_bq27441"]
+	path = 3rdparty/sparkfun_bq27441
+	url = git@github.com:sparkfun/SparkFun_BQ27441_Arduino_Library.git
