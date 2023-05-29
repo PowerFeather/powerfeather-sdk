@@ -29,10 +29,8 @@ void Board::Initialize(uint16_t batteryCapacity, uint16_t maxInputCurrent, uint1
     pinMode(EN, INPUT | OUTPUT | OPEN_DRAIN);
     pinMode(GPOUT, INPUT | OUTPUT | OPEN_DRAIN);
 
-    if (lipo.begin())
-    {
-        lipo.setCapacity(batteryCapacity);
-    }
+    lipo.begin();
+    lipo.setCapacity(batteryCapacity);
 
     /**
      * Set initial state
@@ -85,13 +83,4 @@ void Board::EnableCharging(bool enable)
 void Board::EnableGauge(bool enable)
 {
 
-}
-
-void Board::EnterShipMode()
-{
-
-}
-
-void Board::GetPowerSource()
-{
 }
