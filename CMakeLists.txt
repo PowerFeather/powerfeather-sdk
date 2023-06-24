@@ -1,4 +1,5 @@
-idf_component_register(SRCS "Board.cpp" "3rdparty/arduino-esp32/cores/esp32/esp32-hal-i2c.c"
+idf_component_register(SRCS "Board.cpp" "BQ2562x.cpp"
+                            "3rdparty/arduino-esp32/cores/esp32/esp32-hal-i2c.c"
                             "3rdparty/arduino-esp32/cores/esp32/esp32-hal-gpio.c"
                             "3rdparty/arduino-esp32/cores/esp32/esp32-hal-i2c-slave.c"
                             "3rdparty/arduino-esp32/cores/esp32/esp32-hal-misc.c"

@@ -11,13 +11,37 @@
 
 #include <Board.hpp>
 
+
 extern "C" void app_main(void)
 {
-    Board board;
+    PowerFeather::Board board;
     board.Initialize(1000);
 
-    board.Enable3V3(true);
-    printf("Hello World!\n");
-    // esp_deep_sleep_start();
+    printf("PowerFeather!\n");
+
+    while (true)
+    {
+        // Display the power source
+        PowerFeather::Board::PowerSource power_source = board.GetPowerSource();
+
+        // Battery status
+        //  - is charging/discharghing
+        //  - charging/discharging current
+        //  - is battery connected
+        //  - temperature
+        //  - state of charge
+        //  - estimated health
+
+        // Put into low power mode
+        //  - enable wake source
+        //  - disable 3V3 and 5V
+        //  - disable 
+
+        // Sleep for 1s
+        esp_deep_sleep_start();
+
+        // Re-enable power sources
+        board.Enable3V3(true);
+    }
 }
 
