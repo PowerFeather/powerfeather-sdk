@@ -1,9 +1,5 @@
 #include <driver/rtc_io.h>
-
 #include <driver/i2c.h>
-
-#include <esp32-hal-i2c.h>
-#include <esp32-hal-gpio.h>
 #include <SparkFunBQ27441.h>
 
 #include "BQ2562x.hpp"
@@ -17,7 +13,7 @@ namespace PowerFeather
 {
     BQ2562x charger;
 
-    void Board::Initialize(uint16_t batteryCapacity, uint16_t maxInputCurrent, uint16_t maxChargeCurrent)
+    void Board::Init(uint16_t batteryCapacity, uint16_t maxInputCurrent, uint16_t maxChargeCurrent)
     {
         // Initialize I2C bus
         int i2c_master_port = I2C_NUM;
@@ -33,7 +29,6 @@ namespace PowerFeather
         i2c_param_config(i2c_master_port, &conf);
         i2c_driver_install(i2c_master_port, conf.mode, 0, 0, 0);
         
-
 
         // this->_batteryCapacity = batteryCapacity;
 
@@ -71,21 +66,26 @@ namespace PowerFeather
         // this->EnableGauge(true);
     }
 
-    void Board::SetPowerOutputEnabled(Board::PowerInput input, bool state)
+    void Board::SetPowerOutputEnabled(Board::PowerOutput output, bool state)
     {
-        if (state)
+        int pin = 0;
+
+        if (pin)
         {
-            // // Set the pin high.
-            // rtc_gpio_set_level(static_cast<gpio_num_t>(ENABLE_3V3), 1);
-            // // Hold the pin high, even in deep sleep.
-            // rtc_gpio_hold_en(static_cast<gpio_num_t>(ENABLE_3V3));
-        }
-        else
-        {
-            // // Disable pin hold during deep sleep
-            // rtc_gpio_hold_dis(static_cast<gpio_num_t>(ENABLE_3V3));
-            // // Disconnect from internal circuity to reduce leakage current
-            // rtc_gpio_isolate(static_cast<gpio_num_t>(ENABLE_3V3));
+            if (state)
+            {
+                // // Set the pin high.
+                // rtc_gpio_set_level(static_cast<gpio_num_t>(ENABLE_3V3), 1);
+                // // Hold the pin high, even in deep sleep.
+                // rtc_gpio_hold_en(static_cast<gpio_num_t>(ENABLE_3V3));
+            }
+            else
+            {
+                // // Disable pin hold during deep sleep
+                // rtc_gpio_hold_dis(static_cast<gpio_num_t>(ENABLE_3V3));
+                // // Disconnect from internal circuity to reduce leakage current
+                // rtc_gpio_isolate(static_cast<gpio_num_t>(ENABLE_3V3));
+            }
         }
     }
 

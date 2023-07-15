@@ -14,6 +14,8 @@
 #include <driver/adc.h>
 #include <esp_wifi.h>
 
+#include <Wire.h>
+
 
 // #include <Board.hpp>
 void print_bytes(BQ2562x &bq, uint8_t address)
@@ -32,6 +34,42 @@ void print_bytes(BQ2562x &bq, uint8_t address)
 
 #define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
 
+// Read a specified number of bytes over I2C at a given subAddress
+int16_t i2cReadBytes(uint16_t command, uint16_t * data)
+{
+	int16_t timeout = 2000;	
+	Wire.beginTransmission(0x55);
+	Wire.write(command);
+	Wire.endTransmission(true);
+	
+	Wire.requestFrom(0xAB, sizeof(*data));
+	
+	for (int i=0; i<sizeof(*data); i++)
+	{
+		data[i] = Wire.read();
+	}
+	
+	return timeout;
+}
+
+// Write a specified number of bytes over I2C to a given subAddress
+uint16_t i2cWriteBytes(uint16_t command, uint16_t data)
+{
+	Wire.beginTransmission(0x55);
+	Wire.write(command);
+	for (int i=0; i<sizeof(data); i++)
+	{
+		Wire.write((&data)[i]);
+	}	
+	Wire.endTransmission(true);
+	
+	return true;	
+}
+
+#include <SparkFunBQ27441.h>
+
+const unsigned int BATTERY_CAPACITY = 600; // e.g. 850mAh battery
+
 extern "C" void app_main(void)
 {
     BQ2562x bq;
@@ -42,18 +80,38 @@ extern "C" void app_main(void)
     data |= 0b10000000;
     bq.i2cWriteBytes(0x15, &data, sizeof(data));
 
-    bq.i2cReadBytes(0x16, &data, sizeof(data));
-    data |= 0b00010000;
-    bq.i2cWriteBytes(0x16, &data, sizeof(data));
+    // bq.i2cReadBytes(0x18, &data, sizeof(data));
+    // data |= 0b00000001;
+    // bq.i2cWriteBytes(0x18, &data, sizeof(data));
+
+    // Use lipo.begin() to initialize the BQ27441-G1A and confirm that it's
+    // connected and communicating.
+    if (!lipo.begin()) // begin() will return true if communication is successful
+    {
+        // If communication fails, print an error message and loop forever.
+        printf("Error: Unable to communicate with BQ27441.");
+        printf("  Check wiring and try again.");
+        printf("  (Battery must be plugged into Battery Babysitter!)");
+        while (1) ;
+    }
+    printf("Connected to BQ27441!");
+    
+    // Uset lipo.setCapacity(BATTERY_CAPACITY) to set the design capacity
+    // of your battery.
+    lipo.setCapacity(BATTERY_CAPACITY);
+    lipo.shutdown();
+
+
+    // bq.i2cReadBytes(0x16, &data, sizeof(data));
+    // data |= 0b00010000;
+    // bq.i2cWriteBytes(0x16, &data, sizeof(data));
 
     // esp_wifi_stop();
     // adc_power_off();
-    // esp_sleep_enable_timer_wakeup(1 * uS_TO_S_FACTOR);
-    esp_deep_sleep_start();
-
+    // esp_sleep_enable_timer_wakeup(5 * uS_TO_S_FACTOR);
     // while(true)
     // {
-
+    esp_deep_sleep_start();
     // }
 
 	// int16_t timeout = BQ72562x_I2C_TIMEOUT;	

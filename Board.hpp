@@ -52,13 +52,13 @@ namespace PowerFeather
         // enable 3V3 by default
         // enable 5V by default
 
-        void Initialize(uint16_t batteryCapacity, uint16_t maxInputCurrent = 500, uint16_t maxChargeCurrent = 100);
+        void Init(uint16_t batteryCapacity, uint16_t maxInputCurrent = 500, uint16_t maxChargeCurrent = 100);
 
         // By default, 3V3 is enabled even in sleep.
         // This allows the application to disable it before going to deep sleep.
         // The 5V rail can be disabled even when there is extenal power source plugged in.
         // This is remembered during sleep, and 5V remains off if it was previously disabled.
-        void SetPowerOutputEnabled(Board::PowerInput input, bool state);
+        void SetPowerOutputEnabled(Board::PowerOutput output, bool state);
 
         // Source can either be:
         //  1. USB - board is drawing current from USB
