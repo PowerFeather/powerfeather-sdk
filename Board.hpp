@@ -7,6 +7,15 @@ namespace PowerFeather
     class Board
     {
     public:
+        static constexpr uint8_t Enable3V3HeaderPin = 4;
+        static constexpr uint8_t Enable3V3StemmaPin = 14;
+        static constexpr uint8_t ChargeEnablePin = 7;
+        static constexpr uint8_t EnablePin = 13;
+        static constexpr uint8_t SCL0Pin = 47;
+        static constexpr uint8_t SDA0Pin = 48;
+        static constexpr uint8_t GPOUTPin = 21;
+        static constexpr uint8_t VDDTypePin = 38;
+        static constexpr uint8_t InterruptPin = 5;
 
         enum class PowerInput
         {
@@ -21,6 +30,13 @@ namespace PowerFeather
             Header5V,
             Header3V3,
             Stemma3V3
+        };
+
+        enum class BatteryModeHeader5V
+        {
+            None, // Disabled when PowerInput = Battery
+            Bypass, // Battery value when 
+            Reg,
         };
 
         // Initialize the board
@@ -51,19 +67,25 @@ namespace PowerFeather
         // take OCV for gauge, then enable charging
         // enable 3V3 by default
         // enable 5V by default
+        Board(uint16_t batteryCapacity, bool useTSPin);
 
-        void Init(uint16_t batteryCapacity, uint16_t maxInputCurrent = 500, uint16_t maxChargeCurrent = 100);
+        bool init();
+
+        bool setBatteryModeHeader5V(Board::BatteryModeHeader5V mode, float voltage = 5.0f);
+        bool setVoltageHeader5V(float voltage);
+
+        bool setChargeFactor(float factor);
 
         // By default, 3V3 is enabled even in sleep.
         // This allows the application to disable it before going to deep sleep.
         // The 5V rail can be disabled even when there is extenal power source plugged in.
         // This is remembered during sleep, and 5V remains off if it was previously disabled.
-        void SetPowerOutputEnabled(Board::PowerOutput output, bool state);
+        void EnablePowerOutput(Board::PowerOutput output, bool state);
 
         // Source can either be:
         //  1. USB - board is drawing current from USB
         //  2. DC - board is drawing current from external power adapter
-        //  3. BAT - no external power source, board is drawing current from battery
+        //  3. Battery - no external power source, board is drawing current from battery
         PowerInput GetPowerInput();
 
         // Read the state of the EN pin. It can be pulled low
@@ -110,8 +132,12 @@ namespace PowerFeather
 
     private:
         uint16_t _batteryCapacity;
+        bool _useTSPin;
+        uint8_t _i2cNum;
 
-        size_t readI2C(uint8_t address, uint8_t reg, uint8_t *data, uint8_t len);
-        size_t writeI2C(uint8_t address, uint8_t reg, uint8_t *data, uint8_t len);
+        bool _enableStatLed(bool enable);
+
+        bool _readI2C(uint8_t address, uint8_t reg, uint8_t *data);
+        bool _writeI2C(uint8_t address, uint8_t reg, uint8_t data);
     };
 }
