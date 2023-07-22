@@ -136,8 +136,11 @@ namespace PowerFeather
         uint8_t _i2cNum;
 
         bool _enableStatLed(bool enable);
+        bool _enableTS(bool enable);
+        uint8_t _getChargerFault();
 
         bool _readI2C(uint8_t address, uint8_t reg, uint8_t *data);
         bool _writeI2C(uint8_t address, uint8_t reg, uint8_t data);
+        bool _setChargerRegister(uint8_t address, uint8_t bit, bool value);
     };
 }

@@ -44,17 +44,40 @@ namespace PowerFeather
         return true;
     }
 
-    bool Board::_enableStatLed(bool enable)
+    bool Board::_setChargerRegister(uint8_t address, uint8_t bit, bool value)
     {
-        uint8_t address = 0x15;
         uint8_t data = 0;
         bool res = this->_readI2C(BQ2562x_ADDR, address, &data);
         if (res)
         {
-            data |= 0b10000000;
+            if (value)
+            {
+                data |= (0b1 << bit);
+            }
+            else
+            {
+                data &= ~(0b1 << bit);
+            }
             res = this->_writeI2C(BQ2562x_ADDR, address, data);
         }
         return res;
+    }
+
+    bool Board::_enableStatLed(bool enable)
+    {
+        return _setChargerRegister(0x15, 7, !enable);
+    }
+
+    bool Board::_enableTS(bool enable)
+    {
+        return _setChargerRegister(0x1a, 7, !enable);
+    }
+
+    uint8_t Board::_getChargerFault()
+    {
+        uint8_t data;
+        this->_readI2C(BQ2562x_ADDR, 0x1f, &data);
+        return data;
     }
 
     bool Board::init()
@@ -81,7 +104,8 @@ namespace PowerFeather
             return false;
         }
 
-        this->_enableStatLed(false);
+        _enableTS(false);
+
 
 
 
