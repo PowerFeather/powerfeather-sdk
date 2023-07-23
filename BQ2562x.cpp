@@ -8,6 +8,7 @@
 
 BQ2562x::BQ2562x()
 {
+	abort();
 	_deviceAddress = BQ2562x_I2C_ADDRESS;
 	Wire.begin(48, 47);
 }

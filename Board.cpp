@@ -13,8 +13,6 @@ static constexpr uint8_t BQ2562x_ADDR = 0x6a;
 
 namespace PowerFeather
 {
-    BQ2562x charger;
-
     bool Board::_readI2C(uint8_t address, uint8_t reg, uint8_t *data)
     {
         return i2c_master_write_read_device(I2C_NUM, address, &reg, 1, data, 1, pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
@@ -106,13 +104,15 @@ namespace PowerFeather
         i2c_conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
         i2c_conf.master.clk_speed = I2C_SPEED;
 
-        if (i2c_param_config(i2c_master_port, &i2c_conf) != ESP_OK)
+        esp_err_t res;
+        if ((res = i2c_param_config(i2c_master_port, &i2c_conf)) != ESP_OK)
         {
             return false;
         }
         
-        if (i2c_driver_install(i2c_master_port, i2c_conf.mode, 0, 0, 0) != ESP_OK)
+        if ((res = i2c_driver_install(i2c_master_port, i2c_conf.mode, 0, 0, 0)) != ESP_OK)
         {
+            printf("res: %d\n", res);
             return false;
         }
 
