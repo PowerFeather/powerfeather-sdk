@@ -130,12 +130,12 @@ namespace PowerFeather
          * 
          * EnableHeader3V3Pin - output pp, hold sleep
          * EnableStemma3V3Pin - output pp, hold sleep
-         * EnablePin - input/output od, hold sleep, wake source
+         * EnablePin - input/output od, hold sleep, wake source, interrupt source
          * 
-         * VDDTypePin - input
-         * ChargerIntPin - input, wake source
+         * ChargerIntPin - input, wake source, interrupt source
+         * GaugeAlarmPin - input, wake source, interrupt source
+         * VDDTypePin - input, wake source, interrupt source
          * 
-         * GaugeAlarmPin - input, wake pin
          * ChargerEnPin - output, hold sleep 
          */
         // Output pins
@@ -145,13 +145,18 @@ namespace PowerFeather
         // RTC output pins
         _initRTCPin(Board::EnableHeader3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
         _initRTCPin(Board::EnableStemma3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _initRTCPin(Board::EnablePin, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
 
         // RTC input pins
+
+        // RTC input output
         _initRTCPin(Board::EnablePin, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
 
         // wake source
         // interrupt
+
+        enableHeader3V3(true);
+        enableStemma3V3(true);
+
         return true;
     }
 

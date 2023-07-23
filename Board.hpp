@@ -9,15 +9,6 @@ namespace PowerFeather
     class Board
     {
     public:
-        static constexpr gpio_num_t EnableHeader3V3Pin = static_cast<gpio_num_t>(4);
-        static constexpr gpio_num_t EnableStemma3V3Pin = static_cast<gpio_num_t>(14);
-        static constexpr gpio_num_t ChargerEnPin = static_cast<gpio_num_t>(7);
-        static constexpr gpio_num_t EnablePin = static_cast<gpio_num_t>(13);
-        static constexpr gpio_num_t SCL0Pin = static_cast<gpio_num_t>(47);
-        static constexpr gpio_num_t SDA0Pin = static_cast<gpio_num_t>(48);
-        static constexpr gpio_num_t GaugeGPOUTPin = static_cast<gpio_num_t>(21);
-        static constexpr gpio_num_t VDDTypePin = static_cast<gpio_num_t>(38);
-        static constexpr gpio_num_t ChargerIntPin = static_cast<gpio_num_t>(5);
 
         enum class PowerInput
         {
@@ -69,7 +60,7 @@ namespace PowerFeather
         // take OCV for gauge, then enable charging
         // enable 3V3 by default
         // enable 5V by default
-        Board(uint16_t batteryCapacity, bool useTSPin = false);
+        Board(uint16_t batteryCapacity = 0, bool useTSPin = false);
 
         bool init();
 
@@ -85,7 +76,19 @@ namespace PowerFeather
         void enableCharging(bool state);
         void enableGauge(bool enable);
 
+    protected:
+        static constexpr gpio_num_t EnablePin = static_cast<gpio_num_t>(13);
+        static constexpr gpio_num_t ChargerIntPin = static_cast<gpio_num_t>(5);
+        static constexpr gpio_num_t GaugeAlarmPin = static_cast<gpio_num_t>(21);
+
+        static constexpr gpio_num_t EnableHeader3V3Pin = static_cast<gpio_num_t>(4);
+        static constexpr gpio_num_t EnableStemma3V3Pin = static_cast<gpio_num_t>(14);
+        static constexpr gpio_num_t ChargerEnPin = static_cast<gpio_num_t>(7);
+        static constexpr gpio_num_t VDDTypePin = static_cast<gpio_num_t>(38);
+        static constexpr gpio_num_t SCL0Pin = static_cast<gpio_num_t>(47);
+        static constexpr gpio_num_t SDA0Pin = static_cast<gpio_num_t>(48);
     private:
+
         uint16_t _batteryCapacity;
         bool _useTSPin;
         uint8_t _i2cNum;
