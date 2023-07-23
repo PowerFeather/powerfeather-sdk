@@ -116,14 +116,10 @@ namespace PowerFeather
             return false;
         }
 
+
         _enableChargerTS(_useTSPin);
-
-
-        // _setChargeFactor(0.5f);
-        // _setVoltageHeader5V(5.0);
-
-        // Initialize pins
-
+        setChargeFactor(0.5f);
+        setVoltageHeader5V(5.0);
 
         /**
          * Initialize pins
@@ -157,6 +153,9 @@ namespace PowerFeather
         enableHeader3V3(true);
         enableStemma3V3(true);
 
+        _initRTCPin(Board::UserLedPin, RTC_GPIO_MODE_OUTPUT_ONLY);
+        _setRTCPin(Board::UserLedPin, true);
+
         return true;
     }
 
@@ -164,17 +163,19 @@ namespace PowerFeather
     {
         if (value)
         {
-            // Disable pin hold during deep sleep
-            rtc_gpio_hold_dis(pin);
-            // Disconnect from internal circuity to reduce leakage current
-            rtc_gpio_isolate(pin);
+            // Set the pin high.
+            rtc_gpio_set_level(pin, value);
+            // Hold the pin high, even in deep sleep.
+            rtc_gpio_hold_en(pin);
         }
         else
         {
             // Disable pin hold during deep sleep
             rtc_gpio_hold_dis(pin);
+            // Set the pin low
+            rtc_gpio_set_level(pin, 0);
             // Disconnect from internal circuity to reduce leakage current
-            rtc_gpio_isolate(pin);
+            // rtc_gpio_isolate(pin);
         }
     }
 

@@ -9,6 +9,8 @@ namespace PowerFeather
     class Board
     {
     public:
+        static constexpr gpio_num_t UserLedPin = static_cast<gpio_num_t>(6);
+        static constexpr gpio_num_t UserButtonPin = static_cast<gpio_num_t>(0);
 
         enum class PowerInput
         {
@@ -83,7 +85,7 @@ namespace PowerFeather
 
         static constexpr gpio_num_t EnableHeader3V3Pin = static_cast<gpio_num_t>(4);
         static constexpr gpio_num_t EnableStemma3V3Pin = static_cast<gpio_num_t>(14);
-        static constexpr gpio_num_t ChargerEnPin = static_cast<gpio_num_t>(7);
+        static constexpr gpio_num_t GaugeRegPin = static_cast<gpio_num_t>(7);
         static constexpr gpio_num_t VDDTypePin = static_cast<gpio_num_t>(38);
         static constexpr gpio_num_t SCL0Pin = static_cast<gpio_num_t>(47);
         static constexpr gpio_num_t SDA0Pin = static_cast<gpio_num_t>(48);
