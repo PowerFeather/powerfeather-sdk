@@ -1,4 +1,3 @@
-#include <driver/rtc_io.h>
 #include <driver/i2c.h>
 #include <SparkFunBQ27441.h>
 
@@ -63,14 +62,27 @@ namespace PowerFeather
         return res;
     }
 
-    bool Board::_enableStatLed(bool enable)
+    bool Board::_enableChargerStatLed(bool enable)
     {
         return _setChargerRegister(0x15, 7, !enable);
     }
 
-    bool Board::_enableTS(bool enable)
+    bool Board::_enableChargerTS(bool enable)
     {
         return _setChargerRegister(0x1a, 7, !enable);
+    }
+
+    bool Board::_initRTCPin(int pin, rtc_gpio_mode_t mode)
+    {
+        rtc_gpio_init(static_cast<gpio_num_t>(pin));
+        rtc_gpio_set_direction(static_cast<gpio_num_t>(pin), mode);
+        rtc_gpio_set_direction_in_sleep(static_cast<gpio_num_t>(pin), mode);
+        return true;
+    }
+
+    bool Board::_enableRTCPin(bool enable)
+    {
+        return true;
     }
 
     uint8_t Board::_getChargerFault()
@@ -104,89 +116,92 @@ namespace PowerFeather
             return false;
         }
 
-        _enableTS(false);
+        _enableChargerTS(_useTSPin);
 
 
+        // _setChargeFactor(0.5f);
+        // _setVoltageHeader5V(5.0);
+
+        // Initialize pins
 
 
+        /**
+         * Initialize pins
+         * 
+         * EnableHeader3V3Pin - output pp, hold sleep
+         * EnableStemma3V3Pin - output pp, hold sleep
+         * EnablePin - input/output od, hold sleep, wake source
+         * 
+         * VDDTypePin - input
+         * ChargerIntPin - input, wake source
+         * 
+         * GaugeAlarmPin - input, wake pin
+         * ChargerEnPin - output, hold sleep 
+         */
+        // Output pins
 
-        // this->setChargeFactor(0.5f);
-        // this->setVoltageHeader5V(5.0);
+        // Input pins
+
+        // RTC output pins
+        _initRTCPin(Board::EnableHeader3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
+        _initRTCPin(Board::EnableStemma3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
+        _initRTCPin(Board::EnablePin, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
+
+        // RTC input pins
+        _initRTCPin(Board::EnablePin, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
+
+        // wake source
+        // interrupt
         return true;
-
-        // /**
-        //  * Initialize pins
-        // */
-        // // Input
-        // pinMode(VDD_TYPE, INPUT);
-        // pinMode(INT, INPUT);
-
-        // // Output
-        // // pinMode(static_cast<gpio_num_t>(ENABLE_3V3), OUTPUT);
-        // rtc_gpio_init(static_cast<gpio_num_t>(ENABLE_3V3));
-        // rtc_gpio_set_direction(static_cast<gpio_num_t>(ENABLE_3V3), RTC_GPIO_MODE_OUTPUT_ONLY);
-        // rtc_gpio_set_direction_in_sleep(static_cast<gpio_num_t>(ENABLE_3V3), RTC_GPIO_MODE_OUTPUT_ONLY);
-
-        // pinMode(CE, OPEN_DRAIN);
-
-        // // Input-Output
-        // pinMode(EN, INPUT | OUTPUT | OPEN_DRAIN);
-        // pinMode(GPOUT, INPUT | OUTPUT | OPEN_DRAIN);
-
-        // lipo.begin();
-        // lipo.setCapacity(batteryCapacity);
-
-        // charger.Initialize();
-
-        // /**
-        //  * Set initial state
-        // */
-        // this->Enable3V3(true);
-        // this->Enable5V(true);
-        // this->SetEN(true);
-        // this->EnableCharging(true);
-        // this->EnableGauge(true);
     }
 
-    void Board::EnablePowerOutput(Board::PowerOutput output, bool state)
+    void Board::_setRTCPin(gpio_num_t pin, bool value)
     {
-        int pin = 0;
-
-        if (pin)
+        if (value)
         {
-            if (state)
-            {
-                // // Set the pin high.
-                // rtc_gpio_set_level(static_cast<gpio_num_t>(ENABLE_3V3), 1);
-                // // Hold the pin high, even in deep sleep.
-                // rtc_gpio_hold_en(static_cast<gpio_num_t>(ENABLE_3V3));
-            }
-            else
-            {
-                // // Disable pin hold during deep sleep
-                // rtc_gpio_hold_dis(static_cast<gpio_num_t>(ENABLE_3V3));
-                // // Disconnect from internal circuity to reduce leakage current
-                // rtc_gpio_isolate(static_cast<gpio_num_t>(ENABLE_3V3));
-            }
+            // Disable pin hold during deep sleep
+            rtc_gpio_hold_dis(pin);
+            // Disconnect from internal circuity to reduce leakage current
+            rtc_gpio_isolate(pin);
+        }
+        else
+        {
+            // Disable pin hold during deep sleep
+            rtc_gpio_hold_dis(pin);
+            // Disconnect from internal circuity to reduce leakage current
+            rtc_gpio_isolate(pin);
         }
     }
 
-    bool Board::GetEN()
+    void Board::enableHeader3V3(bool enable)
     {
-        return digitalRead(EN);
+        _setRTCPin(Board::EnableHeader3V3Pin, enable);
     }
 
-    void Board::SetEN(bool enable)
+    void Board::enableStemma3V3(bool enable)
     {
-        digitalWrite(EN, enable);
+        _setRTCPin(Board::EnableStemma3V3Pin, enable);
     }
 
-    void Board::SetChargingEnabled(bool state)
+    void Board::enableHeader5V(bool enabVle)
     {
-        digitalWrite(static_cast<gpio_num_t>(CE), state);
     }
 
-    void Board::SetGaugeEnabled(bool enable)
+    bool Board::getEnablePin()
+    {
+        return true;
+    }
+
+    void Board::setEnablePin(bool value)
+    {
+    }
+
+    void Board::enableCharging(bool state)
+    {
+
+    }
+
+    void Board::enableGauge(bool enable)
     {
 
     }

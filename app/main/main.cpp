@@ -71,7 +71,7 @@ uint16_t i2cWriteBytes(uint16_t command, uint16_t data)
 	return true;	
 }
 
-PowerFeather::Board board(600, false);
+PowerFeather::Board board(600);
 
 extern "C" void app_main(void)
 {
