@@ -37,7 +37,6 @@ namespace PowerFeather
 
     bool Board::setVoltageHeader5V(float voltage)
     {
-        // Sets the voltage header voltage for 
         return true;
     }
 
@@ -78,6 +77,19 @@ namespace PowerFeather
         return true;
     }
 
+    bool Board::_initDigitalPin(int pin, gpio_mode_t mode)
+    {
+        gpio_config_t io_conf = {};
+        memset(&io_conf, 0, sizeof(io_conf));
+        io_conf.intr_type = GPIO_INTR_DISABLE;
+        io_conf.mode = mode;
+        io_conf.pin_bit_mask = (0b1 << pin);
+        io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+        io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+        gpio_config(&io_conf);
+        return true;
+    }
+
     bool Board::_enableRTCPin(bool enable)
     {
         return true;
@@ -92,6 +104,17 @@ namespace PowerFeather
 
     bool Board::init()
     {
+        // Initialize IO pins
+        _initDigitalPin(Board::ChargerIntPin, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::GaugeAlarmPin, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::GaugeRegPin, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::VDDTypePin, GPIO_MODE_INPUT);
+
+        _initRTCPin(Board::EnableHeader3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
+        _initRTCPin(Board::EnableStemma3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
+
+        _initRTCPin(Board::EnablePin, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
+
         // Initialize I2C bus
         int i2c_master_port = I2C_NUM;
 
@@ -112,49 +135,18 @@ namespace PowerFeather
         
         if ((res = i2c_driver_install(i2c_master_port, i2c_conf.mode, 0, 0, 0)) != ESP_OK)
         {
-            printf("res: %d\n", res);
             return false;
         }
 
-
         _enableChargerTS(_useTSPin);
+
         setChargeFactor(0.5f);
         setVoltageHeader5V(5.0);
-
-        /**
-         * Initialize pins
-         * 
-         * EnableHeader3V3Pin - output pp, hold sleep
-         * EnableStemma3V3Pin - output pp, hold sleep
-         * EnablePin - input/output od, hold sleep, wake source, interrupt source
-         * 
-         * ChargerIntPin - input, wake source, interrupt source
-         * GaugeAlarmPin - input, wake source, interrupt source
-         * VDDTypePin - input, wake source, interrupt source
-         * 
-         * ChargerEnPin - output, hold sleep 
-         */
-        // Output pins
-
-        // Input pins
-
-        // RTC output pins
-        _initRTCPin(Board::EnableHeader3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _initRTCPin(Board::EnableStemma3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
-
-        // RTC input pins
-
-        // RTC input output
-        _initRTCPin(Board::EnablePin, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
-
-        // wake source
-        // interrupt
-
+        enableCharging(false);
+        enableGauge(true);
         enableHeader3V3(true);
         enableStemma3V3(true);
-
-        _initRTCPin(Board::UserLedPin, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _setRTCPin(Board::UserLedPin, true);
+        enableHeader5V(true);
 
         return true;
     }
@@ -172,10 +164,20 @@ namespace PowerFeather
         {
             // Disable pin hold during deep sleep
             rtc_gpio_hold_dis(pin);
-            // Set the pin low
-            rtc_gpio_set_level(pin, 0);
-            // Disconnect from internal circuity to reduce leakage current
-            // rtc_gpio_isolate(pin);
+
+            if (pin == Board::EnablePin)
+            {
+                // The enable pin is in open-drain configuration with external pull-up
+                // resistor. Setting the pin to 0 means pulling it down.
+                rtc_gpio_set_level(pin, 0);
+            }
+            else
+            {
+                // The rest of the output RTC pins is by default pulled down by an
+                // external resistor, this means setting them to 0 entails just
+                // just disconnecting the pin from the chip.
+                rtc_gpio_isolate(pin);
+            }
         }
     }
 
@@ -191,15 +193,17 @@ namespace PowerFeather
 
     void Board::enableHeader5V(bool enabVle)
     {
+
     }
 
     bool Board::getEnablePin()
     {
-        return true;
+        return rtc_gpio_get_level(Board::EnablePin);
     }
 
     void Board::setEnablePin(bool value)
     {
+        _setRTCPin(Board::EnablePin, value);
     }
 
     void Board::enableCharging(bool state)

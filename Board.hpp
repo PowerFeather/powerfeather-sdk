@@ -79,14 +79,19 @@ namespace PowerFeather
         void enableGauge(bool enable);
 
     protected:
-        static constexpr gpio_num_t EnablePin = static_cast<gpio_num_t>(13);
+        // Input
         static constexpr gpio_num_t ChargerIntPin = static_cast<gpio_num_t>(5);
         static constexpr gpio_num_t GaugeAlarmPin = static_cast<gpio_num_t>(21);
-
-        static constexpr gpio_num_t EnableHeader3V3Pin = static_cast<gpio_num_t>(4);
-        static constexpr gpio_num_t EnableStemma3V3Pin = static_cast<gpio_num_t>(14);
         static constexpr gpio_num_t GaugeRegPin = static_cast<gpio_num_t>(7);
         static constexpr gpio_num_t VDDTypePin = static_cast<gpio_num_t>(38);
+
+        // Output
+        static constexpr gpio_num_t EnableHeader3V3Pin = static_cast<gpio_num_t>(4);
+        static constexpr gpio_num_t EnableStemma3V3Pin = static_cast<gpio_num_t>(14);
+
+        // Input + Output
+        static constexpr gpio_num_t EnablePin = static_cast<gpio_num_t>(13);
+
         static constexpr gpio_num_t SCL0Pin = static_cast<gpio_num_t>(47);
         static constexpr gpio_num_t SDA0Pin = static_cast<gpio_num_t>(48);
     private:
@@ -103,6 +108,7 @@ namespace PowerFeather
         bool _writeI2C(uint8_t address, uint8_t reg, uint8_t data);
         bool _setChargerRegister(uint8_t address, uint8_t bit, bool value);
         bool _initRTCPin(int pin, rtc_gpio_mode_t mode);
+        bool _initDigitalPin(int pin, gpio_mode_t mode);
         bool _enableRTCPin(bool enable);
         void _setRTCPin(gpio_num_t pin, bool value);
     };
