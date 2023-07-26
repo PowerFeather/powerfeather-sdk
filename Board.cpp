@@ -1,8 +1,13 @@
+#include <climits>
+
 #include <driver/i2c.h>
 #include <SparkFunBQ27441.h>
 
 #include "BQ2562x.hpp"
 #include "Board.hpp"
+
+
+static_assert(CHAR_BIT == 8, "Unsupported architecture");
 
 
 static constexpr int I2C_NUM = 0;
@@ -48,7 +53,7 @@ namespace PowerFeather
         uint16_t current = (_batteryCapacity * factor) / 40;
         if (current >= 0x1 && current <= 0x32)
         {
-            return _setChargerRegister(0x02, 5, 11, current);
+            return _setRegisterValue(0x02, 5, 11, current);
         }
         return false;
     }
@@ -59,15 +64,15 @@ namespace PowerFeather
         switch (mode)
         {
         case Board::BatteryModeHeader5V::None:
-            res = _setChargerRegister(0x18, 6, 0b0 & _setChargerRegister(0x18, 7, 0b0));
+            res = _setRegisterValue(0x18, 6, 0b0 & _setRegisterValue(0x18, 7, 0b0));
             break;
 
         case Board::BatteryModeHeader5V::Bypass:
-            res = _setChargerRegister(0x18, 6, 0b0) & _setChargerRegister(0x18, 7, 0b1);
+            res = _setRegisterValue(0x18, 6, 0b0) & _setRegisterValue(0x18, 7, 0b1);
             break;
 
         case Board::BatteryModeHeader5V::Reg:
-            res = _setChargerRegister(0x18, 6, 0b1) & _setChargerRegister(0x18, 7, 0b1);
+            res = _setRegisterValue(0x18, 6, 0b1) & _setRegisterValue(0x18, 7, 0b1);
             break;
         
         default:
@@ -82,32 +87,27 @@ namespace PowerFeather
         if (volts >= 3840 && volts <= 5040)
         {
             uint16_t volts2 = volts / 80;
-            return _setChargerRegister(0x0C, 6, 12, volts2);
+            return _setRegisterValue(0x0C, 6, 12, volts2);
         }
         return false;
     }
 
-    bool Board::_setChargerRegister(uint8_t address, uint8_t bit, bool value)
+    bool Board::_setRegisterValue(uint8_t address, uint8_t bit, bool value)
     {
-        if (bit >= 8)
-        {
-            return _setChargerRegister(address, bit, bit, static_cast<uint8_t>(value));
-        }
-        else
-        {
-            return _setChargerRegister(address, bit, bit, static_cast<uint16_t>(value));
-        }
+        return bit < CHAR_BIT ? _setRegisterValue(address, bit, bit, static_cast<uint8_t>(value)) 
+                              : _setRegisterValue(address, bit, bit, static_cast<uint16_t>(value));
     }
 
     template <typename T>
-    bool Board::_setChargerRegister(uint8_t address, uint8_t start, uint8_t end, T value)
+    bool Board::_setRegisterValue(uint8_t address, uint8_t start, uint8_t end, T value)
     {
         static_assert(sizeof(T) == 1 || sizeof(T) == 2);
+        assert(end < sizeof(T) * CHAR_BIT);
+        assert(start <= end);
         T data = 0;
         bool res = this->_readI2C(BQ2562x_ADDR, address, data);
         if (res)
         {
-            assert(end >= start);
             uint8_t bits = end - start + 1;
             T mask = ((0b1 << bits) - 1) << start;
             value <<= start;
@@ -117,19 +117,24 @@ namespace PowerFeather
         return res;
     }
 
+    bool Board::_setRegisterValue(uint8_t address, uint16_t value)
+    {
+        return _setRegisterValue(address, 0, (sizeof(value) * CHAR_BIT) - 1, value);
+    }
+
     bool Board::_enableChargerStatLed(bool enable)
     {
-        return _setChargerRegister(0x15, 7, !enable);
+        return _setRegisterValue(0x15, 7, !enable);
     }
 
     bool Board::_enableChargerWd(bool enable)
     {
-        return _setChargerRegister(0x16, 0, 1, static_cast<uint8_t>(enable ? 0x1 : 0x0));
+        return _setRegisterValue(0x16, 0, 1, static_cast<uint8_t>(enable ? 0x1 : 0x0));
     }
 
     bool Board::_enableChargerTS(bool enable)
     {
-        return _setChargerRegister(0x1a, 7, !enable);
+        return _setRegisterValue(0x1a, 7, !enable);
     }
 
     bool Board::_initRTCPin(int pin, rtc_gpio_mode_t mode)
@@ -202,7 +207,7 @@ namespace PowerFeather
         // Rest of initialization
         _enableChargerTS(_useTSPin);
         _enableChargerWd(false);
-        setChargeFactor(1.0f);
+        setChargeFactor(0.5f);
 
         setBatteryModeHeader5V(Board::BatteryModeHeader5V::None);
         setVoltageHeader5V(5.04);
@@ -265,7 +270,7 @@ namespace PowerFeather
 
     void Board::enableCharging(bool state)
     {
-        _setChargerRegister(0x16, 5, state);
+        _setRegisterValue(0x16, 5, state);
     }
 
     void Board::enableGauge(bool enable)

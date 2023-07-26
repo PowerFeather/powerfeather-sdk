@@ -108,10 +108,12 @@ namespace PowerFeather
         bool _writeI2C(uint8_t address, uint8_t reg, uint8_t data);
         bool _readI2C(uint8_t address, uint8_t reg, uint16_t &data);
         bool _writeI2C(uint8_t address, uint8_t reg, uint16_t data);
-        bool _setChargerRegister(uint8_t address, uint8_t bit, bool value);
+        bool _setRegisterValue(uint8_t address, uint8_t bit, bool value);
 
         template <typename T>
-        bool _setChargerRegister(uint8_t address, uint8_t start, uint8_t end, T value);
+        bool _setRegisterValue(uint8_t address, uint8_t start, uint8_t end, T value);
+
+        bool _setRegisterValue(uint8_t address, uint16_t value);
 
         bool _initRTCPin(int pin, rtc_gpio_mode_t mode);
         bool _initDigitalPin(int pin, gpio_mode_t mode);
