@@ -104,9 +104,9 @@ namespace PowerFeather
         uint8_t _getChargerFault();
         bool _enableChargerWd(bool enable);
 
-        bool _readI2C(uint8_t address, uint8_t reg, uint8_t *data);
+        bool _readI2C(uint8_t address, uint8_t reg, uint8_t &data);
         bool _writeI2C(uint8_t address, uint8_t reg, uint8_t data);
-        bool _readI2C(uint8_t address, uint8_t reg, uint16_t *data);
+        bool _readI2C(uint8_t address, uint8_t reg, uint16_t &data);
         bool _writeI2C(uint8_t address, uint8_t reg, uint16_t data);
         bool _setChargerRegister(uint8_t address, uint8_t bit, bool value);
 

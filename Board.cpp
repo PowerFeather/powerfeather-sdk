@@ -13,30 +13,28 @@ static constexpr uint8_t BQ2562x_ADDR = 0x6a;
 
 namespace PowerFeather
 {
-    bool Board::_readI2C(uint8_t address, uint8_t reg, uint8_t *data)
+    bool Board::_readI2C(uint8_t address, uint8_t reg, uint8_t &data)
     {
-        return i2c_master_write_read_device(I2C_NUM, address, &reg, 1, data, 1, pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
+        return i2c_master_write_read_device(I2C_NUM, address, &reg, sizeof(reg), &data, 1, pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
     }
 
     bool Board::_writeI2C(uint8_t address, uint8_t reg, uint8_t data)
     {
-        uint8_t to_write[2] = {reg, data};
-        return i2c_master_write_to_device(I2C_NUM, address, to_write, sizeof(to_write), pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
+        uint8_t data2[] = {reg, data};
+        return i2c_master_write_to_device(I2C_NUM, address, data2, sizeof(data2), pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
     }
 
-    bool Board::_readI2C(uint8_t address, uint8_t reg, uint16_t *data)
+    bool Board::_readI2C(uint8_t address, uint8_t reg, uint16_t &data)
     {
-        uint8_t *data2 = reinterpret_cast<uint8_t*>(data);
-        return i2c_master_write_read_device(I2C_NUM, address, &reg, 1, data2, 2, pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
+        uint8_t *data2 = reinterpret_cast<uint8_t*>(&data);
+        return i2c_master_write_read_device(I2C_NUM, address, &reg, sizeof(reg), data2, sizeof(data), pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
     }
 
     bool Board::_writeI2C(uint8_t address, uint8_t reg, uint16_t data)
     {
-        uint8_t to_write[3] = {0, 0, 0};
-        to_write[0] = reg;
-        to_write[1] = ((uint8_t*)&data)[0];
-        to_write[2] = ((uint8_t*)&data)[1];
-        return i2c_master_write_to_device(I2C_NUM, address, to_write, sizeof(to_write), pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
+        uint8_t *data2 = reinterpret_cast<uint8_t*>(&data);
+        uint8_t data3[] = {reg, data2[0], data2[1]};
+        return i2c_master_write_to_device(I2C_NUM, address, data3, sizeof(data3), pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
     }
 
     Board::Board(uint16_t batteryCapacity, bool useTSPin)
@@ -106,7 +104,7 @@ namespace PowerFeather
     {
         static_assert(sizeof(T) == 1 || sizeof(T) == 2);
         T data = 0;
-        bool res = this->_readI2C(BQ2562x_ADDR, address, &data);
+        bool res = this->_readI2C(BQ2562x_ADDR, address, data);
         if (res)
         {
             assert(end >= start);
@@ -158,7 +156,7 @@ namespace PowerFeather
     uint8_t Board::_getChargerFault()
     {
         uint8_t data;
-        this->_readI2C(BQ2562x_ADDR, 0x1f, &data);
+        this->_readI2C(BQ2562x_ADDR, 0x1f, data);
         return data;
     }
 
@@ -211,7 +209,6 @@ namespace PowerFeather
 
         enableHeader3V3(true);
         enableStemma3V3(true);
-
 
         return true;
     }
