@@ -11,7 +11,7 @@
 
 #include <Board.hpp>
 
-PowerFeather::Board board(600);
+PowerFeather::Board board(320);
 
 extern "C" void app_main(void)
 {

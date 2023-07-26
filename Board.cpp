@@ -47,12 +47,35 @@ namespace PowerFeather
 
     bool Board::setChargeFactor(float factor)
     {
-        return true;
+        uint16_t current = (_batteryCapacity * factor) / 40;
+        if (current >= 0x1 && current <= 0x32)
+        {
+            return _setChargerRegister(0x02, 5, 11, current);
+        }
+        return false;
     }
 
     bool Board::setBatteryModeHeader5V(Board::BatteryModeHeader5V mode)
     {
-        return true;
+        bool res = false;
+        switch (mode)
+        {
+        case Board::BatteryModeHeader5V::None:
+            res = _setChargerRegister(0x18, 6, 0b0 & _setChargerRegister(0x18, 7, 0b0));
+            break;
+
+        case Board::BatteryModeHeader5V::Bypass:
+            res = _setChargerRegister(0x18, 6, 0b0) & _setChargerRegister(0x18, 7, 0b1);
+            break;
+
+        case Board::BatteryModeHeader5V::Reg:
+            res = _setChargerRegister(0x18, 6, 0b1) & _setChargerRegister(0x18, 7, 0b1);
+            break;
+        
+        default:
+            break;
+        }
+        return res;
     }
 
     bool Board::setVoltageHeader5V(float voltage)
@@ -81,6 +104,7 @@ namespace PowerFeather
     template <typename T>
     bool Board::_setChargerRegister(uint8_t address, uint8_t start, uint8_t end, T value)
     {
+        static_assert(sizeof(T) == 1 || sizeof(T) == 2);
         T data = 0;
         bool res = this->_readI2C(BQ2562x_ADDR, address, &data);
         if (res)
@@ -180,7 +204,7 @@ namespace PowerFeather
         // Rest of initialization
         _enableChargerTS(_useTSPin);
         _enableChargerWd(false);
-        setChargeFactor(0.5f);
+        setChargeFactor(1.0f);
 
         setBatteryModeHeader5V(Board::BatteryModeHeader5V::None);
         setVoltageHeader5V(5.04);
