@@ -24,6 +24,21 @@ namespace PowerFeather
         return i2c_master_write_to_device(I2C_NUM, address, to_write, sizeof(to_write), pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
     }
 
+    bool Board::_readI2C(uint8_t address, uint8_t reg, uint16_t *data)
+    {
+        uint8_t *data2 = reinterpret_cast<uint8_t*>(data);
+        return i2c_master_write_read_device(I2C_NUM, address, &reg, 1, data2, 2, pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
+    }
+
+    bool Board::_writeI2C(uint8_t address, uint8_t reg, uint16_t data)
+    {
+        uint8_t to_write[3] = {0, 0, 0};
+        to_write[0] = reg;
+        to_write[1] = ((uint8_t*)&data)[0];
+        to_write[2] = ((uint8_t*)&data)[1];
+        return i2c_master_write_to_device(I2C_NUM, address, to_write, sizeof(to_write), pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
+    }
+
     Board::Board(uint16_t batteryCapacity, bool useTSPin)
     {
         this->_batteryCapacity = batteryCapacity;
@@ -35,25 +50,46 @@ namespace PowerFeather
         return true;
     }
 
-    bool Board::setVoltageHeader5V(float voltage)
+    bool Board::setBatteryModeHeader5V(Board::BatteryModeHeader5V mode)
     {
         return true;
     }
 
+    bool Board::setVoltageHeader5V(float voltage)
+    {
+        uint16_t volts = voltage * 1000;
+        if (volts >= 3840 && volts <= 5040)
+        {
+            uint16_t volts2 = volts / 80;
+            return _setChargerRegister(0x0C, 6, 12, volts2);
+        }
+        return false;
+    }
+
     bool Board::_setChargerRegister(uint8_t address, uint8_t bit, bool value)
     {
-        uint8_t data = 0;
+        if (bit >= 8)
+        {
+            return _setChargerRegister(address, bit, bit, static_cast<uint8_t>(value));
+        }
+        else
+        {
+            return _setChargerRegister(address, bit, bit, static_cast<uint16_t>(value));
+        }
+    }
+
+    template <typename T>
+    bool Board::_setChargerRegister(uint8_t address, uint8_t start, uint8_t end, T value)
+    {
+        T data = 0;
         bool res = this->_readI2C(BQ2562x_ADDR, address, &data);
         if (res)
         {
-            if (value)
-            {
-                data |= (0b1 << bit);
-            }
-            else
-            {
-                data &= ~(0b1 << bit);
-            }
+            assert(end >= start);
+            uint8_t bits = end - start + 1;
+            T mask = ((0b1 << bits) - 1) << start;
+            value <<= start;
+            data = (data & ~mask) | (mask & value);
             res = this->_writeI2C(BQ2562x_ADDR, address, data);
         }
         return res;
@@ -62,6 +98,11 @@ namespace PowerFeather
     bool Board::_enableChargerStatLed(bool enable)
     {
         return _setChargerRegister(0x15, 7, !enable);
+    }
+
+    bool Board::_enableChargerWd(bool enable)
+    {
+        return _setChargerRegister(0x16, 0, 1, static_cast<uint8_t>(enable ? 0x1 : 0x0));
     }
 
     bool Board::_enableChargerTS(bool enable)
@@ -90,11 +131,6 @@ namespace PowerFeather
         return true;
     }
 
-    bool Board::_enableRTCPin(bool enable)
-    {
-        return true;
-    }
-
     uint8_t Board::_getChargerFault()
     {
         uint8_t data;
@@ -104,17 +140,6 @@ namespace PowerFeather
 
     bool Board::init()
     {
-        // Initialize IO pins
-        _initDigitalPin(Board::ChargerIntPin, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::GaugeAlarmPin, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::GaugeRegPin, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::VDDTypePin, GPIO_MODE_INPUT);
-
-        _initRTCPin(Board::EnableHeader3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _initRTCPin(Board::EnableStemma3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
-
-        _initRTCPin(Board::EnablePin, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
-
         // Initialize I2C bus
         int i2c_master_port = I2C_NUM;
 
@@ -138,15 +163,31 @@ namespace PowerFeather
             return false;
         }
 
-        _enableChargerTS(_useTSPin);
-
-        setChargeFactor(0.5f);
-        setVoltageHeader5V(5.0);
+        // Prioritize charging disable after I2C initialization
         enableCharging(false);
-        enableGauge(true);
+
+        // Initialize IO pins
+        _initDigitalPin(Board::ChargerIntPin, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::GaugeAlarmPin, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::GaugeRegPin, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::VDDTypePin, GPIO_MODE_INPUT);
+
+        _initRTCPin(Board::EnableHeader3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
+        _initRTCPin(Board::EnableStemma3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
+
+        _initRTCPin(Board::EnablePin, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
+
+        // Rest of initialization
+        _enableChargerTS(_useTSPin);
+        _enableChargerWd(false);
+        setChargeFactor(0.5f);
+
+        setBatteryModeHeader5V(Board::BatteryModeHeader5V::None);
+        setVoltageHeader5V(5.04);
+
         enableHeader3V3(true);
         enableStemma3V3(true);
-        enableHeader5V(true);
+
 
         return true;
     }
@@ -191,11 +232,6 @@ namespace PowerFeather
         _setRTCPin(Board::EnableStemma3V3Pin, enable);
     }
 
-    void Board::enableHeader5V(bool enabVle)
-    {
-
-    }
-
     bool Board::getEnablePin()
     {
         return rtc_gpio_get_level(Board::EnablePin);
@@ -208,7 +244,7 @@ namespace PowerFeather
 
     void Board::enableCharging(bool state)
     {
-
+        _setChargerRegister(0x16, 5, state);
     }
 
     void Board::enableGauge(bool enable)

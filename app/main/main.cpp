@@ -16,7 +16,5 @@ PowerFeather::Board board(600);
 extern "C" void app_main(void)
 {
     board.init();
-
-    esp_deep_sleep_start();
 }
 

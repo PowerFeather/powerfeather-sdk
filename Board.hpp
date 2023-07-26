@@ -66,13 +66,12 @@ namespace PowerFeather
 
         bool init();
 
-        bool setBatteryModeHeader5V(Board::BatteryModeHeader5V mode, float voltage = 5.0f);
+        bool setBatteryModeHeader5V(Board::BatteryModeHeader5V mode);
         bool setVoltageHeader5V(float voltage);
 
         bool setChargeFactor(float factor);
         void enableHeader3V3(bool enable);
         void enableStemma3V3(bool enable);
-        void enableHeader5V(bool enable);
         bool getEnablePin();
         void setEnablePin(bool value);
         void enableCharging(bool state);
@@ -103,13 +102,19 @@ namespace PowerFeather
         bool _enableChargerStatLed(bool enable);
         bool _enableChargerTS(bool enable);
         uint8_t _getChargerFault();
+        bool _enableChargerWd(bool enable);
 
         bool _readI2C(uint8_t address, uint8_t reg, uint8_t *data);
         bool _writeI2C(uint8_t address, uint8_t reg, uint8_t data);
+        bool _readI2C(uint8_t address, uint8_t reg, uint16_t *data);
+        bool _writeI2C(uint8_t address, uint8_t reg, uint16_t data);
         bool _setChargerRegister(uint8_t address, uint8_t bit, bool value);
+
+        template <typename T>
+        bool _setChargerRegister(uint8_t address, uint8_t start, uint8_t end, T value);
+
         bool _initRTCPin(int pin, rtc_gpio_mode_t mode);
         bool _initDigitalPin(int pin, gpio_mode_t mode);
-        bool _enableRTCPin(bool enable);
         void _setRTCPin(gpio_num_t pin, bool value);
     };
 }
