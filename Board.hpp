@@ -3,11 +3,53 @@
 #include <cstdint>
 
 #include <driver/rtc_io.h>
+#include <driver/i2c.h>
 
 namespace PowerFeather
 {
     class Board
     {
+    private:
+        class MasterI2C
+        {
+        public:
+            bool init(i2c_port_t port, gpio_num_t sda, gpio_num_t scl, uint32_t freq);
+            template <typename T>
+            bool read(uint8_t address, uint8_t reg, T &data);
+            template <typename T>
+            bool write(uint8_t address, uint8_t reg, T data);
+        private:
+            uint32_t _port;
+        };
+
+        class Charger
+        {
+        public:
+            Charger(MasterI2C &i2c):_i2c(i2c) {}
+            template <typename T>
+            bool writeReg(uint8_t address, uint8_t start, uint8_t end, T value);
+            bool writeReg(uint8_t address, uint8_t bit, bool value);
+            template <typename T>
+            bool readReg(uint8_t address, uint8_t start, uint8_t end, T& value);
+            bool readReg(uint8_t address, uint8_t bit, bool& value);
+            template <typename T>
+            bool readReg(uint8_t address, T& value);
+        private:
+            static constexpr uint8_t _address = 0x6a;
+            MasterI2C& _i2c;
+        };
+
+        class FuelGauge
+        {
+        public:
+            FuelGauge(MasterI2C& i2c):_i2c(i2c) {}
+            bool writeCmd(uint8_t cmd, uint16_t value);
+            bool readCmd(uint8_t cmd, uint16_t& value);
+        private:
+            static constexpr uint8_t _address = 0x6a;
+            MasterI2C& _i2c;
+        };
+
     public:
         static constexpr gpio_num_t UserLedPin = static_cast<gpio_num_t>(6);
         static constexpr gpio_num_t UserButtonPin = static_cast<gpio_num_t>(0);
@@ -17,14 +59,6 @@ namespace PowerFeather
             USB,
             DC,
             Battery,
-        };
-
-        // The board has two 3.3V rails which can be individually switched off/on.
-        enum class PowerOutput
-        {
-            Header5V,
-            Header3V3,
-            Stemma3V3
         };
 
         // Initialize the board
@@ -68,6 +102,9 @@ namespace PowerFeather
         void enableCharging(bool state);
         void enableGauge(bool enable);
 
+        Charger& getCharger() { return _charger; }
+        FuelGauge& getFuelGauge() {return _fuelGauge; }
+
     protected:
         // Input
         static constexpr gpio_num_t ChargerIntPin = static_cast<gpio_num_t>(5);
@@ -84,14 +121,20 @@ namespace PowerFeather
 
         static constexpr gpio_num_t SCL0Pin = static_cast<gpio_num_t>(47);
         static constexpr gpio_num_t SDA0Pin = static_cast<gpio_num_t>(48);
+
     private:
-        uint16_t _batteryCapacity;
-        bool _useTSPin;
+        MasterI2C _masterI2C {};
+        Charger _charger {_masterI2C};
+        FuelGauge _fuelGauge {_masterI2C};
 
         template <typename T>
         bool _readI2C(uint8_t address, uint8_t reg, T &data);
         template <typename T>
         bool _writeI2C(uint8_t address, uint8_t reg, T data);
+
+
+        uint16_t _batteryCapacity;
+        bool _useTSPin;
 
         template <typename T>
         bool _setRegisterValue(uint8_t address, uint8_t start, uint8_t end, T value);
