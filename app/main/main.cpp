@@ -9,7 +9,7 @@
 
 #include <esp_sleep.h>
 
-#include <Board.hpp>
+#include <Board.h>
 
 PowerFeather::Board board(320);
 

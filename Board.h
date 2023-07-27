@@ -1,63 +1,12 @@
-
-#include <cstdbool>
-#include <cstdint>
-
 #include <driver/rtc_io.h>
-#include <driver/i2c.h>
+
+#include <BQ2562x.h>
+#include <LC709204F.h>
 
 namespace PowerFeather
 {
     class Board
     {
-    private:
-        class MasterI2C
-        {
-        public:
-            bool init(i2c_port_t port, gpio_num_t sda, gpio_num_t scl, uint32_t freq);
-            template <typename T>
-            bool read(uint8_t address, uint8_t reg, T &data);
-            template <typename T>
-            bool write(uint8_t address, uint8_t reg, T data);
-        private:
-            uint32_t _port;
-        };
-
-        class BQ2562x
-        {
-        public:
-            BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
-
-            template <typename T>
-            bool writeReg(uint8_t address, uint8_t start, uint8_t end, T value);
-            bool writeReg(uint8_t address, uint8_t bit, bool value);
-            template <typename T>
-            bool readReg(uint8_t address, uint8_t start, uint8_t end, T& value);
-            bool readReg(uint8_t address, uint8_t bit, bool& value);
-            template <typename T>
-            bool readReg(uint8_t address, T& value);
-
-            bool setChargeCurrent(uint16_t current);
-            void enableCharging(bool state);
-            bool enableSTAT(bool enable);
-            bool enableTS(bool enable);
-            uint8_t getFault();
-            bool enableWD(bool enable);
-        private:
-            static constexpr uint8_t _address = 0x6a;
-            MasterI2C& _i2c;
-        };
-
-        class LC70924F
-        {
-        public:
-            LC70924F(MasterI2C& i2c):_i2c(i2c) {}
-            bool writeCmd(uint8_t cmd, uint16_t value);
-            bool readCmd(uint8_t cmd, uint16_t& value);
-        private:
-            static constexpr uint8_t _address = 0x6a;
-            MasterI2C& _i2c;
-        };
-
     public:
         static constexpr gpio_num_t UserLedPin = static_cast<gpio_num_t>(6);
         static constexpr gpio_num_t UserButtonPin = static_cast<gpio_num_t>(0);
@@ -78,8 +27,6 @@ namespace PowerFeather
         //      - change in external power source
         //      - enable pin pulled down low
         //      - charging started/stopped
-        //
-        //
         //      - temperature too high or too low (hardware set)
         //      - battery state of charge low
         //      - input current exceeded
