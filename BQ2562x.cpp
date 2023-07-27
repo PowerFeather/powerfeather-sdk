@@ -1,7 +1,5 @@
 #include <BQ2562x.h>
 
-
-
 namespace PowerFeather
 {
 	template <typename T>

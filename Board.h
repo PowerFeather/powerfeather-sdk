@@ -2,6 +2,7 @@
 
 #include <BQ2562x.h>
 #include <LC709204F.h>
+#include <MasterI2C.h>
 
 namespace PowerFeather
 {
