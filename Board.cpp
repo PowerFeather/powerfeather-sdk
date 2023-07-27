@@ -10,16 +10,6 @@ namespace PowerFeather
 {
     static_assert(CHAR_BIT == 8, "Unsupported architecture");
 
-    static constexpr int I2C_NUM = 0;
-    static constexpr uint32_t I2C_SPEED = 400000;
-    static constexpr uint32_t I2C_TIMEOUT = 1000;
-
-    Board::Board()
-    {
-
-    }
-
-
     bool Board::_initRTCPin(int pin, rtc_gpio_mode_t mode)
     {
         rtc_gpio_init(static_cast<gpio_num_t>(pin));
@@ -45,7 +35,7 @@ namespace PowerFeather
     {
         soc_reset_reason_t reset_reason = esp_rom_get_reset_reason(0);
 
-        _masterI2C.init(I2C_NUM, Board::SDA0Pin, Board::SCL0Pin, I2C_SPEED);
+        _masterI2C.init(_i2c_port, Board::SDA0Pin, Board::SCL0Pin, _i2c_freq);
 
         if (reset_reason == RESET_REASON_CHIP_POWER_ON)
         {
@@ -116,6 +106,25 @@ namespace PowerFeather
     void Board::enableStemma3V3(bool enable)
     {
         _setRTCPin(Board::EnableStemma3V3Pin, enable);
+    }
+
+    Board::PowerInput Board::getPowerInput()
+    {
+        BQ2562x::VBUSStat vbusStat = _charger.getVBUSStat();
+
+        if (vbusStat != BQ2562x::VBUSStat::None)
+        {
+            if (gpio_get_level(Board::VDDTypePin))
+            {
+                return PowerInput::DC;
+            }
+            else
+            {
+                return PowerInput::USB;
+            }
+        }
+
+        return PowerInput::Battery;
     }
 
     bool Board::getEnablePin()

@@ -128,4 +128,45 @@ namespace PowerFeather
         // return _charger.writeReg(0x18, 6, enable);
 		return false;
     }
+
+    BQ2562x::VBUSStat BQ2562x::getVBUSStat()
+    {
+		uint8_t value;
+		readReg(0x1e, 0, 2, value);
+		if (value)
+		{
+			return VBUSStat::Adapter;
+		}
+
+		return VBUSStat::None;
+    }
+
+    BQ2562x::ChargeStat BQ2562x::getChargeStat()
+    {
+		uint8_t value;
+		readReg(0x1e, 3, 4, value);
+
+		ChargeStat res = ChargeStat::Terminated;
+
+		switch (value)
+		{
+		case 0x01:
+			res = ChargeStat::Trickle;
+			break;
+
+		case 0x02:
+			res = ChargeStat::Taper;
+			break;
+
+		case 0x03:
+			res = ChargeStat::TopOff;
+			break;
+		
+		case 0x00:
+		default:
+			break;
+		}
+
+		return res;
+    }
 }
