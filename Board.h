@@ -35,9 +35,17 @@ namespace PowerFeather
             D13 =  static_cast<gpio_num_t>(5),
             SCL =  static_cast<gpio_num_t>(5),
             SDA =  static_cast<gpio_num_t>(5),
-            EN =   static_cast<gpio_num_t>(5),
             LED =  static_cast<gpio_num_t>(6),
             BTN =  static_cast<gpio_num_t>(0),
+        };
+
+        enum class InterruptPin
+        {
+            EN =    static_cast<gpio_num_t>(5), // Board EN
+            REGN =  static_cast<gpio_num_t>(4), // FuelGauge REGN
+            ALARM = static_cast<gpio_num_t>(21), // FuelGauge ALARM
+            INT =   static_cast<gpio_num_t>(5), // Charger INT
+            VDDTYPE = static_cast<gpio_num_t>(4), // Board VDDTYPE
         };
 
         bool init();
@@ -51,17 +59,13 @@ namespace PowerFeather
         LC70924F& getFuelGauge() {return _fuelGauge; }
 
     protected:
-
-        enum class InternalPin
+        enum class PrivatePin
         {
             SQT_3V3 = static_cast<gpio_num_t>(14),
             HDR_3V3 = static_cast<gpio_num_t>(4),
-            REGN = static_cast<gpio_num_t>(4),
-            ALARM = static_cast<gpio_num_t>(21),
-            INT = static_cast<gpio_num_t>(5),
+            EN2 = static_cast<gpio_num_t>(0),
             SCL0 = static_cast<gpio_num_t>(47),
             SDA0 = static_cast<gpio_num_t>(48),
-            EN2 = static_cast<gpio_num_t>(0)
         };
 
         // Input

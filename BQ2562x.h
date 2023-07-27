@@ -32,14 +32,15 @@ namespace PowerFeather
         BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
 
         template <typename T>
-        bool writeReg(uint8_t address, uint8_t start, uint8_t end, T value);
-        bool writeReg(uint8_t address, uint8_t bit, bool value);
+        bool writeReg(T address, uint8_t start, uint8_t end, T value);
         template <typename T>
-        bool readReg(uint8_t address, uint8_t start, uint8_t end, T& value);
-        bool readReg(uint8_t address, uint8_t bit, bool& value);
+        bool writeReg(T address, uint8_t bit, bool value);
         template <typename T>
-        bool readReg(uint8_t address, T& value);
-
+        bool readReg(T address, uint8_t start, uint8_t end, T& value);
+        template <typename T>
+        bool readReg(T address, uint8_t bit, bool& value);
+        template <typename T>
+        bool readReg(T address, T& value);
         
         bool setOTGMode(OTGMode mode);
         bool setOTGVoltage(float voltage);

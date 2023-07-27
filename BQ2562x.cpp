@@ -2,6 +2,8 @@
 
 namespace PowerFeather
 {
+	#define BYTE(x)		static_cast<uint8_t>(x)
+	#define SHORT(x)	static_cast<uint16_t>(x)
 	// Initialize the board
 	// batteryCapacity - advertised capacity of the battery
 	// chargeRate - charge rate of the battery expressed as fraction of the capacity, 
@@ -30,7 +32,7 @@ namespace PowerFeather
 	// enable 5V by default
 
 	template <typename T>
-	bool BQ2562x::writeReg(uint8_t reg, uint8_t start, uint8_t end, T value)
+	bool BQ2562x::writeReg(T reg, uint8_t start, uint8_t end, T value)
 	{
 		static_assert(sizeof(T) == 1 || sizeof(T) == 2);
 		assert(end < sizeof(T) * CHAR_BIT);
@@ -48,14 +50,14 @@ namespace PowerFeather
 		return res;
 	}
 
-	bool BQ2562x::writeReg(uint8_t address, uint8_t bit, bool value)
+	template <typename T>
+	bool BQ2562x::writeReg(T address, uint8_t bit, bool value)
 	{
-		return bit < CHAR_BIT ? writeReg(address, bit, bit, static_cast<uint8_t>(value))
-								: writeReg(address, bit, bit, static_cast<uint16_t>(value));
+		return writeReg(address, bit, bit, static_cast<T>(value));
 	}
 
 	template <typename T>
-	bool BQ2562x::readReg(uint8_t address, uint8_t start, uint8_t end, T &value)
+	bool BQ2562x::readReg(T address, uint8_t start, uint8_t end, T &value)
 	{
 		static_assert(sizeof(T) == 1 || sizeof(T) == 2);
 		assert(end < sizeof(T) * CHAR_BIT);
@@ -69,20 +71,19 @@ namespace PowerFeather
 		return res;
 	}
 
-	bool BQ2562x::readReg(uint8_t address, uint8_t bit, bool &value)
+	template <typename T>
+	bool BQ2562x::readReg(T address, uint8_t bit, bool &value)
 	{
-		uint8_t value1 = 0;
-		uint16_t value2 = 0;
-		bool res = bit < CHAR_BIT ? readReg(address, bit, bit, value1)
-								: readReg(address, bit, bit, value2);
-		value = value1 | value2;
+		T value2 = 0;
+		bool res = readReg(address, bit, bit, value2);
+		value = value2;
 		return res;
 	}
 
 	template <typename T>
-	bool BQ2562x::readReg(uint8_t address, T& value)
+	bool BQ2562x::readReg(T address, T& value)
 	{
-		return readReg(address, 0, (sizeof(value) * CHAR_BIT) - 1, value);
+		return readReg(static_cast<uint8_t>(address), 0, (sizeof(value) * CHAR_BIT) - 1, value);
 	}
 
 	bool BQ2562x::setChargeCurrent(uint16_t current)
@@ -90,31 +91,31 @@ namespace PowerFeather
 		current /= 40;
 		if (current >= 0x1 && current <= 0x32)
 		{
-			return writeReg(0x02, 5, 11, current);
+			return writeReg(SHORT(0x02), 5, 11, current);
 		}
 		return false;
 	}
 
 	bool BQ2562x::enableWD(bool enable)
 	{
-		return writeReg(0x16, 0, 1, static_cast<uint8_t>(enable));
+		return writeReg(BYTE(0x16), 0, 1, BYTE(enable));
 	}
 
 	bool BQ2562x::enableTS(bool enable)
 	{
-		return writeReg(0x1a, 7, !enable);
+		return writeReg(BYTE(0x1a), 7, !enable);
 	}
 
 	uint8_t BQ2562x::getFault()
 	{
 		uint8_t data;
-		readReg(0x1f, data);
+		readReg(BYTE(0x1f), data);
 		return data;
 	}
 
 	void BQ2562x::enableCharging(bool state)
 	{
-		writeReg(0x16, 5, state);
+		writeReg(BYTE(0x16), 5, state);
 	}
 
     bool BQ2562x::setOTGMode(BQ2562x::OTGMode mode)
@@ -132,7 +133,7 @@ namespace PowerFeather
     BQ2562x::VBUSStat BQ2562x::getVBUSStat()
     {
 		uint8_t value;
-		readReg(0x1e, 0, 2, value);
+		readReg(BYTE(0x1e), 0, 2, value);
 		if (value)
 		{
 			return VBUSStat::Adapter;
@@ -144,7 +145,7 @@ namespace PowerFeather
     BQ2562x::ChargeStat BQ2562x::getChargeStat()
     {
 		uint8_t value;
-		readReg(0x1e, 3, 4, value);
+		readReg(BYTE(0x1e), 3, 4, value);
 
 		ChargeStat res = ChargeStat::Terminated;
 
