@@ -19,39 +19,11 @@ namespace PowerFeather
             Battery,
         };
 
-        // Initialize the board
-        // batteryCapacity - advertised capacity of the battery
-        // chargeRate - charge rate of the battery expressed as fraction of the capacity, 
-        //              ex. 2000mAh, 0.5 charge rate = 1000mA charge current
-        //
-        // event handler - when significant events occur
-        //      - change in external power source
-        //      - enable pin pulled down low
-        //      - charging started/stopped
-        //      - temperature too high or too low (hardware set)
-        //      - battery state of charge low
-        //      - input current exceeded
-        //      - charge current exceeded
-        //
-        //  charger status
-        //      - charging changed
-        //      - vbus changed
-        //  charger fault
-        //      - bat overvoltage or overcurrent
-        //      - sys overvoltage or short
-        //      - otg overvoltage,
-        //      - tshut thermal shutdown
-        //
-        // take OCV for gauge, then enable charging
-        // enable 3V3 by default
-        // enable 5V by default
-        Board(uint16_t batteryCapacity = 0, bool useTSPin = false);
+        Board();
 
         bool init();
-
         void enableHeader3V3(bool enable);
         void enableStemma3V3(bool enable);
-        bool enableHeader5VOnBattery(bool enable);
         bool getEnablePin();
         void setEnablePin(bool value);
 

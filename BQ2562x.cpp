@@ -2,6 +2,33 @@
 
 namespace PowerFeather
 {
+	// Initialize the board
+	// batteryCapacity - advertised capacity of the battery
+	// chargeRate - charge rate of the battery expressed as fraction of the capacity, 
+	//              ex. 2000mAh, 0.5 charge rate = 1000mA charge current
+	//
+	// event handler - when significant events occur
+	//      - change in external power source
+	//      - enable pin pulled down low
+	//      - charging started/stopped
+	//      - temperature too high or too low (hardware set)
+	//      - battery state of charge low
+	//      - input current exceeded
+	//      - charge current exceeded
+	//
+	//  charger status
+	//      - charging changed
+	//      - vbus changed
+	//  charger fault
+	//      - bat overvoltage or overcurrent
+	//      - sys overvoltage or short
+	//      - otg overvoltage,
+	//      - tshut thermal shutdown
+	//
+	// take OCV for gauge, then enable charging
+	// enable 3V3 by default
+	// enable 5V by default
+
 	template <typename T>
 	bool BQ2562x::writeReg(uint8_t reg, uint8_t start, uint8_t end, T value)
 	{
@@ -70,7 +97,7 @@ namespace PowerFeather
 
 	bool BQ2562x::enableWD(bool enable)
 	{
-		return writeReg(0x16, 0, 1, static_cast<uint8_t>(enable ? 0x1 : 0x0));
+		return writeReg(0x16, 0, 1, static_cast<uint8_t>(enable));
 	}
 
 	bool BQ2562x::enableTS(bool enable)
@@ -89,4 +116,16 @@ namespace PowerFeather
 	{
 		writeReg(0x16, 5, state);
 	}
+
+    bool BQ2562x::setOTGMode(BQ2562x::OTGMode mode)
+    {
+        // return _charger.writeReg(0x18, 6, enable);
+		return false;
+    }
+
+    bool BQ2562x::setOTGVoltage(float voltage)
+    {
+        // return _charger.writeReg(0x18, 6, enable);
+		return false;
+    }
 }

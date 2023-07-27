@@ -14,16 +14,11 @@ namespace PowerFeather
     static constexpr uint32_t I2C_SPEED = 400000;
     static constexpr uint32_t I2C_TIMEOUT = 1000;
 
-    Board::Board(uint16_t batteryCapacity, bool useTSPin)
+    Board::Board()
     {
-        this->_batteryCapacity = batteryCapacity;
-        this->_useTSPin = useTSPin;
+
     }
 
-    bool Board::enableHeader5VOnBattery(bool enable)
-    {
-        return _charger.writeReg(0x18, 6, enable);
-    }
 
     bool Board::_initRTCPin(int pin, rtc_gpio_mode_t mode)
     {
@@ -55,7 +50,8 @@ namespace PowerFeather
         if (reset_reason == RESET_REASON_CHIP_POWER_ON)
         {
             _charger.enableCharging(false);
-            _charger.enableTS(_useTSPin);
+            _charger.enableTS(false);
+            _charger.enableWD(false);
         }
 
         if (reset_reason == RESET_REASON_CHIP_POWER_ON || 
@@ -78,13 +74,6 @@ namespace PowerFeather
         _initDigitalPin(Board::GaugeAlarmPin, GPIO_MODE_INPUT);
         _initDigitalPin(Board::GaugeRegPin, GPIO_MODE_INPUT);
         _initDigitalPin(Board::VDDTypePin, GPIO_MODE_INPUT);
-
-        if (reset_reason == RESET_REASON_CHIP_POWER_ON)
-        {
-            _charger.enableWD(false);
-            _charger.setChargeCurrent(0.5f * _batteryCapacity);
-            enableHeader5VOnBattery(false);
-        }
 
         return true;
     }

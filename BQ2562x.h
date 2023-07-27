@@ -8,6 +8,13 @@ namespace PowerFeather
     class BQ2562x
     {
     public:
+        enum class OTGMode
+        {
+            None,
+            Boost,
+            Bypass
+        };
+
         BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
 
         template <typename T>
@@ -19,12 +26,15 @@ namespace PowerFeather
         template <typename T>
         bool readReg(uint8_t address, T& value);
 
+        bool setOTGMode(BQ2562x::OTGMode mode);
+        bool setOTGVoltage(float voltage);
         bool setChargeCurrent(uint16_t current);
         void enableCharging(bool state);
         bool enableSTAT(bool enable);
         bool enableTS(bool enable);
-        uint8_t getFault();
         bool enableWD(bool enable);
+        uint8_t getFault();
+
     private:
         static constexpr uint8_t _address = 0x6a;
         MasterI2C& _i2c;

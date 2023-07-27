@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2010-2022 Espressif Systems (Shanghai) CO LTD
- *
- * SPDX-License-Identifier: CC0-1.0
- */
-
 #include <stdio.h>
 #include <sdkconfig.h>
 
@@ -11,7 +5,7 @@
 
 #include <Board.h>
 
-PowerFeather::Board board(320);
+PowerFeather::Board board;
 
 extern "C" void app_main(void)
 {
