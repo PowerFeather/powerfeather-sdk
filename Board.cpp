@@ -1,5 +1,6 @@
 #include <climits>
 
+#include <soc/reset_reasons.h>
 #include <driver/i2c.h>
 #include <SparkFunBQ27441.h>
 
@@ -49,38 +50,9 @@ namespace PowerFeather
         return false;
     }
 
-    bool Board::setBatteryModeHeader5V(Board::BatteryModeHeader5V mode)
+    bool Board::enableHeader5VOnBattery(bool enable)
     {
-        bool res = false;
-        switch (mode)
-        {
-        case Board::BatteryModeHeader5V::None:
-            res = _setRegisterValue(0x18, 6, 0b0 & _setRegisterValue(0x18, 7, 0b0));
-            break;
-
-        case Board::BatteryModeHeader5V::Bypass:
-            res = _setRegisterValue(0x18, 6, 0b0) & _setRegisterValue(0x18, 7, 0b1);
-            break;
-
-        case Board::BatteryModeHeader5V::Reg:
-            res = _setRegisterValue(0x18, 6, 0b1) & _setRegisterValue(0x18, 7, 0b1);
-            break;
-
-        default:
-            break;
-        }
-        return res;
-    }
-
-    bool Board::setVoltageHeader5V(float voltage)
-    {
-        uint16_t volts = voltage * 1000;
-        if (volts >= 3840 && volts <= 5040)
-        {
-            uint16_t volts2 = volts / 80;
-            return _setRegisterValue(0x0C, 6, 12, volts2);
-        }
-        return false;
+        return _setRegisterValue(0x18, 6, enable);
     }
 
     bool Board::_setRegisterValue(uint8_t address, uint8_t bit, bool value)
@@ -190,6 +162,8 @@ namespace PowerFeather
 
     bool Board::init()
     {
+        soc_reset_reason_t reset_reason = esp_rom_get_reset_reason(0);
+
         // Initialize I2C bus
         int i2c_master_port = I2C_NUM;
 
@@ -213,8 +187,27 @@ namespace PowerFeather
             return false;
         }
 
-        // Prioritize charging disable after I2C initialization
-        enableCharging(false);
+        if (reset_reason == RESET_REASON_CHIP_POWER_ON)
+        {
+            enableCharging(false);
+            _enableChargerTS(_useTSPin);
+
+        }
+
+        if (reset_reason == RESET_REASON_CHIP_POWER_ON || 
+            reset_reason == RESET_REASON_CHIP_BROWN_OUT ||
+            reset_reason == RESET_REASON_CHIP_SUPER_WDT ||
+            reset_reason == RESET_REASON_SYS_RTC_WDT || 
+            reset_reason == RESET_REASON_SYS_SUPER_WDT ||
+            reset_reason == RESET_REASON_SYS_CLK_GLITCH)
+        {
+            _initRTCPin(Board::EnableHeader3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
+            _initRTCPin(Board::EnableStemma3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
+            _initRTCPin(Board::EnablePin, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
+
+            enableHeader3V3(true);
+            enableStemma3V3(true);
+        }
 
         // Initialize IO pins
         _initDigitalPin(Board::ChargerIntPin, GPIO_MODE_INPUT);
@@ -222,21 +215,12 @@ namespace PowerFeather
         _initDigitalPin(Board::GaugeRegPin, GPIO_MODE_INPUT);
         _initDigitalPin(Board::VDDTypePin, GPIO_MODE_INPUT);
 
-        _initRTCPin(Board::EnableHeader3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _initRTCPin(Board::EnableStemma3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
-
-        _initRTCPin(Board::EnablePin, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
-
-        // Rest of initialization
-        _enableChargerTS(_useTSPin);
-        _enableChargerWd(false);
-        setChargeFactor(0.5f);
-
-        setBatteryModeHeader5V(Board::BatteryModeHeader5V::None);
-        setVoltageHeader5V(5.04);
-
-        enableHeader3V3(true);
-        enableStemma3V3(true);
+        if (reset_reason == RESET_REASON_CHIP_POWER_ON)
+        {
+            _enableChargerWd(false);
+            setChargeFactor(0.5f);
+            enableHeader5VOnBattery(false);
+        }
 
         return true;
     }

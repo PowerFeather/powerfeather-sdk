@@ -27,13 +27,6 @@ namespace PowerFeather
             Stemma3V3
         };
 
-        enum class BatteryModeHeader5V
-        {
-            None, // Disabled when PowerInput = Battery
-            Bypass, // Battery value when 
-            Reg,
-        };
-
         // Initialize the board
         // batteryCapacity - advertised capacity of the battery
         // chargeRate - charge rate of the battery expressed as fraction of the capacity, 
@@ -66,12 +59,10 @@ namespace PowerFeather
 
         bool init();
 
-        bool setBatteryModeHeader5V(Board::BatteryModeHeader5V mode);
-        bool setVoltageHeader5V(float voltage);
-
         bool setChargeFactor(float factor);
         void enableHeader3V3(bool enable);
         void enableStemma3V3(bool enable);
+        bool enableHeader5VOnBattery(bool enable);
         bool getEnablePin();
         void setEnablePin(bool value);
         void enableCharging(bool state);
