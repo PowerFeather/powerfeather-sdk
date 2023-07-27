@@ -18,28 +18,19 @@ static constexpr uint8_t BQ2562x_ADDR = 0x6a;
 
 namespace PowerFeather
 {
-    bool Board::_readI2C(uint8_t address, uint8_t reg, uint8_t &data)
-    {
-        return i2c_master_write_read_device(I2C_NUM, address, &reg, sizeof(reg), &data, 1, pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
-    }
-
-    bool Board::_writeI2C(uint8_t address, uint8_t reg, uint8_t data)
-    {
-        uint8_t data2[] = {reg, data};
-        return i2c_master_write_to_device(I2C_NUM, address, data2, sizeof(data2), pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
-    }
-
-    bool Board::_readI2C(uint8_t address, uint8_t reg, uint16_t &data)
+    template <typename T>
+    bool Board::_readI2C(uint8_t address, uint8_t reg, T &data)
     {
         uint8_t *data2 = reinterpret_cast<uint8_t*>(&data);
         return i2c_master_write_read_device(I2C_NUM, address, &reg, sizeof(reg), data2, sizeof(data), pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
     }
 
-    bool Board::_writeI2C(uint8_t address, uint8_t reg, uint16_t data)
+    template <typename T>
+    bool Board::_writeI2C(uint8_t address, uint8_t reg, T data)
     {
-        uint8_t *data2 = reinterpret_cast<uint8_t*>(&data);
-        uint8_t data3[] = {reg, data2[0], data2[1]};
-        return i2c_master_write_to_device(I2C_NUM, address, data3, sizeof(data3), pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
+        uint8_t data2[sizeof(reg) + sizeof(data)] = { reg };
+        memcpy(&data2[sizeof(reg)], &data, sizeof(data));
+        return i2c_master_write_to_device(I2C_NUM, address, data2, sizeof(data2), pdMS_TO_TICKS(I2C_TIMEOUT)) == ESP_OK;
     }
 
     Board::Board(uint16_t batteryCapacity, bool useTSPin)
@@ -74,7 +65,7 @@ namespace PowerFeather
         case Board::BatteryModeHeader5V::Reg:
             res = _setRegisterValue(0x18, 6, 0b1) & _setRegisterValue(0x18, 7, 0b1);
             break;
-        
+
         default:
             break;
         }
@@ -94,7 +85,7 @@ namespace PowerFeather
 
     bool Board::_setRegisterValue(uint8_t address, uint8_t bit, bool value)
     {
-        return bit < CHAR_BIT ? _setRegisterValue(address, bit, bit, static_cast<uint8_t>(value)) 
+        return bit < CHAR_BIT ? _setRegisterValue(address, bit, bit, static_cast<uint8_t>(value))
                               : _setRegisterValue(address, bit, bit, static_cast<uint16_t>(value));
     }
 
@@ -184,7 +175,7 @@ namespace PowerFeather
         {
             return false;
         }
-        
+
         if ((res = i2c_driver_install(i2c_master_port, i2c_conf.mode, 0, 0, 0)) != ESP_OK)
         {
             return false;

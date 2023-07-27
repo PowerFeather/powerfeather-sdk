@@ -94,27 +94,23 @@ namespace PowerFeather
         static constexpr gpio_num_t SCL0Pin = static_cast<gpio_num_t>(47);
         static constexpr gpio_num_t SDA0Pin = static_cast<gpio_num_t>(48);
     private:
-
         uint16_t _batteryCapacity;
         bool _useTSPin;
-        uint8_t _i2cNum;
+
+        template <typename T>
+        bool _readI2C(uint8_t address, uint8_t reg, T &data);
+        template <typename T>
+        bool _writeI2C(uint8_t address, uint8_t reg, T data);
+
+        template <typename T>
+        bool _setRegisterValue(uint8_t address, uint8_t start, uint8_t end, T value);
+        bool _setRegisterValue(uint8_t address, uint8_t bit, bool value);
+        bool _setRegisterValue(uint8_t address, uint16_t value);
 
         bool _enableChargerStatLed(bool enable);
         bool _enableChargerTS(bool enable);
         uint8_t _getChargerFault();
         bool _enableChargerWd(bool enable);
-
-        bool _readI2C(uint8_t address, uint8_t reg, uint8_t &data);
-        bool _writeI2C(uint8_t address, uint8_t reg, uint8_t data);
-        bool _readI2C(uint8_t address, uint8_t reg, uint16_t &data);
-        bool _writeI2C(uint8_t address, uint8_t reg, uint16_t data);
-        bool _setRegisterValue(uint8_t address, uint8_t bit, bool value);
-
-        template <typename T>
-        bool _setRegisterValue(uint8_t address, uint8_t start, uint8_t end, T value);
-
-        bool _setRegisterValue(uint8_t address, uint16_t value);
-
         bool _initRTCPin(int pin, rtc_gpio_mode_t mode);
         bool _initDigitalPin(int pin, gpio_mode_t mode);
         void _setRTCPin(gpio_num_t pin, bool value);
