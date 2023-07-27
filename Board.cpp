@@ -6,14 +6,14 @@
 
 #include <Board.h>
 
-static_assert(CHAR_BIT == 8, "Unsupported architecture");
-
-static constexpr int I2C_NUM = 0;
-static constexpr uint32_t I2C_SPEED = 400000;
-static constexpr uint32_t I2C_TIMEOUT = 1000;
-
 namespace PowerFeather
 {
+    static_assert(CHAR_BIT == 8, "Unsupported architecture");
+
+    static constexpr int I2C_NUM = 0;
+    static constexpr uint32_t I2C_SPEED = 400000;
+    static constexpr uint32_t I2C_TIMEOUT = 1000;
+
     Board::Board(uint16_t batteryCapacity, bool useTSPin)
     {
         this->_batteryCapacity = batteryCapacity;
