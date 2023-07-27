@@ -22,10 +22,11 @@ namespace PowerFeather
             uint32_t _port;
         };
 
-        class Charger
+        class BQ2562x
         {
         public:
-            Charger(MasterI2C &i2c):_i2c(i2c) {}
+            BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
+
             template <typename T>
             bool writeReg(uint8_t address, uint8_t start, uint8_t end, T value);
             bool writeReg(uint8_t address, uint8_t bit, bool value);
@@ -34,15 +35,22 @@ namespace PowerFeather
             bool readReg(uint8_t address, uint8_t bit, bool& value);
             template <typename T>
             bool readReg(uint8_t address, T& value);
+
+            bool setChargeCurrent(uint16_t current);
+            void enableCharging(bool state);
+            bool enableSTAT(bool enable);
+            bool enableTS(bool enable);
+            uint8_t getFault();
+            bool enableWD(bool enable);
         private:
             static constexpr uint8_t _address = 0x6a;
             MasterI2C& _i2c;
         };
 
-        class FuelGauge
+        class LC70924F
         {
         public:
-            FuelGauge(MasterI2C& i2c):_i2c(i2c) {}
+            LC70924F(MasterI2C& i2c):_i2c(i2c) {}
             bool writeCmd(uint8_t cmd, uint16_t value);
             bool readCmd(uint8_t cmd, uint16_t& value);
         private:
@@ -93,17 +101,15 @@ namespace PowerFeather
 
         bool init();
 
-        bool setChargeFactor(float factor);
         void enableHeader3V3(bool enable);
         void enableStemma3V3(bool enable);
         bool enableHeader5VOnBattery(bool enable);
         bool getEnablePin();
         void setEnablePin(bool value);
-        void enableCharging(bool state);
         void enableGauge(bool enable);
 
-        Charger& getCharger() { return _charger; }
-        FuelGauge& getFuelGauge() {return _fuelGauge; }
+        BQ2562x& getCharger() { return _charger; }
+        LC70924F& getFuelGauge() {return _fuelGauge; }
 
     protected:
         // Input
@@ -124,14 +130,13 @@ namespace PowerFeather
 
     private:
         MasterI2C _masterI2C {};
-        Charger _charger {_masterI2C};
-        FuelGauge _fuelGauge {_masterI2C};
+        BQ2562x _charger {_masterI2C};
+        LC70924F _fuelGauge {_masterI2C};
 
         template <typename T>
         bool _readI2C(uint8_t address, uint8_t reg, T &data);
         template <typename T>
         bool _writeI2C(uint8_t address, uint8_t reg, T data);
-
 
         uint16_t _batteryCapacity;
         bool _useTSPin;
@@ -148,10 +153,6 @@ namespace PowerFeather
         template <typename T>
         bool _getRegisterValue(uint8_t address, T &value);
 
-        bool _enableChargerStatLed(bool enable);
-        bool _enableChargerTS(bool enable);
-        uint8_t _getChargerFault();
-        bool _enableChargerWd(bool enable);
         bool _initRTCPin(int pin, rtc_gpio_mode_t mode);
         bool _initDigitalPin(int pin, gpio_mode_t mode);
         void _setRTCPin(gpio_num_t pin, bool value);

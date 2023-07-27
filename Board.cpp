@@ -58,7 +58,7 @@ namespace PowerFeather
     }
 
     template <typename T>
-    bool Board::Charger::writeReg(uint8_t reg, uint8_t start, uint8_t end, T value)
+    bool Board::BQ2562x::writeReg(uint8_t reg, uint8_t start, uint8_t end, T value)
     {
         static_assert(sizeof(T) == 1 || sizeof(T) == 2);
         assert(end < sizeof(T) * CHAR_BIT);
@@ -76,14 +76,14 @@ namespace PowerFeather
         return res;
     }
 
-    bool Board::Charger::writeReg(uint8_t address, uint8_t bit, bool value)
+    bool Board::BQ2562x::writeReg(uint8_t address, uint8_t bit, bool value)
     {
         return bit < CHAR_BIT ? writeReg(address, bit, bit, static_cast<uint8_t>(value))
                               : writeReg(address, bit, bit, static_cast<uint16_t>(value));
     }
 
     template <typename T>
-    bool Board::Charger::readReg(uint8_t address, uint8_t start, uint8_t end, T &value)
+    bool Board::BQ2562x::readReg(uint8_t address, uint8_t start, uint8_t end, T &value)
     {
         static_assert(sizeof(T) == 1 || sizeof(T) == 2);
         assert(end < sizeof(T) * CHAR_BIT);
@@ -97,7 +97,7 @@ namespace PowerFeather
         return res;
     }
 
-    bool Board::Charger::readReg(uint8_t address, uint8_t bit, bool &value)
+    bool Board::BQ2562x::readReg(uint8_t address, uint8_t bit, bool &value)
     {
         uint8_t value1 = 0;
         uint16_t value2 = 0;
@@ -108,23 +108,42 @@ namespace PowerFeather
     }
 
     template <typename T>
-    bool Board::Charger::readReg(uint8_t address, T& value)
+    bool Board::BQ2562x::readReg(uint8_t address, T& value)
     {
         return readReg(address, 0, (sizeof(value) * CHAR_BIT) - 1, value);
     }
 
+    bool Board::BQ2562x::setChargeCurrent(uint16_t current)
+    {
+        current /= 40;
+        if (current >= 0x1 && current <= 0x32)
+        {
+            return writeReg(0x02, 5, 11, current);
+        }
+        return false;
+    }
 
+    bool Board::BQ2562x::enableWD(bool enable)
+    {
+        return writeReg(0x16, 0, 1, static_cast<uint8_t>(enable ? 0x1 : 0x0));
+    }
 
+    bool Board::BQ2562x::enableTS(bool enable)
+    {
+        return writeReg(0x1a, 7, !enable);
+    }
 
+    uint8_t Board::BQ2562x::getFault()
+    {
+        uint8_t data;
+        readReg(0x1f, data);
+        return data;
+    }
 
-
-
-
-
-
-
-
-
+    void Board::BQ2562x::enableCharging(bool state)
+    {
+        writeReg(0x16, 5, state);
+    }
 
 
     Board::Board(uint16_t batteryCapacity, bool useTSPin)
@@ -133,29 +152,9 @@ namespace PowerFeather
         this->_useTSPin = useTSPin;
     }
 
-    bool Board::setChargeFactor(float factor)
-    {
-        uint16_t current = (_batteryCapacity * factor) / 40;
-        if (current >= 0x1 && current <= 0x32)
-        {
-            return _charger.writeReg(0x02, 5, 11, current);
-        }
-        return false;
-    }
-
     bool Board::enableHeader5VOnBattery(bool enable)
     {
         return _charger.writeReg(0x18, 6, enable);
-    }
-
-    bool Board::_enableChargerWd(bool enable)
-    {
-        return _charger.writeReg(0x16, 0, 1, static_cast<uint8_t>(enable ? 0x1 : 0x0));
-    }
-
-    bool Board::_enableChargerTS(bool enable)
-    {
-        return _charger.writeReg(0x1a, 7, !enable);
     }
 
     bool Board::_initRTCPin(int pin, rtc_gpio_mode_t mode)
@@ -179,13 +178,6 @@ namespace PowerFeather
         return true;
     }
 
-    uint8_t Board::_getChargerFault()
-    {
-        uint8_t data;
-        _charger.readReg(0x1f, data);
-        return data;
-    }
-
     bool Board::init()
     {
         soc_reset_reason_t reset_reason = esp_rom_get_reset_reason(0);
@@ -194,8 +186,8 @@ namespace PowerFeather
 
         if (reset_reason == RESET_REASON_CHIP_POWER_ON)
         {
-            enableCharging(false);
-            _enableChargerTS(_useTSPin);
+            _charger.enableCharging(false);
+            _charger.enableTS(_useTSPin);
         }
 
         if (reset_reason == RESET_REASON_CHIP_POWER_ON || 
@@ -221,8 +213,8 @@ namespace PowerFeather
 
         if (reset_reason == RESET_REASON_CHIP_POWER_ON)
         {
-            _enableChargerWd(false);
-            setChargeFactor(0.5f);
+            _charger.enableWD(false);
+            _charger.setChargeCurrent(0.5f * _batteryCapacity);
             enableHeader5VOnBattery(false);
         }
 
@@ -277,15 +269,5 @@ namespace PowerFeather
     void Board::setEnablePin(bool value)
     {
         _setRTCPin(Board::EnablePin, value);
-    }
-
-    void Board::enableCharging(bool state)
-    {
-        _charger.writeReg(0x16, 5, state);
-    }
-
-    void Board::enableGauge(bool enable)
-    {
-
     }
 }
