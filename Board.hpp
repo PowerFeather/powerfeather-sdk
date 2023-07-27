@@ -106,7 +106,6 @@ namespace PowerFeather
         bool enableHeader5VOnBattery(bool enable);
         bool getEnablePin();
         void setEnablePin(bool value);
-        void enableGauge(bool enable);
 
         BQ2562x& getCharger() { return _charger; }
         LC70924F& getFuelGauge() {return _fuelGauge; }
@@ -133,25 +132,8 @@ namespace PowerFeather
         BQ2562x _charger {_masterI2C};
         LC70924F _fuelGauge {_masterI2C};
 
-        template <typename T>
-        bool _readI2C(uint8_t address, uint8_t reg, T &data);
-        template <typename T>
-        bool _writeI2C(uint8_t address, uint8_t reg, T data);
-
         uint16_t _batteryCapacity;
         bool _useTSPin;
-
-        template <typename T>
-        bool _setRegisterValue(uint8_t address, uint8_t start, uint8_t end, T value);
-        bool _setRegisterValue(uint8_t address, uint8_t bit, bool value);
-        template <typename T>
-        bool _setRegisterValue(uint8_t address, T value);
-
-        template <typename T>
-        bool _getRegisterValue(uint8_t address, uint8_t start, uint8_t end, T &value);
-        bool _getRegisterValue(uint8_t address, uint8_t bit, bool &value);
-        template <typename T>
-        bool _getRegisterValue(uint8_t address, T &value);
 
         bool _initRTCPin(int pin, rtc_gpio_mode_t mode);
         bool _initDigitalPin(int pin, gpio_mode_t mode);
