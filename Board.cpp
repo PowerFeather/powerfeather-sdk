@@ -108,7 +108,8 @@ namespace PowerFeather
         return res;
     }
 
-    bool Board::_setRegisterValue(uint8_t address, uint16_t value)
+    template <typename T>
+    bool Board::_setRegisterValue(uint8_t address, T value)
     {
         return _setRegisterValue(address, 0, (sizeof(value) * CHAR_BIT) - 1, value);
     }
@@ -116,6 +117,37 @@ namespace PowerFeather
     bool Board::_enableChargerStatLed(bool enable)
     {
         return _setRegisterValue(0x15, 7, !enable);
+    }
+
+    template <typename T>
+    bool Board::_getRegisterValue(uint8_t address, uint8_t start, uint8_t end, T &value)
+    {
+        static_assert(sizeof(T) == 1 || sizeof(T) == 2);
+        assert(end < sizeof(T) * CHAR_BIT);
+        assert(start <= end);
+        T data = 0;
+        bool res = this->_readI2C(BQ2562x_ADDR, address, data);
+        if (res)
+        {
+            value = (data << (((sizeof(value) * CHAR_BIT) - 1) - end)) >> start;
+        }
+        return res;
+    }
+
+    bool Board::_getRegisterValue(uint8_t address, uint8_t bit, bool &value)
+    {
+        uint8_t value1 = 0;
+        uint16_t value2 = 0;
+        bool res = bit < CHAR_BIT ? _getRegisterValue(address, bit, bit, value1)
+                              : _getRegisterValue(address, bit, bit, value2);
+        value = value1 | value2;
+        return res;
+    }
+
+    template <typename T>
+    bool Board::_getRegisterValue(uint8_t address, T &value)
+    {
+        return _getRegisterValue(address, 0, (sizeof(value) * CHAR_BIT) - 1, value);
     }
 
     bool Board::_enableChargerWd(bool enable)
@@ -152,7 +184,7 @@ namespace PowerFeather
     uint8_t Board::_getChargerFault()
     {
         uint8_t data;
-        this->_readI2C(BQ2562x_ADDR, 0x1f, data);
+        _getRegisterValue(0x1f, data);
         return data;
     }
 

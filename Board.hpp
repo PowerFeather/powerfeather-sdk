@@ -105,7 +105,14 @@ namespace PowerFeather
         template <typename T>
         bool _setRegisterValue(uint8_t address, uint8_t start, uint8_t end, T value);
         bool _setRegisterValue(uint8_t address, uint8_t bit, bool value);
-        bool _setRegisterValue(uint8_t address, uint16_t value);
+        template <typename T>
+        bool _setRegisterValue(uint8_t address, T value);
+
+        template <typename T>
+        bool _getRegisterValue(uint8_t address, uint8_t start, uint8_t end, T &value);
+        bool _getRegisterValue(uint8_t address, uint8_t bit, bool &value);
+        template <typename T>
+        bool _getRegisterValue(uint8_t address, T &value);
 
         bool _enableChargerStatLed(bool enable);
         bool _enableChargerTS(bool enable);
