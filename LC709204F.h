@@ -12,7 +12,7 @@ namespace PowerFeather
         bool writeCmd(uint8_t cmd, uint16_t value);
         bool readCmd(uint8_t cmd, uint16_t& value);
     private:
-        static constexpr uint8_t _address = 0x6a;
+        static constexpr uint8_t _i2c_address = 0x6a;
         MasterI2C& _i2c;
     };
 }

@@ -38,14 +38,14 @@ namespace PowerFeather
 		assert(end < sizeof(T) * CHAR_BIT);
 		assert(start <= end);
 		T data = 0;
-		bool res = _i2c.read(_address, reg, data);
+		bool res = _i2c.read(_i2c_address, reg, data);
 		if (res)
 		{
 			uint8_t bits = end - start + 1;
 			T mask = ((0b1 << bits) - 1) << start;
 			value <<= start;
 			data = (data & ~mask) | (mask & value);
-			res = _i2c.write(_address, reg, data);
+			res = _i2c.write(_i2c_address, reg, data);
 		}
 		return res;
 	}

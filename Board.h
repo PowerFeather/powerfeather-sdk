@@ -16,57 +16,51 @@ namespace PowerFeather
             Battery,
         };
 
-        enum class Pin
+        class Pin
         {
-            A0 =   static_cast<gpio_num_t>(5),
-            A1 =   static_cast<gpio_num_t>(5),
-            A2 =   static_cast<gpio_num_t>(5),
-            A3 =   static_cast<gpio_num_t>(5),
-            A4 =   static_cast<gpio_num_t>(5),
-            A5 =   static_cast<gpio_num_t>(5),
-            A6 =   static_cast<gpio_num_t>(5),
-            D6 =   static_cast<gpio_num_t>(5),
-            D7 =   static_cast<gpio_num_t>(5),
-            D8 =   static_cast<gpio_num_t>(5),
-            D9 =   static_cast<gpio_num_t>(5),
-            D10 =  static_cast<gpio_num_t>(5),
-            D11 =  static_cast<gpio_num_t>(5),
-            D12 =  static_cast<gpio_num_t>(5),
-            D13 =  static_cast<gpio_num_t>(5),
-            SCL =  static_cast<gpio_num_t>(5),
-            SDA =  static_cast<gpio_num_t>(5),
-            LED =  static_cast<gpio_num_t>(6),
-            BTN =  static_cast<gpio_num_t>(0),
+        public:
+            static constexpr gpio_num_t A0 =   GPIO_NUM_5;
+            static constexpr gpio_num_t A1 =   GPIO_NUM_5;
+            static constexpr gpio_num_t A2 =   GPIO_NUM_5;
+            static constexpr gpio_num_t A3 =   GPIO_NUM_5;
+            static constexpr gpio_num_t A4 =   GPIO_NUM_5;
+            static constexpr gpio_num_t A5 =   GPIO_NUM_5;
+            static constexpr gpio_num_t A6 =   GPIO_NUM_5;
+            static constexpr gpio_num_t D6 =   GPIO_NUM_5;
+            static constexpr gpio_num_t D7 =   GPIO_NUM_5;
+            static constexpr gpio_num_t D8 =   GPIO_NUM_5;
+            static constexpr gpio_num_t D9 =   GPIO_NUM_5;
+            static constexpr gpio_num_t D10 =  GPIO_NUM_5;
+            static constexpr gpio_num_t D11 =  GPIO_NUM_5;
+            static constexpr gpio_num_t D12 =  GPIO_NUM_5;
+            static constexpr gpio_num_t D13 =  GPIO_NUM_5;
+            static constexpr gpio_num_t SCL =  GPIO_NUM_5;
+            static constexpr gpio_num_t SDA =  GPIO_NUM_5;
+            static constexpr gpio_num_t LED =  GPIO_NUM_6;
+            static constexpr gpio_num_t BTN =  GPIO_NUM_0;
         };
 
-        enum class InterruptPin
+        class InputPin
         {
-            EN =    static_cast<gpio_num_t>(5), // Board EN
-            REGN =  static_cast<gpio_num_t>(4), // FuelGauge REGN
-            ALARM = static_cast<gpio_num_t>(21), // FuelGauge ALARM
-            INT =   static_cast<gpio_num_t>(5), // Charger INT
-            VDDTYPE = static_cast<gpio_num_t>(4), // Board VDDTYPE
+        public:
+            static constexpr gpio_num_t EN =      GPIO_NUM_5; // Board EN
+            static constexpr gpio_num_t REGN =    GPIO_NUM_4; // FuelGauge REGN
+            static constexpr gpio_num_t ALARM =   GPIO_NUM_21; // FuelGauge ALARM
+            static constexpr gpio_num_t INT =     GPIO_NUM_5; // Charger INT
+            static constexpr gpio_num_t VDDTYPE = GPIO_NUM_4; // Board VDDTYPE
         };
+
 
         bool init();
         void enableHeader3V3(bool enable);
         void enableStemma3V3(bool enable);
-        bool getEnablePin();
         void setEnablePin(bool value);
         PowerInput getPowerInput();
 
         BQ2562x& getCharger() { return _charger; }
-        LC70924F& getFuelGauge() {return _fuelGauge; }
+        LC70924F& getFuelGauge() { return _fuelGauge; }
 
     protected:
-        enum class PrivatePin
-        {
-            SQT_3V3 = static_cast<gpio_num_t>(14),
-            HDR_3V3 = static_cast<gpio_num_t>(4),
-            EN2 = static_cast<gpio_num_t>(0),
-            SCL0 = static_cast<gpio_num_t>(47),
-            SDA0 = static_cast<gpio_num_t>(48),
-        };
 
         // Input
         static constexpr gpio_num_t ChargerIntPin = static_cast<gpio_num_t>(5);
@@ -81,10 +75,17 @@ namespace PowerFeather
         // Input + Output
         static constexpr gpio_num_t EnablePin = static_cast<gpio_num_t>(13);
 
-        static constexpr gpio_num_t SCL0Pin = static_cast<gpio_num_t>(47);
-        static constexpr gpio_num_t SDA0Pin = static_cast<gpio_num_t>(48);
-
     private:
+        class InternalPin
+        {
+        public:
+            static constexpr gpio_num_t SQT_3V3 = GPIO_NUM_14;
+            static constexpr gpio_num_t HDR_3V3 = GPIO_NUM_4;
+            static constexpr gpio_num_t EN2 =     GPIO_NUM_0;
+            static constexpr gpio_num_t SCL0 =    GPIO_NUM_47;
+            static constexpr gpio_num_t SDA0 =    GPIO_NUM_4;
+        };
+
         static constexpr int _i2c_port = 0;
         static constexpr uint32_t _i2c_freq = 400000;
         static constexpr uint32_t _i2c_timeout = 1000;
@@ -93,8 +94,8 @@ namespace PowerFeather
         BQ2562x _charger {_masterI2C};
         LC70924F _fuelGauge {_masterI2C};
 
-        bool _initRTCPin(int pin, rtc_gpio_mode_t mode);
-        bool _initDigitalPin(int pin, gpio_mode_t mode);
+        bool _initRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
+        bool _initDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         void _setRTCPin(gpio_num_t pin, bool value);
     };
 }

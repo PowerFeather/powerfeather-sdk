@@ -10,15 +10,15 @@ namespace PowerFeather
 {
     static_assert(CHAR_BIT == 8, "Unsupported architecture");
 
-    bool Board::_initRTCPin(int pin, rtc_gpio_mode_t mode)
+    bool Board::_initRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode)
     {
-        rtc_gpio_init(static_cast<gpio_num_t>(pin));
-        rtc_gpio_set_direction(static_cast<gpio_num_t>(pin), mode);
-        rtc_gpio_set_direction_in_sleep(static_cast<gpio_num_t>(pin), mode);
+        rtc_gpio_init(pin);
+        rtc_gpio_set_direction(pin, mode);
+        rtc_gpio_set_direction_in_sleep(pin, mode);
         return true;
     }
 
-    bool Board::_initDigitalPin(int pin, gpio_mode_t mode)
+    bool Board::_initDigitalPin(gpio_num_t pin, gpio_mode_t mode)
     {
         gpio_config_t io_conf = {};
         memset(&io_conf, 0, sizeof(io_conf));
@@ -35,7 +35,7 @@ namespace PowerFeather
     {
         soc_reset_reason_t reset_reason = esp_rom_get_reset_reason(0);
 
-        _masterI2C.init(_i2c_port, Board::SDA0Pin, Board::SCL0Pin, _i2c_freq);
+        _masterI2C.init(_i2c_port, InternalPin::SDA0, InternalPin::SCL0, _i2c_freq);
 
         if (reset_reason == RESET_REASON_CHIP_POWER_ON)
         {
@@ -125,11 +125,6 @@ namespace PowerFeather
         }
 
         return PowerInput::Battery;
-    }
-
-    bool Board::getEnablePin()
-    {
-        return rtc_gpio_get_level(Board::EnablePin);
     }
 
     void Board::setEnablePin(bool value)
