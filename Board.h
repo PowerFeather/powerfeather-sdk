@@ -36,20 +36,26 @@ namespace PowerFeather
             static constexpr gpio_num_t D13 =  GPIO_NUM_5;
             static constexpr gpio_num_t SCL =  GPIO_NUM_5;
             static constexpr gpio_num_t SDA =  GPIO_NUM_5;
-            static constexpr gpio_num_t LED =  GPIO_NUM_6;
-            static constexpr gpio_num_t BTN =  GPIO_NUM_0;
+            static constexpr gpio_num_t TX =   GPIO_NUM_5;
+            static constexpr gpio_num_t RX =   GPIO_NUM_5;
+            static constexpr gpio_num_t MISO = GPIO_NUM_5;
+            static constexpr gpio_num_t MOSI = GPIO_NUM_5;
+            static constexpr gpio_num_t SCK =  GPIO_NUM_5;
         };
 
-        class InputPin
+        class Signal
         {
         public:
-            static constexpr gpio_num_t EN =      GPIO_NUM_5; // Board EN
-            static constexpr gpio_num_t REGN =    GPIO_NUM_4; // FuelGauge REGN
-            static constexpr gpio_num_t ALARM =   GPIO_NUM_21; // FuelGauge ALARM
-            static constexpr gpio_num_t INT =     GPIO_NUM_5; // Charger INT
-            static constexpr gpio_num_t VDDTYPE = GPIO_NUM_4; // Board VDDTYPE
+            static constexpr gpio_num_t EN =      GPIO_NUM_5; // Board EN, Input
+            static constexpr gpio_num_t REGN =    GPIO_NUM_4; // FuelGauge REGN, Input
+            static constexpr gpio_num_t ALARM =   GPIO_NUM_21; // FuelGauge ALARM, Input
+            static constexpr gpio_num_t INT =     GPIO_NUM_5; // Charger INT, Input
+            static constexpr gpio_num_t VDDTYPE = GPIO_NUM_4; // Board VDDTYPE, Input
+            static constexpr gpio_num_t LED =     GPIO_NUM_6; // Board LED, Output
+            static constexpr gpio_num_t BTN =     GPIO_NUM_0; // Board BTN, Input
+            static constexpr gpio_num_t SQT_SCL = GPIO_NUM_5; // Board STEMMA QT SCL
+            static constexpr gpio_num_t SQT_SDA = GPIO_NUM_5; // Board STEMMA QT SDA
         };
-
 
         bool init();
         void enableHeader3V3(bool enable);
@@ -60,23 +66,8 @@ namespace PowerFeather
         BQ2562x& getCharger() { return _charger; }
         LC70924F& getFuelGauge() { return _fuelGauge; }
 
-    protected:
-
-        // Input
-        static constexpr gpio_num_t ChargerIntPin = static_cast<gpio_num_t>(5);
-        static constexpr gpio_num_t GaugeAlarmPin = static_cast<gpio_num_t>(21);
-        static constexpr gpio_num_t GaugeRegPin = static_cast<gpio_num_t>(7);
-        static constexpr gpio_num_t VDDTypePin = static_cast<gpio_num_t>(38);
-
-        // Output
-        static constexpr gpio_num_t EnableHeader3V3Pin = static_cast<gpio_num_t>(4);
-        static constexpr gpio_num_t EnableStemma3V3Pin = static_cast<gpio_num_t>(14);
-
-        // Input + Output
-        static constexpr gpio_num_t EnablePin = static_cast<gpio_num_t>(13);
-
     private:
-        class InternalPin
+        class _Signal
         {
         public:
             static constexpr gpio_num_t SQT_3V3 = GPIO_NUM_14;

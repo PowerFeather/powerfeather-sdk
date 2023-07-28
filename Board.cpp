@@ -35,7 +35,7 @@ namespace PowerFeather
     {
         soc_reset_reason_t reset_reason = esp_rom_get_reset_reason(0);
 
-        _masterI2C.init(_i2c_port, InternalPin::SDA0, InternalPin::SCL0, _i2c_freq);
+        _masterI2C.init(_i2c_port, _Signal::SDA0, _Signal::SCL0, _i2c_freq);
 
         if (reset_reason == RESET_REASON_CHIP_POWER_ON)
         {
@@ -51,19 +51,19 @@ namespace PowerFeather
             reset_reason == RESET_REASON_SYS_SUPER_WDT ||
             reset_reason == RESET_REASON_SYS_CLK_GLITCH)
         {
-            _initRTCPin(Board::EnableHeader3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
-            _initRTCPin(Board::EnableStemma3V3Pin, RTC_GPIO_MODE_OUTPUT_ONLY);
-            _initRTCPin(Board::EnablePin, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
+            _initRTCPin(Board::_Signal::HDR_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
+            _initRTCPin(Board::_Signal::SQT_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
+            _initRTCPin(Board::_Signal::EN2, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
 
             enableHeader3V3(true);
             enableStemma3V3(true);
         }
 
         // Initialize IO pins
-        _initDigitalPin(Board::ChargerIntPin, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::GaugeAlarmPin, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::GaugeRegPin, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::VDDTypePin, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::INT, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::ALARM, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::REGN, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::VDDTYPE, GPIO_MODE_INPUT);
 
         return true;
     }
@@ -82,7 +82,7 @@ namespace PowerFeather
             // Disable pin hold during deep sleep
             rtc_gpio_hold_dis(pin);
 
-            if (pin == Board::EnablePin)
+            if (pin == Board::_Signal::EN2)
             {
                 // The enable pin is in open-drain configuration with external pull-up
                 // resistor. Setting the pin to 0 means pulling it down.
@@ -100,12 +100,12 @@ namespace PowerFeather
 
     void Board::enableHeader3V3(bool enable)
     {
-        _setRTCPin(Board::EnableHeader3V3Pin, enable);
+        _setRTCPin(Board::_Signal::HDR_3V3, enable);
     }
 
     void Board::enableStemma3V3(bool enable)
     {
-        _setRTCPin(Board::EnableStemma3V3Pin, enable);
+        _setRTCPin(Board::_Signal::SQT_3V3, enable);
     }
 
     Board::PowerInput Board::getPowerInput()
@@ -114,7 +114,7 @@ namespace PowerFeather
 
         if (vbusStat != BQ2562x::VBUSStat::None)
         {
-            if (gpio_get_level(Board::VDDTypePin))
+            if (gpio_get_level(Board::Signal::VDDTYPE))
             {
                 return PowerInput::DC;
             }
@@ -129,6 +129,6 @@ namespace PowerFeather
 
     void Board::setEnablePin(bool value)
     {
-        _setRTCPin(Board::EnablePin, value);
+        _setRTCPin(Board::Signal::EN, value);
     }
 }
