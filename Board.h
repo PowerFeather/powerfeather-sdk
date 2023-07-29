@@ -56,8 +56,8 @@ namespace PowerFeather
             static constexpr gpio_num_t VDDTYPE = GPIO_NUM_4; // Board VDDTYPE, Input
             static constexpr gpio_num_t LED =     GPIO_NUM_6; // Board LED, Output
             static constexpr gpio_num_t BTN =     GPIO_NUM_0; // Board BTN, Input
-            static constexpr gpio_num_t SCL =  GPIO_NUM_5; // Board SCL, shared with STEMMA QT, 5,1 pullup, Unconfigured
-            static constexpr gpio_num_t SDA =  GPIO_NUM_5; // Board SDA, shared with STEMMA QT, 5.1k pullup, Unconfigured
+            static constexpr gpio_num_t SCL =     GPIO_NUM_5; // Board SCL, shared with STEMMA QT, 5,1 pullup, Unconfigured
+            static constexpr gpio_num_t SDA =     GPIO_NUM_5; // Board SDA, shared with STEMMA QT, 5.1k pullup, Unconfigured
         };
 
         bool init();
@@ -77,7 +77,7 @@ namespace PowerFeather
             static constexpr gpio_num_t StemmaQt3V3 = GPIO_NUM_14;
             static constexpr gpio_num_t EN =     GPIO_NUM_0;
             static constexpr gpio_num_t SCL0 =    GPIO_NUM_47;
-            static constexpr gpio_num_t SDA0 =    GPIO_NUM_4;
+            static constexpr gpio_num_t SDA0 =    GPIO_NUM_48;
         };
 
         static constexpr int _i2c_port = 0;
