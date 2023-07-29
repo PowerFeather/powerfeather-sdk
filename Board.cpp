@@ -48,6 +48,15 @@ namespace PowerFeather
             _charger.enableWD(false);
         }
 
+        // Initialize digital pins always.
+        _initDigitalPin(Board::Signal::EN, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::REGN, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::ALARM, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::INT, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::VDDTYPE, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::LED, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::BTN, GPIO_MODE_INPUT);
+
         // Only initialize RTC pins if the RTC core has been reset - this
         // happens on system and chip-level resets.
         if (reset_reason == RESET_REASON_CHIP_POWER_ON ||
@@ -57,23 +66,15 @@ namespace PowerFeather
             reset_reason == RESET_REASON_SYS_SUPER_WDT ||
             reset_reason == RESET_REASON_SYS_CLK_GLITCH)
         {
-            _initRTCPin(Board::_Signal::Header3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
-            _initRTCPin(Board::_Signal::StemmaQt3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
+            _initRTCPin(Board::_Signal::EN_3V3_HEADER, RTC_GPIO_MODE_OUTPUT_ONLY);
+            _initRTCPin(Board::_Signal::EN_3V3_STEMMAQT, RTC_GPIO_MODE_OUTPUT_ONLY);
             _initRTCPin(Board::_Signal::EN, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
 
             // By default, enable both the 3V3 power outputs.
             enableHeader3V3(true);
-            enableStemmaQT3V3(true);
-        }
+            enableSTEMMAQT3V3(true);
 
-        // Initialize digital pins always.
-        _initDigitalPin(Board::Signal::EN, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Signal::REGN, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Signal::ALARM, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Signal::INT, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Signal::VDDTYPE, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Signal::LED, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Signal::BTN, GPIO_MODE_INPUT);
+        }
 
         return true;
     }
@@ -110,12 +111,12 @@ namespace PowerFeather
 
     void Board::enableHeader3V3(bool enable)
     {
-        _setRTCPin(Board::_Signal::Header3V3, enable);
+        _setRTCPin(Board::_Signal::EN_3V3_HEADER, enable);
     }
 
-    void Board::enableStemmaQT3V3(bool enable)
+    void Board::enableSTEMMAQT3V3(bool enable)
     {
-        _setRTCPin(Board::_Signal::Header3V3, enable);
+        _setRTCPin(Board::_Signal::EN_3V3_HEADER, enable);
     }
 
     Board::PowerInput Board::getPowerInput()

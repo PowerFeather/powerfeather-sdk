@@ -62,7 +62,7 @@ namespace PowerFeather
 
         bool init();
         void enableHeader3V3(bool enable);
-        void enableStemmaQT3V3(bool enable);
+        void enableSTEMMAQT3V3(bool enable);
         void setEN(bool value);
         PowerInput getPowerInput();
 
@@ -73,8 +73,8 @@ namespace PowerFeather
         class _Signal
         {
         public:
-            static constexpr gpio_num_t Header3V3 = GPIO_NUM_4;
-            static constexpr gpio_num_t StemmaQt3V3 = GPIO_NUM_14;
+            static constexpr gpio_num_t EN_3V3_HEADER = GPIO_NUM_4;
+            static constexpr gpio_num_t EN_3V3_STEMMAQT = GPIO_NUM_14;
             static constexpr gpio_num_t EN =     GPIO_NUM_0;
             static constexpr gpio_num_t SCL0 =    GPIO_NUM_47;
             static constexpr gpio_num_t SDA0 =    GPIO_NUM_48;
