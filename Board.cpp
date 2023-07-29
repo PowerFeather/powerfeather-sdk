@@ -39,31 +39,41 @@ namespace PowerFeather
 
         if (reset_reason == RESET_REASON_CHIP_POWER_ON)
         {
+            // Disable charging.
             _charger.enableCharging(false);
+            // Disable charger TS pin; since it registers as a TS_COLD/TS_OTG_COLD
+            // (TS_STAT = 0x1) if no thermistor is connected.
             _charger.enableTS(false);
+            // Disable the charger watchdog to keep the charger in host mode.
             _charger.enableWD(false);
         }
 
-        if (reset_reason == RESET_REASON_CHIP_POWER_ON || 
+        // Only initialize RTC pins if the RTC core has been reset - this
+        // happens on system and chip-level resets.
+        if (reset_reason == RESET_REASON_CHIP_POWER_ON ||
             reset_reason == RESET_REASON_CHIP_BROWN_OUT ||
             reset_reason == RESET_REASON_CHIP_SUPER_WDT ||
-            reset_reason == RESET_REASON_SYS_RTC_WDT || 
+            reset_reason == RESET_REASON_SYS_RTC_WDT ||
             reset_reason == RESET_REASON_SYS_SUPER_WDT ||
             reset_reason == RESET_REASON_SYS_CLK_GLITCH)
         {
-            _initRTCPin(Board::_Signal::HDR_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
-            _initRTCPin(Board::_Signal::SQT_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
-            _initRTCPin(Board::_Signal::EN2, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
+            _initRTCPin(Board::_Signal::Header3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
+            _initRTCPin(Board::_Signal::StemmaQt3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
+            _initRTCPin(Board::_Signal::EN, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
 
+            // By default, enable both the 3V3 power outputs.
             enableHeader3V3(true);
-            enableStemma3V3(true);
+            enableStemmaQT3V3(true);
         }
 
-        // Initialize IO pins
-        _initDigitalPin(Board::Signal::INT, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Signal::ALARM, GPIO_MODE_INPUT);
+        // Initialize digital pins always.
+        _initDigitalPin(Board::Signal::EN, GPIO_MODE_INPUT);
         _initDigitalPin(Board::Signal::REGN, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::ALARM, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::INT, GPIO_MODE_INPUT);
         _initDigitalPin(Board::Signal::VDDTYPE, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::LED, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::Signal::BTN, GPIO_MODE_INPUT);
 
         return true;
     }
@@ -82,7 +92,7 @@ namespace PowerFeather
             // Disable pin hold during deep sleep
             rtc_gpio_hold_dis(pin);
 
-            if (pin == Board::_Signal::EN2)
+            if (pin == Board::_Signal::EN)
             {
                 // The enable pin is in open-drain configuration with external pull-up
                 // resistor. Setting the pin to 0 means pulling it down.
@@ -100,12 +110,12 @@ namespace PowerFeather
 
     void Board::enableHeader3V3(bool enable)
     {
-        _setRTCPin(Board::_Signal::HDR_3V3, enable);
+        _setRTCPin(Board::_Signal::Header3V3, enable);
     }
 
-    void Board::enableStemma3V3(bool enable)
+    void Board::enableStemmaQT3V3(bool enable)
     {
-        _setRTCPin(Board::_Signal::SQT_3V3, enable);
+        _setRTCPin(Board::_Signal::Header3V3, enable);
     }
 
     Board::PowerInput Board::getPowerInput()
@@ -127,8 +137,8 @@ namespace PowerFeather
         return PowerInput::Battery;
     }
 
-    void Board::setEnablePin(bool value)
+    void Board::setEN(bool value)
     {
-        _setRTCPin(Board::Signal::EN, value);
+        _setRTCPin(Board::_Signal::EN, value);
     }
 }
