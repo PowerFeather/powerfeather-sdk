@@ -65,17 +65,6 @@ namespace PowerFeather
             enableHeader3V3(true);
             enableStemmaQT3V3(true);
         }
-        
-        // _masterI2C.write(, )
-	// uint8_t subCommandMSB = (function >> 8);
-	// uint8_t subCommandLSB = (function & 0x00FF);
-	// uint8_t command[2] = {subCommandLSB, subCommandMSB};
-	// uint8_t data[2] = {0, 0};
-	
-	// if (i2cWriteBytes((uint8_t) 0, command, 2))
-	// 	return true;
-	
-	// return false;
 
         // Initialize digital pins always.
         _initDigitalPin(Board::Signal::EN, GPIO_MODE_INPUT);

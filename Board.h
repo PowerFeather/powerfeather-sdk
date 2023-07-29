@@ -80,7 +80,7 @@ namespace PowerFeather
             static constexpr gpio_num_t SDA0 =    GPIO_NUM_48;
         };
 
-        static constexpr int _i2c_port = 0;
+        static constexpr int _i2c_port = 1;
         static constexpr uint32_t _i2c_freq = 400000;
         static constexpr uint32_t _i2c_timeout = 1000;
 
