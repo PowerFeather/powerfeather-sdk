@@ -134,6 +134,7 @@ namespace PowerFeather
     {
 		uint8_t value;
 		readReg(BYTE(0x1e), 0, 2, value);
+		printf("value: %d\n", value);
 		if (value)
 		{
 			return VBUSStat::Adapter;

@@ -21,27 +21,28 @@ namespace PowerFeather
         // Pins that are not connected to anything on the board, and
         // can be freely configured/used by the user.
         public:
-            static constexpr gpio_num_t A0 =   GPIO_NUM_5;
-            static constexpr gpio_num_t A1 =   GPIO_NUM_5;
-            static constexpr gpio_num_t A2 =   GPIO_NUM_5;
-            static constexpr gpio_num_t A3 =   GPIO_NUM_5;
-            static constexpr gpio_num_t A4 =   GPIO_NUM_5;
-            static constexpr gpio_num_t A5 =   GPIO_NUM_5;
-            static constexpr gpio_num_t A6 =   GPIO_NUM_5;
-            static constexpr gpio_num_t D6 =   GPIO_NUM_5;
-            static constexpr gpio_num_t D7 =   GPIO_NUM_5;
-            static constexpr gpio_num_t D8 =   GPIO_NUM_5;
-            static constexpr gpio_num_t D9 =   GPIO_NUM_5;
-            static constexpr gpio_num_t D10 =  GPIO_NUM_5;
-            static constexpr gpio_num_t D11 =  GPIO_NUM_5;
-            static constexpr gpio_num_t D12 =  GPIO_NUM_5;
-            static constexpr gpio_num_t D13 =  GPIO_NUM_5;
-            static constexpr gpio_num_t TX =   GPIO_NUM_5;
-            static constexpr gpio_num_t RX =   GPIO_NUM_5;
-            static constexpr gpio_num_t MISO = GPIO_NUM_5;
-            static constexpr gpio_num_t MOSI = GPIO_NUM_5;
-            static constexpr gpio_num_t SCK =  GPIO_NUM_5;
-            static constexpr gpio_num_t TX0 =  GPIO_NUM_5;
+            static constexpr gpio_num_t A0 =   GPIO_NUM_1;
+            static constexpr gpio_num_t A1 =   GPIO_NUM_1;
+            static constexpr gpio_num_t A2 =   GPIO_NUM_1;
+            static constexpr gpio_num_t A3 =   GPIO_NUM_1;
+            static constexpr gpio_num_t A4 =   GPIO_NUM_1;
+            static constexpr gpio_num_t A5 =   GPIO_NUM_1;
+            static constexpr gpio_num_t A6 =   GPIO_NUM_1;
+            static constexpr gpio_num_t D6 =   GPIO_NUM_1;
+            static constexpr gpio_num_t D9 =   GPIO_NUM_1;
+            static constexpr gpio_num_t D10 =  GPIO_NUM_1;
+            static constexpr gpio_num_t D11 =  GPIO_NUM_1;
+            static constexpr gpio_num_t D12 =  GPIO_NUM_1;
+            static constexpr gpio_num_t D13 =  GPIO_NUM_1;
+
+            static constexpr gpio_num_t D14 =   GPIO_NUM_1;
+
+            static constexpr gpio_num_t TX =   GPIO_NUM_1;
+            static constexpr gpio_num_t RX =   GPIO_NUM_1;
+            static constexpr gpio_num_t MISO = GPIO_NUM_1;
+            static constexpr gpio_num_t MOSI = GPIO_NUM_1;
+            static constexpr gpio_num_t SCK =  GPIO_NUM_1;
+            static constexpr gpio_num_t TX0 =  GPIO_NUM_1;
         };
 
         class Signal
@@ -49,15 +50,14 @@ namespace PowerFeather
         // Pins that are connected to a component on the board and has a 
         // pre-determined/pre-configured function.
         public:
-            static constexpr gpio_num_t EN =      GPIO_NUM_5; // Board EN, Input
-            static constexpr gpio_num_t REGN =    GPIO_NUM_4; // FuelGauge REGN, Input
-            static constexpr gpio_num_t ALARM =   GPIO_NUM_21; // FuelGauge ALARM, Input
-            static constexpr gpio_num_t INT =     GPIO_NUM_5; // Charger INT, Input
-            static constexpr gpio_num_t VDDTYPE = GPIO_NUM_4; // Board VDDTYPE, Input
-            static constexpr gpio_num_t LED =     GPIO_NUM_6; // Board LED, Output
-            static constexpr gpio_num_t BTN =     GPIO_NUM_0; // Board BTN, Input
-            static constexpr gpio_num_t SCL =     GPIO_NUM_5; // Board SCL, shared with STEMMA QT, 5,1 pullup, Unconfigured
-            static constexpr gpio_num_t SDA =     GPIO_NUM_5; // Board SDA, shared with STEMMA QT, 5.1k pullup, Unconfigured
+            static constexpr gpio_num_t EN =       GPIO_NUM_13; // Board EN, Input
+            static constexpr gpio_num_t ALARM =    GPIO_NUM_7; // FuelGauge ALARM, Input
+            static constexpr gpio_num_t INT =      GPIO_NUM_5; // Charger INT, Input
+            static constexpr gpio_num_t LED =      GPIO_NUM_6; // Board LED, Output
+            static constexpr gpio_num_t BTN =      GPIO_NUM_0; // Board BTN, Input
+
+            static constexpr gpio_num_t SCL =      GPIO_NUM_36; // Board SCL, shared with STEMMA QT, 5,1k pullup, Unconfigured
+            static constexpr gpio_num_t SDA =      GPIO_NUM_45; // Board SDA, shared with STEMMA QT, 5.1k pullup, Unconfigured
         };
 
         bool init();
@@ -65,6 +65,7 @@ namespace PowerFeather
         void enableSTEMMAQT3V3(bool enable);
         void setEN(bool value);
         PowerInput getPowerInput();
+        bool isBatteryConnected();
 
         BQ2562x& getCharger() { return _charger; }
         LC70924F& getFuelGauge() { return _fuelGauge; }
@@ -75,9 +76,13 @@ namespace PowerFeather
         public:
             static constexpr gpio_num_t EN_3V3_HEADER = GPIO_NUM_4;
             static constexpr gpio_num_t EN_3V3_STEMMAQT = GPIO_NUM_14;
-            static constexpr gpio_num_t EN =     GPIO_NUM_0;
+            static constexpr gpio_num_t EN =     GPIO_NUM_13;
+
             static constexpr gpio_num_t SCL0 =    GPIO_NUM_47;
             static constexpr gpio_num_t SDA0 =    GPIO_NUM_48;
+
+            static constexpr gpio_num_t REGN =     GPIO_NUM_7; // FuelGauge REGN, Input
+            static constexpr gpio_num_t VDD_TYPE = GPIO_NUM_38; // Board VDD_TYPE, Input
         };
 
         static constexpr int _i2c_port = 1;

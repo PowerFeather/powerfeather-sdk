@@ -24,10 +24,10 @@ namespace PowerFeather
         memset(&io_conf, 0, sizeof(io_conf));
         io_conf.intr_type = GPIO_INTR_DISABLE;
         io_conf.mode = mode;
-        io_conf.pin_bit_mask = (0b1 << pin);
+        io_conf.pin_bit_mask = (static_cast<uint64_t>(0b1) << pin);
         io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
         io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-        gpio_config(&io_conf);
+        ESP_ERROR_CHECK(gpio_config(&io_conf));
         return true;
     }
 
@@ -49,13 +49,12 @@ namespace PowerFeather
         }
 
         // Initialize digital pins always.
-        _initDigitalPin(Board::Signal::EN, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Signal::REGN, GPIO_MODE_INPUT);
+        // _initDigitalPin(Board::Signal::EN, GPIO_MODE_INPUT);
         _initDigitalPin(Board::Signal::ALARM, GPIO_MODE_INPUT);
         _initDigitalPin(Board::Signal::INT, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Signal::VDDTYPE, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Signal::LED, GPIO_MODE_INPUT);
         _initDigitalPin(Board::Signal::BTN, GPIO_MODE_INPUT);
+
+        _initDigitalPin(Board::Signal::LED, GPIO_MODE_OUTPUT);
 
         // Only initialize RTC pins if the RTC core has been reset - this
         // happens on system and chip-level resets.
@@ -68,13 +67,16 @@ namespace PowerFeather
         {
             _initRTCPin(Board::_Signal::EN_3V3_HEADER, RTC_GPIO_MODE_OUTPUT_ONLY);
             _initRTCPin(Board::_Signal::EN_3V3_STEMMAQT, RTC_GPIO_MODE_OUTPUT_ONLY);
-            _initRTCPin(Board::_Signal::EN, RTC_GPIO_MODE_INPUT_OUTPUT_OD);
+            _initRTCPin(Board::_Signal::EN, RTC_GPIO_MODE_OUTPUT_OD);
 
             // By default, enable both the 3V3 power outputs.
             enableHeader3V3(true);
             enableSTEMMAQT3V3(true);
-
+            setEN(true);
         }
+
+        _initDigitalPin(Board::_Signal::REGN, GPIO_MODE_INPUT);
+        _initDigitalPin(Board::_Signal::VDD_TYPE, GPIO_MODE_INPUT);
 
         return true;
     }
@@ -119,13 +121,14 @@ namespace PowerFeather
         _setRTCPin(Board::_Signal::EN_3V3_HEADER, enable);
     }
 
+
     Board::PowerInput Board::getPowerInput()
     {
         BQ2562x::VBUSStat vbusStat = _charger.getVBUSStat();
 
         if (vbusStat != BQ2562x::VBUSStat::None)
         {
-            if (gpio_get_level(Board::Signal::VDDTYPE))
+            if (gpio_get_level(Board::_Signal::VDD_TYPE))
             {
                 return PowerInput::DC;
             }
@@ -141,5 +144,10 @@ namespace PowerFeather
     void Board::setEN(bool value)
     {
         _setRTCPin(Board::_Signal::EN, value);
+    }
+
+    bool Board::isBatteryConnected()
+    {
+        return gpio_get_level(Board::_Signal::REGN);
     }
 }

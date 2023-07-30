@@ -86,14 +86,17 @@ void test6()
         {
         case PowerFeather::Board::PowerInput::Battery:
             ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.99f)));
+            printf("battery\n");
             break;
 
         case PowerFeather::Board::PowerInput::USB:
             ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.5f)));
+            printf("usb\n");
             break;
 
         case PowerFeather::Board::PowerInput::DC:
             ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.01f)));
+            printf("dc\n");
             break;
         
         default:
@@ -106,13 +109,20 @@ void test6()
 
 void test7()
 {
-
+    while (true)
+    {
+        bool battery = board.isBatteryConnected();
+        gpio_set_level(PowerFeather::Board::Signal::LED, battery);
+        printf("battery: %d\n", battery);
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
 }
+
+#include "esp_rom_gpio.h"
 
 extern "C" void app_main(void)
 {
     board.init();
-
-
+    test7();
 }
 
