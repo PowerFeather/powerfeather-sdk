@@ -108,7 +108,7 @@ namespace PowerFeather
 
 	uint8_t BQ2562x::getFault()
 	{
-		uint8_t data;
+		uint8_t data = 0;
 		readReg(BYTE(0x1f), data);
 		return data;
 	}
@@ -132,7 +132,7 @@ namespace PowerFeather
 
     BQ2562x::VBUSStat BQ2562x::getVBUSStat()
     {
-		uint8_t value;
+		uint8_t value = 0;
 		readReg(BYTE(0x1e), 0, 2, value);
 		printf("value: %d\n", value);
 		if (value)
@@ -145,7 +145,7 @@ namespace PowerFeather
 
     BQ2562x::ChargeStat BQ2562x::getChargeStat()
     {
-		uint8_t value;
+		uint8_t value = 0;
 		readReg(BYTE(0x1e), 3, 4, value);
 
 		ChargeStat res = ChargeStat::Terminated;
