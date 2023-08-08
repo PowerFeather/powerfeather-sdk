@@ -103,6 +103,8 @@ void test6()
             break;
         }
 
+        // printf("fault:%d\n", board.getCharger().getFault());
+
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
@@ -123,6 +125,17 @@ void test7()
 extern "C" void app_main(void)
 {
     board.init();
-    test7();
+    board.getCharger().enableADC(true);
+
+
+    // board.getCharger().enableADC(true);
+    // printf("fault: %d\n", board.getCharger().getFault());
+    // printf("part info: %d\n", board.getCharger().getPartInformation());
+    while (true)
+    {
+        printf("voltage: %f\n", board.getCharger().getVBUSVoltage());
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+    // test6();
 }
 

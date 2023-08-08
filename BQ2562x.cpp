@@ -98,12 +98,20 @@ namespace PowerFeather
 
 	bool BQ2562x::enableWD(bool enable)
 	{
+
+
 		return writeReg(BYTE(0x16), 0, 1, BYTE(enable));
 	}
 
 	bool BQ2562x::enableTS(bool enable)
 	{
-		return writeReg(BYTE(0x1a), 7, !enable);
+		bool inspect = 0;
+		readReg(BYTE(0x1a), 7, inspect);
+		printf("before: %d\n", inspect);
+		bool res = writeReg(BYTE(0x1a), 7, !enable);
+		readReg(BYTE(0x1a), 7, inspect);
+		printf("after: %d\n", inspect);
+		return res;
 	}
 
 	uint8_t BQ2562x::getFault()
@@ -137,18 +145,32 @@ namespace PowerFeather
 		return false;
     }
 
-    BQ2562x::VBUSStat BQ2562x::getVBUSStat()
+    float BQ2562x::getVBUSVoltage()
     {
-		uint8_t value = 0;
-		readReg(BYTE(0x1e), 0, 2, value);
+		uint16_t value = 0;
+		readReg(SHORT(0x2c), 2, 14, value);
 		printf("value: %d\n", value);
-		if (value)
-		{
-			return VBUSStat::Adapter;
-		}
-
-		return VBUSStat::None;
+		return value / 1000.0f;
     }
+
+    void BQ2562x::enableADC(bool enable)
+	{
+		writeReg(BYTE(0x26), 7, enable);
+	}
+
+    // bool BQ2562x::checkADC()
+	// {
+	// 	bool value;
+	// 	readReg(BYTE(0x1d), 6, value);
+	// 	return value;
+	// }
+
+    float BQ2562x::getBatteryVoltage()
+	{
+		uint16_t data = 0;
+		readReg(SHORT(0x30), 1, 12, data);
+		return (data) / 1000.0f;
+	}
 
     BQ2562x::ChargeStat BQ2562x::getChargeStat()
     {
@@ -178,4 +200,5 @@ namespace PowerFeather
 
 		return res;
     }
+
 }

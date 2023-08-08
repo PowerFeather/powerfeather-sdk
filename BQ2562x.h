@@ -50,6 +50,10 @@ namespace PowerFeather
         bool enableTS(bool enable);
         bool enableWD(bool enable);
         uint8_t getFault();
+        float getBatteryVoltage();
+        float getVBUSVoltage();
+        void enableADC(bool enable);
+        bool checkADC();
         uint8_t getPartInformation();
 
         VBUSStat getVBUSStat();
