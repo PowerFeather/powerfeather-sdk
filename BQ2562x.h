@@ -50,6 +50,7 @@ namespace PowerFeather
         bool enableTS(bool enable);
         bool enableWD(bool enable);
         uint8_t getFault();
+        uint8_t getPartInformation();
 
         VBUSStat getVBUSStat();
         ChargeStat getChargeStat();

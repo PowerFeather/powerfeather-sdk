@@ -63,7 +63,7 @@ namespace PowerFeather
 		assert(end < sizeof(T) * CHAR_BIT);
 		assert(start <= end);
 		T data = 0;
-		bool res = _i2c.read(address, address, data);
+		bool res = _i2c.read(_i2c_address, address, data);
 		if (res)
 		{
 			value = (data << (((sizeof(value) * CHAR_BIT) - 1) - end)) >> start;
@@ -110,6 +110,13 @@ namespace PowerFeather
 	{
 		uint8_t data = 0;
 		readReg(BYTE(0x1f), data);
+		return data;
+	}
+
+	uint8_t BQ2562x::getPartInformation()
+	{
+		uint8_t data = 0;
+		readReg(BYTE(0x38), data);
 		return data;
 	}
 
