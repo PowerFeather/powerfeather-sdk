@@ -83,7 +83,7 @@ namespace PowerFeather
 	template <typename T>
 	bool BQ2562x::readReg(T address, T& value)
 	{
-		return readReg(static_cast<uint8_t>(address), 0, (sizeof(value) * CHAR_BIT) - 1, value);
+		return readReg(static_cast<T>(address), 0, (sizeof(value) * CHAR_BIT) - 1, value);
 	}
 
 	bool BQ2562x::setChargeCurrent(uint16_t current)
