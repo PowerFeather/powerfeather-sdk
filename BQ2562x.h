@@ -29,12 +29,44 @@ namespace PowerFeather
             TopOff
         };
 
+        enum class ADCRate
+        {
+            Oneshot,
+            Continuous,
+            LastValue
+        };
+
+        enum class ADCSampling
+        {
+            Bits_12,
+            Bits_11,
+            Bits_10,
+            Bits_9,
+            LastValue
+        };
+
+        enum class ADCAverage
+        {
+            Single,
+            Running,
+            LastValue
+        };
+
+        enum class ADCAverageInit
+        {
+            Existing,
+            New,
+            LastValue
+        };
+
         BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
 
         template <typename T>
         bool writeReg(T address, uint8_t start, uint8_t end, T value);
         template <typename T>
         bool writeReg(T address, uint8_t bit, bool value);
+        template <typename T>
+        bool writeReg(T address, T value);
         template <typename T>
         bool readReg(T address, uint8_t start, uint8_t end, T& value);
         template <typename T>
@@ -52,7 +84,8 @@ namespace PowerFeather
         uint8_t getFault();
         float getBatteryVoltage();
         float getVBUSVoltage();
-        void enableADC(bool enable);
+        void enableADC(bool enable, ADCRate rate = ADCRate::LastValue, ADCSampling sampling = ADCSampling::LastValue, 
+                        ADCAverage average = ADCAverage::LastValue, ADCAverageInit averageInit = ADCAverageInit::LastValue);
         bool checkADC();
         uint8_t getPartInformation();
 

@@ -57,6 +57,12 @@ namespace PowerFeather
 	}
 
 	template <typename T>
+	bool BQ2562x::writeReg(T address, T value)
+	{
+		return writeReg(address, 0, ((sizeof(value) * CHAR_BIT) - 1), value);
+	}
+
+	template <typename T>
 	bool BQ2562x::readReg(T address, uint8_t start, uint8_t end, T &value)
 	{
 		static_assert(sizeof(T) == 1 || sizeof(T) == 2);
@@ -98,8 +104,6 @@ namespace PowerFeather
 
 	bool BQ2562x::enableWD(bool enable)
 	{
-
-
 		return writeReg(BYTE(0x16), 0, 1, BYTE(enable));
 	}
 
@@ -148,14 +152,83 @@ namespace PowerFeather
     float BQ2562x::getVBUSVoltage()
     {
 		uint16_t value = 0;
-		readReg(SHORT(0x2c), 2, 14, value);
+		readReg(SHORT(0x2c), value);
 		printf("value: %d\n", value);
 		return value / 1000.0f;
     }
 
-    void BQ2562x::enableADC(bool enable)
+	void BQ2562x::enableADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)
 	{
-		writeReg(BYTE(0x26), 7, enable);
+		uint8_t value = enable << 7;
+
+		if (enable)
+		{
+			switch (rate)
+			{
+			case ADCRate::Oneshot:
+				/* code */
+				break;
+
+			case ADCRate::Continuous:
+				/* code */
+				break;
+			
+			default:
+				break;
+			}
+
+			switch (sampling)
+			{
+			case ADCSampling::Bits_12:
+				/* code */
+				break;
+
+			case ADCSampling::Bits_11:
+				/* code */
+				break;
+
+			case ADCSampling::Bits_10:
+				/* code */
+				break;
+
+			case ADCSampling::Bits_9:
+				/* code */
+				break;
+			
+			default:
+				break;
+			}
+
+			switch (average)
+			{
+			case ADCAverage::Single:
+				/* code */
+				break;
+
+			case ADCAverage::Running:
+				/* code */
+				break;
+			
+			default:
+				break;
+			}
+
+			switch (averageInit)
+			{
+			case ADCAverageInit::Existing:
+				/* code */
+				break;
+
+			case ADCAverageInit::New:
+				/* code */
+				break;
+			
+			default:
+				break;
+			}
+		}
+
+		writeReg(BYTE(0x26), value);
 	}
 
     // bool BQ2562x::checkADC()
