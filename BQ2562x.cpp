@@ -157,6 +157,7 @@ namespace PowerFeather
 		return value / 1000.0f;
     }
 
+
 	void BQ2562x::enableADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)
 	{
 		uint8_t value = enable << 7;
@@ -165,34 +166,36 @@ namespace PowerFeather
 		{
 			switch (rate)
 			{
-			case ADCRate::Oneshot:
-				/* code */
+			case ADCRate::Continuous:
+				value &= ~(0b1 << 6);
 				break;
 
-			case ADCRate::Continuous:
-				/* code */
-				break;
-			
+			case ADCRate::Oneshot:
 			default:
+				value |= 0b1 << 6;
 				break;
 			}
 
 			switch (sampling)
 			{
 			case ADCSampling::Bits_12:
-				/* code */
+				value &= ~(0b1 << 5);
+				value &= ~(0b1 << 4);
 				break;
 
 			case ADCSampling::Bits_11:
-				/* code */
+				value &= ~(0b1 << 5);
+				value |= 0b1 << 4;
 				break;
 
 			case ADCSampling::Bits_10:
-				/* code */
+				value |= 0b1 << 5;
+				value &= ~(0b1 << 4);
 				break;
 
 			case ADCSampling::Bits_9:
-				/* code */
+				value |= 0b1 << 5;
+				value |= 0b1 << 4;
 				break;
 			
 			default:
@@ -202,11 +205,11 @@ namespace PowerFeather
 			switch (average)
 			{
 			case ADCAverage::Single:
-				/* code */
+				value &= ~(0b1 << 3);
 				break;
 
 			case ADCAverage::Running:
-				/* code */
+				value |= 0b1 << 3;
 				break;
 			
 			default:
@@ -216,11 +219,11 @@ namespace PowerFeather
 			switch (averageInit)
 			{
 			case ADCAverageInit::Existing:
-				/* code */
+				value &= ~(0b1 << 2);
 				break;
 
 			case ADCAverageInit::New:
-				/* code */
+				value |= 0b1 << 2;
 				break;
 			
 			default:
@@ -231,9 +234,15 @@ namespace PowerFeather
 		writeReg(BYTE(0x26), value);
 	}
 
-    // bool BQ2562x::checkADC()
+    // bool BQ2562x::getADCDoneStat()
 	// {
 	// 	bool value;
+	// 	readReg(BYTE(0x1d), 6, value);
+	// 	return value;
+	// }
+
+    // bool BQ2562x::setADCDoneStat(bool value)
+	// {
 	// 	readReg(BYTE(0x1d), 6, value);
 	// 	return value;
 	// }
@@ -243,6 +252,17 @@ namespace PowerFeather
 		uint16_t data = 0;
 		readReg(SHORT(0x30), 1, 12, data);
 		return (data) / 1000.0f;
+	}
+
+	BQ2562x::VBUSStat BQ2562x::getVBUSStat()
+	{
+		uint8_t data = 0;
+		readReg(BYTE(0x1e), data);
+		if ((data & 0b111) == 0b100)
+		{
+			return VBUSStat::Adapter;
+		}
+		return VBUSStat::None;
 	}
 
     BQ2562x::ChargeStat BQ2562x::getChargeStat()

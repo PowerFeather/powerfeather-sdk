@@ -33,7 +33,6 @@ namespace PowerFeather
         {
             Oneshot,
             Continuous,
-            LastValue
         };
 
         enum class ADCSampling
@@ -84,7 +83,7 @@ namespace PowerFeather
         uint8_t getFault();
         float getBatteryVoltage();
         float getVBUSVoltage();
-        void enableADC(bool enable, ADCRate rate = ADCRate::LastValue, ADCSampling sampling = ADCSampling::LastValue, 
+        void enableADC(bool enable, ADCRate rate = ADCRate::Oneshot, ADCSampling sampling = ADCSampling::LastValue, 
                         ADCAverage average = ADCAverage::LastValue, ADCAverageInit averageInit = ADCAverageInit::LastValue);
         bool checkADC();
         uint8_t getPartInformation();

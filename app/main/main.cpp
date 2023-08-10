@@ -78,7 +78,9 @@ void test6()
     ledc_channel.duty           = 0;
     ledc_channel.hpoint         = 0;
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.3f)));
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.99f)));
+
+    vTaskDelay(pdMS_TO_TICKS(1000));
 
     while (true)
     {
@@ -86,26 +88,25 @@ void test6()
         {
         case PowerFeather::Board::PowerInput::Battery:
             ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.99f)));
+            ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL));
             printf("battery\n");
             break;
 
         case PowerFeather::Board::PowerInput::USB:
-            ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.5f)));
+            ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.9f)));
+            ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL));
             printf("usb\n");
             break;
 
         case PowerFeather::Board::PowerInput::DC:
-            ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.01f)));
-            printf("dc\n");
+            ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.99f)));
+            ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL));
+            printf("adapter\n");
             break;
         
         default:
             break;
         }
-
-        // printf("fault:%d\n", board.getCharger().getFault());
-
-        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
@@ -125,17 +126,26 @@ void test7()
 extern "C" void app_main(void)
 {
     board.init();
-    board.getCharger().enableADC(true);
+    test6();
 
+    // printf("voltage: %02x\n", board.getCharger().getPartInformation());
+
+    // uint8_t adc_reg = 0;
+    // board.getCharger().readReg((uint8_t)0x26, adc_reg);
+    // printf("adc_reg: 0x%02x ----\n", adc_reg);
 
     // board.getCharger().enableADC(true);
-    // printf("fault: %d\n", board.getCharger().getFault());
-    // printf("part info: %d\n", board.getCharger().getPartInformation());
-    while (true)
-    {
-        printf("voltage: %f\n", board.getCharger().getVBUSVoltage());
-        vTaskDelay(pdMS_TO_TICKS(100));
-    }
+
+    // while (true)
+    // {
+    //     adc_reg = 0;
+    //     board.getCharger().readReg((uint8_t)0x26, adc_reg);
+    //     printf("adc_reg: 0x%02x ---- ", adc_reg);
+
+
+    //     printf("voltage: %f\n", board.getCharger().getBatteryVoltage());
+    //     vTaskDelay(pdMS_TO_TICKS(100));
+    // }
     // test6();
 }
 
