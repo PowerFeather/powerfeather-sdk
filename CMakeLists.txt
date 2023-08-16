@@ -18,4 +18,4 @@ idf_component_register(SRCS "BQ2562x.cpp"
                        PRIV_REQUIRES spi_flash nvs_flash
                             )
 
-target_compile_options(${COMPONENT_LIB} PUBLIC -std=gnu++17)
+target_compile_options(${COMPONENT_LIB} PRIVATE -std=gnu++17)

@@ -15,6 +15,8 @@ namespace PowerFeather
         rtc_gpio_init(pin);
         rtc_gpio_set_direction(pin, mode);
         rtc_gpio_set_direction_in_sleep(pin, mode);
+        rtc_gpio_pullup_dis(pin);
+        rtc_gpio_pulldown_dis(pin);
         return true;
     }
 
@@ -56,6 +58,11 @@ namespace PowerFeather
 
         _initDigitalPin(Board::Signal::LED, GPIO_MODE_OUTPUT);
 
+        _initRTCPin(Board::_Signal::EN, RTC_GPIO_MODE_OUTPUT_OD);
+
+        _initRTCPin(Board::_Signal::EN_3V3_HEADER, RTC_GPIO_MODE_OUTPUT_ONLY);
+        _initRTCPin(Board::_Signal::EN_3V3_STEMMAQT, RTC_GPIO_MODE_OUTPUT_ONLY);
+
         // Only initialize RTC pins if the RTC core has been reset - this
         // happens on system and chip-level resets.
         if (reset_reason == RESET_REASON_CHIP_POWER_ON ||
@@ -65,10 +72,6 @@ namespace PowerFeather
             reset_reason == RESET_REASON_SYS_SUPER_WDT ||
             reset_reason == RESET_REASON_SYS_CLK_GLITCH)
         {
-            _initRTCPin(Board::_Signal::EN_3V3_HEADER, RTC_GPIO_MODE_OUTPUT_ONLY);
-            _initRTCPin(Board::_Signal::EN_3V3_STEMMAQT, RTC_GPIO_MODE_OUTPUT_ONLY);
-            _initRTCPin(Board::_Signal::EN, RTC_GPIO_MODE_OUTPUT_OD);
-
             // By default, enable both the 3V3 power outputs.
             enableHeader3V3(true);
             enableSTEMMAQT3V3(true);
@@ -83,32 +86,9 @@ namespace PowerFeather
 
     void Board::_setRTCPin(gpio_num_t pin, bool value)
     {
-        if (value)
-        {
-            // Set the pin high.
-            rtc_gpio_set_level(pin, value);
-            // Hold the pin high, even in deep sleep.
-            rtc_gpio_hold_en(pin);
-        }
-        else
-        {
-            // Disable pin hold during deep sleep
-            rtc_gpio_hold_dis(pin);
-
-            if (pin == Board::_Signal::EN)
-            {
-                // The enable pin is in open-drain configuration with external pull-up
-                // resistor. Setting the pin to 0 means pulling it down.
-                rtc_gpio_set_level(pin, 0);
-            }
-            else
-            {
-                // The rest of the output RTC pins is by default pulled down by an
-                // external resistor, this means setting them to 0 entails just
-                // just disconnecting the pin from the chip.
-                rtc_gpio_isolate(pin);
-            }
-        }
+        rtc_gpio_hold_dis(pin);
+        rtc_gpio_set_level(pin, value);
+        rtc_gpio_hold_en(pin);
     }
 
     void Board::enableHeader3V3(bool enable)
@@ -118,9 +98,8 @@ namespace PowerFeather
 
     void Board::enableSTEMMAQT3V3(bool enable)
     {
-        _setRTCPin(Board::_Signal::EN_3V3_HEADER, enable);
+        _setRTCPin(Board::_Signal::EN_3V3_STEMMAQT, enable);
     }
-
 
     Board::PowerInput Board::getPowerInput()
     {
