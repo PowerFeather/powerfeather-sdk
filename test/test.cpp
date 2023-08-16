@@ -2,8 +2,7 @@
 // #include <sdkconfig.h>
 // #include <driver/ledc.h>
 
-// #include <esp_private/system_internal.h>
-
+#include <esp_private/system_internal.h>
 #include <esp_sleep.h>
 #include "unity.h"
 
@@ -11,7 +10,7 @@
 
 PowerFeather::Board board;
 
-static constexpr char MODULE_NAME[] = "[board]";
+static constexpr char MODULE_NAME[] = "[PowerFeather::Board]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
 TEST_CASE("3.3V rails off, no glitch on deep sleep and wake", MODULE_NAME)
@@ -30,44 +29,48 @@ TEST_CASE("3.3V rails on, no glitch on deep sleep and wake", MODULE_NAME)
     esp_deep_sleep(MS_TO_US(100));
 }
 
-// void test_3v3_rails_on_deep_sleep_current()
-// {
-//     board.enableHeader3V3(false);
-//     board.enableSTEMMAQT3V3(false);
-//     esp_deep_sleep(ms2micro(5000));
-// }
-
-// RTC_NOINIT_ATTR bool high = false;
-// void test_3v3_rails_on_off_changeable_even_deep_sleep()
-// {
-//     board.enableHeader3V3(high);
-//     board.enableSTEMMAQT3V3(high);
-//     high = !high;
-//     esp_deep_sleep(ms2micro(100));
-// }
-
-// void test_3v3_rails_off_deep_sleep_no_glitch()
-// {
-//     board.enableHeader3V3(false);
-//     board.enableSTEMMAQT3V3(false);
-//     esp_deep_sleep(ms2micro(100));
-// }
+TEST_CASE("3.3V rails on, deep sleep current draw", MODULE_NAME)
+{
+    board.init();
+    board.enableHeader3V3(true);
+    board.enableSTEMMAQT3V3(true);
+    esp_deep_sleep(MS_TO_US(7000));
+}
 
 
-// void test_3v3_rails_off_digital_reset_no_glitch()
-// {
-//     board.enableHeader3V3(false);
-//     board.enableSTEMMAQT3V3(false);
-//     esp_restart_noos_dig();
-// }
+TEST_CASE("3.3V rails off, deep sleep current draw", MODULE_NAME)
+{
+    board.init();
+    board.enableHeader3V3(false);
+    board.enableSTEMMAQT3V3(false);
+    esp_deep_sleep(MS_TO_US(7000));
+}
 
-// void test_3v3_rails_on_digital_reset_no_glitch()
-// {
-//     board.enableHeader3V3(true);
-//     board.enableSTEMMAQT3V3(true);
-//     esp_restart_noos_dig();
-// }
+RTC_NOINIT_ATTR bool high = false;
+TEST_CASE("3.3V rails on/off after deep sleep wake", MODULE_NAME)
+{
+    board.init();
+    board.enableHeader3V3(high);
+    board.enableSTEMMAQT3V3(high);
+    high = !high;
+    esp_deep_sleep(MS_TO_US(100));
+}
 
+TEST_CASE("3.3V rails off, no glitch on digital reset", MODULE_NAME)
+{
+    board.init();
+    board.enableHeader3V3(false);
+    board.enableSTEMMAQT3V3(false);
+    esp_restart_noos_dig();
+}
+
+TEST_CASE("3.3V rails on, no glitch on digital reset", MODULE_NAME)
+{
+    board.init();
+    board.enableHeader3V3(true);
+    board.enableSTEMMAQT3V3(true);
+    esp_restart_noos_dig();
+}
 
 // void test6()
 // {
@@ -152,25 +155,22 @@ TEST_CASE("3.3V rails on, no glitch on deep sleep and wake", MODULE_NAME)
 // }
 
 
+// printf("voltage: %02x\n", board.getCharger().getPartInformation());
 
-    // test1();
+// uint8_t adc_reg = 0;
+// board.getCharger().readReg((uint8_t)0x26, adc_reg);
+// printf("adc_reg: 0x%02x ----\n", adc_reg);
 
-    // printf("voltage: %02x\n", board.getCharger().getPartInformation());
+// board.getCharger().enableADC(true);
 
-    // uint8_t adc_reg = 0;
-    // board.getCharger().readReg((uint8_t)0x26, adc_reg);
-    // printf("adc_reg: 0x%02x ----\n", adc_reg);
-
-    // board.getCharger().enableADC(true);
-
-    // while (true)
-    // {
-    //     adc_reg = 0;
-    //     board.getCharger().readReg((uint8_t)0x26, adc_reg);
-    //     printf("adc_reg: 0x%02x ---- ", adc_reg);
+// while (true)
+// {
+//     adc_reg = 0;
+//     board.getCharger().readReg((uint8_t)0x26, adc_reg);
+//     printf("adc_reg: 0x%02x ---- ", adc_reg);
 
 
-    //     printf("voltage: %f\n", board.getCharger().getBatteryVoltage());
-    //     vTaskDelay(pdMS_TO_TICKS(100));
-    // }
-    // test6();
+//     printf("voltage: %f\n", board.getCharger().getBatteryVoltage());
+//     vTaskDelay(pdMS_TO_TICKS(100));
+// }
+// test6();
