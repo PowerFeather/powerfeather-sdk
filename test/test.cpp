@@ -11,7 +11,7 @@
 
 PowerFeather::Board board;
 
-static constexpr char MODULE_NAME[] = "[PowerFeather::Board]";
+static constexpr char MODULE_NAME[] = "[board]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
 TEST_CASE("3.3V rails off, no glitch on deep sleep and wake", MODULE_NAME)
