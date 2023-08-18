@@ -11,129 +11,64 @@ PowerFeather::Board board;
 static constexpr char MODULE_NAME[] = "[PowerFeather::Board]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
-
-TEST_CASE("Basic I2C communicaton", MODULE_NAME)
-{
-    board.init();
-
-    board.getCharger().getPartInformation();
-}
-
-TEST_CASE("Charger interrupt", MODULE_NAME)
-{
-    board.init();
-    board.getCharger().getPartInformation();
-}
-
-TEST_CASE("FuelGauge interrupt", MODULE_NAME)
-{
-    board.init();
-}
-
-TEST_CASE("Charge enable and disable", MODULE_NAME)
-{
-    board.init();
-}
-
-TEST_CASE("Ship mode", MODULE_NAME)
-{
-    // Test ship mode can be entered
-    // Measure ship mode current
-    // Tie QON to reset, check that ship mode can be exited
-    board.init();
-}
-
-TEST_CASE("Shutdown mode current", MODULE_NAME)
-{
-    // Test shutdown mode can be entered
-    // Measure shutdown mode current
-    // Tie QON to reset, check that ship mode can be exited
-    board.init();
-}
-
-TEST_CASE("Temperature sense", MODULE_NAME)
-{
-    // Tie potentiometer to temperature sense
-    // Check interrupt, may be combined with another test
-    board.init();
-}
-
-TEST_CASE("Pin connections", MODULE_NAME)
-{
-    board.init();
-}
-
-TEST_CASE("Current loading", MODULE_NAME)
-{
-    // Perform iperf test
-    // 5V is loaded up to 2.5A
-    // 3.3V is loaded up to 500mA 
-    board.init();
-}
-
-TEST_CASE("3.3V rails off, no glitch on deep sleep and wake", MODULE_NAME)
+TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
 {
     board.init();
     board.enableHeader3V3(false);
     board.enableSTEMMAQT3V3(false);
+    board.setEN(false);
     esp_deep_sleep(MS_TO_US(100));
 }
 
-TEST_CASE("3.3V rails on, no glitch on deep sleep and wake", MODULE_NAME)
+TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
 {
     board.init();
     board.enableHeader3V3(true);
     board.enableSTEMMAQT3V3(true);
+    board.setEN(true);
     esp_deep_sleep(MS_TO_US(100));
 }
 
-TEST_CASE("3.3V rails on, deep sleep current draw", MODULE_NAME)
+TEST_CASE("3.3v power outputs on, deep sleep current draw", MODULE_NAME)
 {
     board.init();
     board.enableHeader3V3(true);
     board.enableSTEMMAQT3V3(true);
-    esp_deep_sleep(MS_TO_US(7000));
+    esp_deep_sleep(MS_TO_US(10000));
 }
 
-
-TEST_CASE("3.3V rails off, deep sleep current draw", MODULE_NAME)
+TEST_CASE("3.3V power outputs off, deep sleep current draw", MODULE_NAME)
 {
     board.init();
     board.enableHeader3V3(false);
     board.enableSTEMMAQT3V3(false);
-    esp_deep_sleep(MS_TO_US(7000));
+    esp_deep_sleep(MS_TO_US(10000));
 }
 
-RTC_DATA_ATTR bool high = false;
-TEST_CASE("3.3V rails on/off after deep sleep wake", MODULE_NAME)
-{
-    board.init();
-    board.enableHeader3V3(high);
-    board.enableSTEMMAQT3V3(high);
-    printf("%d\n", high);
-    high = !high;
-    printf("%d\n", high);
-    esp_deep_sleep(MS_TO_US(100));
-}
-
-TEST_CASE("3.3V rails off, no glitch on digital reset", MODULE_NAME)
+TEST_CASE("rtc outputs off, no glitch on digital reset", MODULE_NAME)
 {
     board.init();
     board.enableHeader3V3(false);
     board.enableSTEMMAQT3V3(false);
+    board.setEN(false);
     esp_restart_noos_dig();
 }
 
-TEST_CASE("3.3V rails on, no glitch on digital reset", MODULE_NAME)
+TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
 {
     board.init();
     board.enableHeader3V3(true);
     board.enableSTEMMAQT3V3(true);
+    board.setEN(true);
     esp_restart_noos_dig();
 }
 
-TEST_CASE("Determining power source", MODULE_NAME)
+TEST_CASE("determine power source", MODULE_NAME)
 {
+    // No reset when removing external supply (usb/dc) with battery connected.
+    board.init();
+    board.enableHeader3V3(true);
+
     #define LEDC_TIMER              LEDC_TIMER_0
     #define LEDC_MODE               LEDC_LOW_SPEED_MODE
     #define LEDC_OUTPUT_IO          (PowerFeather::Board::Signal::LED) // Define the output GPIO
@@ -160,32 +95,158 @@ TEST_CASE("Determining power source", MODULE_NAME)
     ledc_channel.duty           = 0;
     ledc_channel.hpoint         = 0;
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.01f)));
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL));
+
+    PowerFeather::Board::PowerInput last = board.getPowerInput();
+    bool first = true;
 
     while (true)
     {
-        switch (board.getPowerInput())
+        PowerFeather::Board::PowerInput current = board.getPowerInput();
+        if (current != last || first)
         {
-        case PowerFeather::Board::PowerInput::Battery:
-            ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.999f)));
-            break;
+            switch (current)
+            {
+            case PowerFeather::Board::PowerInput::Battery:
+                // Barely lit
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.001f));
+                printf("battery");
+                break;
 
-        case PowerFeather::Board::PowerInput::USB:
-            ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.95f)));
-            break;
+            case PowerFeather::Board::PowerInput::USB:
+                // Faint
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.01));
+                printf("usb");
+                break;
 
-        case PowerFeather::Board::PowerInput::DC:
-            ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.01f)));
-            break;
-        
-        default:
-            break;
+            case PowerFeather::Board::PowerInput::DC:
+                // Bright
+                // ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(1.0f));
+                // printf("dc");
+                break;
+
+            default:
+                break;
+            }
+
+            ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+            last = current;
         }
 
-        ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+        first = false;
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
+
+static void periodic_timer_callback(void* arg)
+{
+    gpio_num_t pin = static_cast<gpio_num_t>((int)arg);
+    gpio_set_level(pin, !gpio_get_level(pin));
+}
+
+void setup_pin(int pin)
+{
+    gpio_config_t io_conf = {};
+    memset(&io_conf, 0, sizeof(io_conf));
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.mode = GPIO_MODE_INPUT_OUTPUT;
+    io_conf.pin_bit_mask = (static_cast<uint64_t>(0b1) << pin);
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
+
+    esp_timer_create_args_t periodic_timer_args;
+    memset(&periodic_timer_args, 0, sizeof(periodic_timer_args));
+    periodic_timer_args.callback = &periodic_timer_callback;
+    periodic_timer_args.arg = reinterpret_cast<void*>(pin);
+
+    esp_timer_handle_t periodic_timer;
+    esp_timer_create(&periodic_timer_args, &periodic_timer);
+    esp_timer_start_periodic(periodic_timer, (1000000 / (pin)) / 2);
+}
+
+TEST_CASE("Pin connections", MODULE_NAME)
+{
+    // Output frequency same as pin number, i.e. GPIO1 output 1Hz,
+    // GPIO2 output 2Hz and so on.
+    gpio_num_t exclude[] = { GPIO_NUM_0, GPIO_NUM_3, GPIO_NUM_45, GPIO_NUM_46};
+    int min = 36;
+    int max = 40;
+
+    for (int i = min; i < max + 1; i++)
+    {
+        bool excluded = false;
+        for (int e : exclude)
+        {
+            if (i == e)
+            {
+                excluded = true;
+                break;
+            }
+        }
+
+        if (!excluded)
+        {
+            setup_pin(i);
+        }
+    }
+
+    while (true)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+// TEST_CASE("Temperature sense", MODULE_NAME)
+// {
+//     // Tie potentiometer to temperature sense
+//     // Check interrupt, may be combined with another test
+//     board.init();
+// }
+
+// TEST_CASE("Basic I2C communicaton", MODULE_NAME)
+// {
+//     board.init();
+
+//     board.getCharger().getPartInformation();
+// }
+
+// TEST_CASE("FuelGauge interrupt", MODULE_NAME)
+// {
+//     board.init();
+// }
+
+// TEST_CASE("Charge enable and disable", MODULE_NAME)
+// {
+//     board.init();
+// }
+
+// TEST_CASE("Ship mode", MODULE_NAME)
+// {
+//     // Test ship mode can be entered
+//     // Measure ship mode current
+//     // Tie QON to reset, check that ship mode can be exited
+//     board.init();
+// }
+
+// TEST_CASE("Shutdown mode current", MODULE_NAME)
+// {
+//     // Test shutdown mode can be entered
+//     // Measure shutdown mode current
+//     // Tie QON to reset, check that ship mode can be exited
+//     board.init();
+// }
+
+
+
+// TEST_CASE("Current loading", MODULE_NAME)
+// {
+//     // Perform iperf test
+//     // 5V is loaded up to 2.5A
+//     // 3.3V is loaded up to 500mA
+//     board.init();
+// }
+
+
 
 // printf("voltage: %02x\n", board.getCharger().getPartInformation());
 
