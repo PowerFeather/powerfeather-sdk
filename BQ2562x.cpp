@@ -158,6 +158,11 @@ namespace PowerFeather
 		return value / 1000.0f;
     }
 
+    void BQ2562x::setVINDPM(float voltage)
+    {
+		uint16_t value = 0;
+		writeReg(SHORT(0x08), 5, 13, static_cast<uint16_t>((voltage * 1000.0) / 40));
+    }
 
 	void BQ2562x::enableADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)
 	{

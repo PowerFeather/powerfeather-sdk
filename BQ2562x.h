@@ -87,6 +87,7 @@ namespace PowerFeather
                         ADCAverage average = ADCAverage::LastValue, ADCAverageInit averageInit = ADCAverageInit::LastValue);
         bool checkADC();
         uint8_t getPartInformation();
+        void setVINDPM(float voltage);
 
         VBUSStat getVBUSStat();
         ChargeStat getChargeStat();

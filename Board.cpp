@@ -48,6 +48,7 @@ namespace PowerFeather
             _charger.enableTS(false);
             // Disable the charger watchdog to keep the charger in host mode.
             _charger.enableWD(false);
+            _charger.setVINDPM(4.0f);
         }
 
         // Initialize digital pins always.
