@@ -72,7 +72,8 @@ namespace PowerFeather
 		bool res = _i2c.read(_i2c_address, address, data);
 		if (res)
 		{
-			value = (data << (((sizeof(value) * CHAR_BIT) - 1) - end)) >> start;
+			int right = (((sizeof(value) * CHAR_BIT) - 1) - end);
+			value = (data << right) >> (right + start);
 		}
 		return res;
 	}
