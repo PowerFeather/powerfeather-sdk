@@ -63,7 +63,7 @@ TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
     esp_restart_noos_dig();
 }
 
-TEST_CASE("determine power source", MODULE_NAME)
+extern "C" void determine_power_source()
 {
     // No reset when removing external supply (usb/dc) with battery connected.
     board.init();
@@ -120,8 +120,8 @@ TEST_CASE("determine power source", MODULE_NAME)
 
             case PowerFeather::Board::PowerInput::DC:
                 // Bright
-                // ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(1.0f));
-                // printf("dc");
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(1.0f));
+                printf("dc");
                 break;
 
             default:
@@ -136,6 +136,12 @@ TEST_CASE("determine power source", MODULE_NAME)
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
+
+TEST_CASE("determine power source", MODULE_NAME)
+{
+    determine_power_source();
+}
+
 
 static void periodic_timer_callback(void* arg)
 {
@@ -164,7 +170,7 @@ void setup_pin(int pin)
     esp_timer_start_periodic(periodic_timer, (1000000 / (pin)) / 2);
 }
 
-TEST_CASE("Pin connections", MODULE_NAME)
+TEST_CASE("digital pin connections", MODULE_NAME)
 {
     // Output frequency same as pin number, i.e. GPIO1 output 1Hz,
     // GPIO2 output 2Hz and so on.
