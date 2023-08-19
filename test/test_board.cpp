@@ -109,19 +109,19 @@ extern "C" void determine_power_source()
             case PowerFeather::Board::PowerInput::Battery:
                 // Barely lit
                 ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.001f));
-                printf("battery");
+                printf("battery\n");
                 break;
 
             case PowerFeather::Board::PowerInput::USB:
                 // Faint
                 ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.01));
-                printf("usb");
+                printf("usb\n");
                 break;
 
             case PowerFeather::Board::PowerInput::DC:
                 // Bright
                 ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(1.0f));
-                printf("dc");
+                printf("dc\n");
                 break;
 
             default:
@@ -133,7 +133,7 @@ extern "C" void determine_power_source()
         }
 
         first = false;
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
