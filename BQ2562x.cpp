@@ -162,6 +162,8 @@ namespace PowerFeather
     {
 		uint16_t value = 0;
 		writeReg(SHORT(0x08), 5, 13, static_cast<uint16_t>((voltage * 1000.0) / 40));
+		readReg(SHORT(0x08), 5, 13, value);
+		printf("vindpm: %d\n", value * 40);
     }
 
 	void BQ2562x::enableADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)
@@ -300,4 +302,25 @@ namespace PowerFeather
 		return res;
     }
 
+    void BQ2562x::setBATFETControl(BATFETControl control)
+    {
+		uint16_t value = 0x0;
+		switch (control)
+		{
+		case BATFETControl::ShutdownMode:
+			value = 0x01;
+			break;
+		case BATFETControl::ShipMode:
+			value = 0x02;
+			break;
+		case BATFETControl::SystemPowerReset:
+			value = 0x03;
+			break;
+		case BATFETControl::Normal:
+		default:
+			break;
+		}
+
+		writeReg(SHORT(0x18), value);
+    }
 }

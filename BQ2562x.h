@@ -58,6 +58,14 @@ namespace PowerFeather
             LastValue
         };
 
+        enum class BATFETControl
+        {
+            Normal,
+            ShutdownMode,
+            ShipMode,
+            SystemPowerReset
+        };
+
         BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
 
         template <typename T>
@@ -88,6 +96,7 @@ namespace PowerFeather
         bool checkADC();
         uint8_t getPartInformation();
         void setVINDPM(float voltage);
+        void setBATFETControl(BATFETControl control);
 
         VBUSStat getVBUSStat();
         ChargeStat getChargeStat();

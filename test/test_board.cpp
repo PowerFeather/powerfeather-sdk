@@ -5,10 +5,13 @@
 #include "unity.h"
 
 #include <Board.h>
+#include <BQ2562x.h>
 
-PowerFeather::Board board;
+using namespace PowerFeather;
 
-static constexpr char MODULE_NAME[] = "[PowerFeather::Board]";
+Board board;
+
+static constexpr char MODULE_NAME[] = "[Board]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
 TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
@@ -71,7 +74,7 @@ extern "C" void determine_power_source()
 
     #define LEDC_TIMER              LEDC_TIMER_0
     #define LEDC_MODE               LEDC_LOW_SPEED_MODE
-    #define LEDC_OUTPUT_IO          (PowerFeather::Board::Signal::LED) // Define the output GPIO
+    #define LEDC_OUTPUT_IO          (Board::Signal::LED) // Define the output GPIO
     #define LEDC_CHANNEL            LEDC_CHANNEL_0
     #define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
     #define LEDC_FREQUENCY          (5000) // Frequency in Hertz. Set frequency at 5 kHz
@@ -96,29 +99,29 @@ extern "C" void determine_power_source()
     ledc_channel.hpoint         = 0;
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
 
-    PowerFeather::Board::PowerInput last = board.getPowerInput();
+    Board::PowerInput last = board.getPowerInput();
     bool first = true;
 
     while (true)
     {
-        PowerFeather::Board::PowerInput current = board.getPowerInput();
+        Board::PowerInput current = board.getPowerInput();
         if (current != last || first)
         {
             switch (current)
             {
-            case PowerFeather::Board::PowerInput::Battery:
+            case Board::PowerInput::Battery:
                 // Barely lit
                 ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.001f));
                 printf("battery\n");
                 break;
 
-            case PowerFeather::Board::PowerInput::USB:
+            case Board::PowerInput::USB:
                 // Faint
                 ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.01));
                 printf("usb\n");
                 break;
 
-            case PowerFeather::Board::PowerInput::DC:
+            case Board::PowerInput::DC:
                 // Bright
                 ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(1.0f));
                 printf("dc\n");
@@ -202,26 +205,39 @@ TEST_CASE("digital pin connections", MODULE_NAME)
     }
 }
 
-// TEST_CASE("Temperature sense", MODULE_NAME)
+TEST_CASE("3.3V regulator response to VSYS voltage", MODULE_NAME)
+{
+    // Check the response of the 3.3V switching regulator as VSYS is adjusted.
+}
+
+// TEST_CASE("set VINDPM", MODULE_NAME)
+// {
+//     // Check the response of the 3.3V switching regulator as VSYS is adjusted.
+//     board.init();
+//     board.getCharger().setVINDPM(4.0f);
+// }
+
+// TEST_CASE("temperature sense", MODULE_NAME)
 // {
 //     // Tie potentiometer to temperature sense
 //     // Check interrupt, may be combined with another test
 //     board.init();
 // }
 
-// TEST_CASE("Basic I2C communicaton", MODULE_NAME)
+// TEST_CASE("basic I2C communicaton", MODULE_NAME)
 // {
 //     board.init();
 
 //     board.getCharger().getPartInformation();
 // }
 
-// TEST_CASE("FuelGauge interrupt", MODULE_NAME)
+// TEST_CASE("fuel guage interrupt", MODULE_NAME)
 // {
 //     board.init();
+//     // Write a high temperature to register
 // }
 
-// TEST_CASE("Charge enable and disable", MODULE_NAME)
+// TEST_CASE("charge enable and disable", MODULE_NAME)
 // {
 //     board.init();
 // }
