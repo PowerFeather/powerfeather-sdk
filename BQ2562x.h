@@ -68,6 +68,12 @@ namespace PowerFeather
             SystemPowerReset
         };
 
+        enum class BATFETDelay
+        {
+            Delay20ms,
+            Delay10s,
+        };
+
         BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
 
         template <typename T>
@@ -99,6 +105,7 @@ namespace PowerFeather
         uint8_t getPartInformation();
         void setVINDPM(float voltage);
         void setBATFETControl(BATFETControl control);
+        void setBATFETDelay(BATFETDelay delay);
 
         VBUSStat getVBUSStat();
         ChargeStat getChargeStat();

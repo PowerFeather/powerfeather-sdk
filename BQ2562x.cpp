@@ -304,7 +304,7 @@ namespace PowerFeather
 
     void BQ2562x::setBATFETControl(BATFETControl control)
     {
-		uint16_t value = 0x0;
+		uint8_t value = 0x0;
 		switch (control)
 		{
 		case BATFETControl::ShutdownMode:
@@ -321,6 +321,22 @@ namespace PowerFeather
 			break;
 		}
 
-		writeReg(SHORT(0x18), value);
-    }
+		writeReg(BYTE(0x18), 0, 1, value);
+	}
+
+	void BQ2562x::setBATFETDelay(BATFETDelay delay)
+	{
+		bool value = false;
+		switch (delay)
+		{
+		case BATFETDelay::Delay10s:
+			value = true;
+			break;
+		case BATFETDelay::Delay20ms:
+		default:
+			break;
+		}
+
+		writeReg(BYTE(0x18), 2, value);
+	}
 }

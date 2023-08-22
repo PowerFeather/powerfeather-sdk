@@ -234,43 +234,16 @@ TEST_CASE("charger i2c communicaton", MODULE_NAME)
     TEST_ASSERT_EQUAL(0x02, rev);
 }
 
-// TEST_CASE("fuel guage interrupt", MODULE_NAME)
-// {
-//     board.init();
-//     // Write a high temperature to register
-// }
-
-// TEST_CASE("charge enable and disable", MODULE_NAME)
-// {
-//     board.init();
-// }
-
-TEST_CASE("ship mode", MODULE_NAME)
+TEST_CASE("fuel guage interrupt", MODULE_NAME)
 {
-    // Test ship mode can be entered
-    // Measure ship mode current
-    // Tie QON to reset, check that ship mode can be exited
     board.init();
-    board.getCharger().setBATFETControl(BQ2562x::BATFETControl::ShipMode);
+    // Write a high temperature to register
 }
 
-TEST_CASE("shutdown mode", MODULE_NAME)
+TEST_CASE("charging", MODULE_NAME)
 {
-    // Test shutdown mode can be entered
-    // Measure shutdown mode current
-    // Tie QON to reset, check that ship mode can be exited
+    // Measure IBAT current
     board.init();
-    board.getCharger().setBATFETControl(BQ2562x::BATFETControl::ShutdownMode);
-}
-
-
-TEST_CASE("power cycle", MODULE_NAME)
-{
-    // Test shutdown mode can be entered
-    // Measure shutdown mode current
-    // Tie QON to reset, check that ship mode can be exited
-    board.init();
-    board.getCharger().setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset);
 }
 
 TEST_CASE("current loading", MODULE_NAME)
@@ -278,5 +251,50 @@ TEST_CASE("current loading", MODULE_NAME)
     // Perform iperf test
     // 5V is loaded up to 2.5A
     // 3.3V is loaded up to 500mA
+    // Measure ibus current
     board.init();
+}
+
+void wait_for_battery(uint32_t delay_ms)
+{
+    Board::PowerInput input = board.getPowerInput();
+    while (input != Board::PowerInput::Battery) {
+        input = board.getPowerInput();
+    }
+    vTaskDelay(pdMS_TO_TICKS(delay_ms));
+}
+
+void test_batctrl(BQ2562x::BATFETControl control)
+{
+    // Test ship mode can be entered
+    // Measure ship mode current
+    // Tie QON to reset, check that ship mode can be exited
+    board.init();
+    board.getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms);
+    wait_for_battery(1000);
+    board.getCharger().setBATFETControl(control);
+}
+
+TEST_CASE("ship mode", MODULE_NAME)
+{
+    // Test ship mode can be entered
+    // Measure ship mode current
+    // Tie QON to reset, check that ship mode can be exited
+    test_batctrl(BQ2562x::BATFETControl::ShipMode);
+}
+
+TEST_CASE("shutdown mode", MODULE_NAME)
+{
+    // Test shutdown mode can be entered
+    // Measure shutdown mode current
+    // Tie QON to reset, check that ship mode can be exited
+    test_batctrl(BQ2562x::BATFETControl::ShutdownMode);
+}
+
+TEST_CASE("power cycle", MODULE_NAME)
+{
+    // Test shutdown mode can be entered
+    // Measure shutdown mode current
+    // Tie QON to reset, check that ship mode can be exited
+    test_batctrl(BQ2562x::BATFETControl::SystemPowerReset);
 }
