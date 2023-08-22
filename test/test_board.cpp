@@ -224,11 +224,15 @@ TEST_CASE("3.3V regulator response to VSYS voltage", MODULE_NAME)
 //     board.init();
 // }
 
-// TEST_CASE("basic I2C communicaton", MODULE_NAME)
-// {
-//     board.init();
-//     board.getCharger().getPartInformation();
-// }
+TEST_CASE("charger i2c communicaton", MODULE_NAME)
+{
+    board.init();
+    uint8_t partNum = 0, rev = 0;
+    board.getCharger().readReg(BYTE(0x38), 0, 2, rev);
+    board.getCharger().readReg(BYTE(0x38), 3, 5, partNum);
+    TEST_ASSERT_EQUAL(0x02, partNum);
+    TEST_ASSERT_EQUAL(0x02, rev);
+}
 
 // TEST_CASE("fuel guage interrupt", MODULE_NAME)
 // {

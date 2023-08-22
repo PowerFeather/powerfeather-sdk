@@ -2,8 +2,6 @@
 
 namespace PowerFeather
 {
-	#define BYTE(x)		static_cast<uint8_t>(x)
-	#define SHORT(x)	static_cast<uint16_t>(x)
 	// Initialize the board
 	// batteryCapacity - advertised capacity of the battery
 	// chargeRate - charge rate of the battery expressed as fraction of the capacity, 
@@ -72,8 +70,10 @@ namespace PowerFeather
 		bool res = _i2c.read(_i2c_address, address, data);
 		if (res)
 		{
-			int right = (((sizeof(value) * CHAR_BIT) - 1) - end);
-			value = (data << right) >> (right + start);
+			int left = (((sizeof(value) * CHAR_BIT) - 1) - end);
+			data <<= left;
+			data >>= left + start;
+			value = data;
 		}
 		return res;
 	}
