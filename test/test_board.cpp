@@ -227,7 +227,6 @@ TEST_CASE("3.3V regulator response to VSYS voltage", MODULE_NAME)
 // TEST_CASE("basic I2C communicaton", MODULE_NAME)
 // {
 //     board.init();
-
 //     board.getCharger().getPartInformation();
 // }
 
@@ -242,50 +241,38 @@ TEST_CASE("3.3V regulator response to VSYS voltage", MODULE_NAME)
 //     board.init();
 // }
 
-// TEST_CASE("Ship mode", MODULE_NAME)
-// {
-//     // Test ship mode can be entered
-//     // Measure ship mode current
-//     // Tie QON to reset, check that ship mode can be exited
-//     board.init();
-// }
+TEST_CASE("ship mode", MODULE_NAME)
+{
+    // Test ship mode can be entered
+    // Measure ship mode current
+    // Tie QON to reset, check that ship mode can be exited
+    board.init();
+    board.getCharger().setBATFETControl(BQ2562x::BATFETControl::ShipMode);
+}
 
-// TEST_CASE("Shutdown mode current", MODULE_NAME)
-// {
-//     // Test shutdown mode can be entered
-//     // Measure shutdown mode current
-//     // Tie QON to reset, check that ship mode can be exited
-//     board.init();
-// }
-
-
-
-// TEST_CASE("Current loading", MODULE_NAME)
-// {
-//     // Perform iperf test
-//     // 5V is loaded up to 2.5A
-//     // 3.3V is loaded up to 500mA
-//     board.init();
-// }
+TEST_CASE("shutdown mode", MODULE_NAME)
+{
+    // Test shutdown mode can be entered
+    // Measure shutdown mode current
+    // Tie QON to reset, check that ship mode can be exited
+    board.init();
+    board.getCharger().setBATFETControl(BQ2562x::BATFETControl::ShutdownMode);
+}
 
 
+TEST_CASE("power cycle", MODULE_NAME)
+{
+    // Test shutdown mode can be entered
+    // Measure shutdown mode current
+    // Tie QON to reset, check that ship mode can be exited
+    board.init();
+    board.getCharger().setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset);
+}
 
-// printf("voltage: %02x\n", board.getCharger().getPartInformation());
-
-// uint8_t adc_reg = 0;
-// board.getCharger().readReg((uint8_t)0x26, adc_reg);
-// printf("adc_reg: 0x%02x ----\n", adc_reg);
-
-// board.getCharger().enableADC(true);
-
-// while (true)
-// {
-//     adc_reg = 0;
-//     board.getCharger().readReg((uint8_t)0x26, adc_reg);
-//     printf("adc_reg: 0x%02x ---- ", adc_reg);
-
-
-//     printf("voltage: %f\n", board.getCharger().getBatteryVoltage());
-//     vTaskDelay(pdMS_TO_TICKS(100));
-// }
-// test6();
+TEST_CASE("current loading", MODULE_NAME)
+{
+    // Perform iperf test
+    // 5V is loaded up to 2.5A
+    // 3.3V is loaded up to 500mA
+    board.init();
+}
