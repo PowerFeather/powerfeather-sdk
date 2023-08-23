@@ -223,6 +223,28 @@ TEST_CASE("3.3V regulator response to VSYS voltage", MODULE_NAME)
 //     // Check interrupt, may be combined with another test
 //     board.init();
 // }
+static void button_anyedge_handler(void *arg)
+{
+    gpio_set_level(Board::Signal::LED, gpio_get_level(Board::Signal::BTN));
+}
+
+TEST_CASE("button and led", MODULE_NAME)
+{
+    // Tie potentiometer to temperature sense
+    // Check interrupt, may be combined with another test
+    board.init();
+
+    gpio_set_level(Board::Signal::LED, true);
+
+    gpio_set_intr_type(Board::Signal::BTN, GPIO_INTR_ANYEDGE);
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(Board::Signal::BTN, button_anyedge_handler, NULL);
+
+    while (true)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
 
 TEST_CASE("charger i2c communicaton", MODULE_NAME)
 {
