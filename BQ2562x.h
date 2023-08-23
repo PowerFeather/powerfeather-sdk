@@ -89,6 +89,7 @@ namespace PowerFeather
         template <typename T>
         bool readReg(T address, T& value);
         
+        float getBatteryTemperature();
         bool setOTGMode(OTGMode mode);
         bool setOTGVoltage(float voltage);
         bool setChargeCurrent(uint16_t current);
@@ -96,7 +97,6 @@ namespace PowerFeather
         bool enableSTAT(bool enable);
         bool enableTS(bool enable);
         bool enableWD(bool enable);
-        uint8_t getFault();
         float getBatteryVoltage();
         float getVBUSVoltage();
         void enableADC(bool enable, ADCRate rate = ADCRate::Oneshot, ADCSampling sampling = ADCSampling::LastValue, 
@@ -106,6 +106,10 @@ namespace PowerFeather
         void setVINDPM(float voltage);
         void setBATFETControl(BATFETControl control);
         void setBATFETDelay(BATFETDelay delay);
+
+        uint8_t getStat(int num);
+        uint8_t getFlags(int num);
+        uint8_t getFault();
 
         VBUSStat getVBUSStat();
         ChargeStat getChargeStat();

@@ -223,6 +223,16 @@ TEST_CASE("3.3V regulator response to VSYS voltage", MODULE_NAME)
 //     // Check interrupt, may be combined with another test
 //     board.init();
 // }
+TEST_CASE("charger status and flags", MODULE_NAME)
+{
+    board.init();
+    printf("\nflag0: 0x%02x ", board.getCharger().getFlags(0));
+    printf("flag1: 0x%02x ", board.getCharger().getFlags(1));
+    printf("stat0: 0x%02x ", board.getCharger().getStat(0));
+    printf("stat1: 0x%02x ", board.getCharger().getStat(1));
+    printf("fault: 0x%02x\n\n", board.getCharger().getFault());
+}
+
 static void button_anyedge_handler(void *arg)
 {
     gpio_set_level(Board::Signal::LED, gpio_get_level(Board::Signal::BTN));
@@ -258,8 +268,8 @@ TEST_CASE("charger i2c communicaton", MODULE_NAME)
 
 TEST_CASE("fuel guage interrupt", MODULE_NAME)
 {
-    board.init();
     // Write a high temperature to register
+    board.init();
 }
 
 TEST_CASE("charging", MODULE_NAME)

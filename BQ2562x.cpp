@@ -119,10 +119,24 @@ namespace PowerFeather
 		return res;
 	}
 
+	uint8_t BQ2562x::getStat(int num)
+	{
+		uint8_t data = 0;
+		readReg(BYTE(0x1d + num), data);
+		return data;
+	}
+
 	uint8_t BQ2562x::getFault()
 	{
 		uint8_t data = 0;
 		readReg(BYTE(0x1f), data);
+		return data;
+	}
+
+	uint8_t BQ2562x::getFlags(int num)
+	{
+		uint8_t data = 0;
+		readReg(BYTE(0x20 + num), data);
 		return data;
 	}
 
@@ -338,5 +352,12 @@ namespace PowerFeather
 		}
 
 		writeReg(BYTE(0x18), 2, value);
+	}
+
+	float BQ2562x::getBatteryTemperature()
+	{
+		uint16_t value;
+		readReg(SHORT(0x34), 0, 11, value);
+		return value * 0.0961;
 	}
 }
