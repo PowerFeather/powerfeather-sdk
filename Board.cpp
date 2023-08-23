@@ -35,11 +35,12 @@ namespace PowerFeather
 
     bool Board::init()
     {
-        soc_reset_reason_t reset_reason = esp_rom_get_reset_reason(0);
+        static RTC_NOINIT_ATTR uint32_t init;
+        static constexpr uint32_t magic = 0xDEADBEEF;
 
         _masterI2C.init(_i2c_port, _Signal::SDA0, _Signal::SCL0, _i2c_freq);
 
-        if (reset_reason == RESET_REASON_CHIP_POWER_ON)
+        if (init != magic)
         {
             // Disable charging.
             _charger.enableCharging(false);
@@ -66,12 +67,7 @@ namespace PowerFeather
 
         // Only initialize RTC pins if the RTC core has been reset - this
         // happens on system and chip-level resets.
-        if (reset_reason == RESET_REASON_CHIP_POWER_ON ||
-            reset_reason == RESET_REASON_CHIP_BROWN_OUT ||
-            reset_reason == RESET_REASON_CHIP_SUPER_WDT ||
-            reset_reason == RESET_REASON_SYS_RTC_WDT ||
-            reset_reason == RESET_REASON_SYS_SUPER_WDT ||
-            reset_reason == RESET_REASON_SYS_CLK_GLITCH)
+        if (init != magic)
         {
             // By default, enable both the 3V3 power outputs.
             enableHeader3V3(true);
