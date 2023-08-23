@@ -210,19 +210,39 @@ TEST_CASE("3.3V regulator response to VSYS voltage", MODULE_NAME)
     // Check the response of the 3.3V switching regulator as VSYS is adjusted.
 }
 
-// TEST_CASE("set VINDPM", MODULE_NAME)
-// {
-//     // Check the response of the 3.3V switching regulator as VSYS is adjusted.
-//     board.init();
-//     board.getCharger().setVINDPM(4.0f);
-// }
+static bool charger_int = false;
 
-// TEST_CASE("temperature sense", MODULE_NAME)
-// {
-//     // Tie potentiometer to temperature sense
-//     // Check interrupt, may be combined with another test
-//     board.init();
-// }
+static void charger_int_handler(void *arg)
+{
+    charger_int = true;
+}
+
+TEST_CASE("temperature sense", MODULE_NAME)
+{
+    // Tie potentiometer to temperature sense
+    // Check interrupt, may be combined with another test
+    board.init();
+
+    board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
+
+    gpio_set_intr_type(Board::Signal::INT, GPIO_INTR_NEGEDGE);
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(Board::Signal::INT, charger_int_handler, &board);
+
+    board.getCharger().enableTS(true);
+
+    while (true)
+    {
+        if (charger_int)
+        {
+            printf("charger interrupt\n");
+            charger_int = false;
+        }
+        printf("temperature: %f\n", board.getCharger().getBatteryTemperature());
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+
 TEST_CASE("charger status and flags", MODULE_NAME)
 {
     board.init();
@@ -272,9 +292,11 @@ TEST_CASE("fuel guage interrupt", MODULE_NAME)
     board.init();
 }
 
-TEST_CASE("charging", MODULE_NAME)
+TEST_CASE("discharging and charging", MODULE_NAME)
 {
-    // Measure IBAT current
+    // Measure VBAT, IBAT
+    // Disable charging initially, until certain SOC
+    // Enable charging, then disable again once another SOC is reached
     board.init();
 }
 
