@@ -16,7 +16,6 @@ static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
 TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
 {
-    board.init();
     board.enableHeader3V3(false);
     board.enableSTEMMAQT3V3(false);
     board.setEN(false);
@@ -25,7 +24,6 @@ TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
 
 TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
 {
-    board.init();
     board.enableHeader3V3(true);
     board.enableSTEMMAQT3V3(true);
     board.setEN(true);
@@ -34,7 +32,6 @@ TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
 
 TEST_CASE("3.3v power outputs on, deep sleep current draw", MODULE_NAME)
 {
-    board.init();
     board.enableHeader3V3(true);
     board.enableSTEMMAQT3V3(true);
     esp_deep_sleep(MS_TO_US(10000));
@@ -42,7 +39,6 @@ TEST_CASE("3.3v power outputs on, deep sleep current draw", MODULE_NAME)
 
 TEST_CASE("3.3V power outputs off, deep sleep current draw", MODULE_NAME)
 {
-    board.init();
     board.enableHeader3V3(false);
     board.enableSTEMMAQT3V3(false);
     esp_deep_sleep(MS_TO_US(10000));
@@ -50,7 +46,6 @@ TEST_CASE("3.3V power outputs off, deep sleep current draw", MODULE_NAME)
 
 TEST_CASE("rtc outputs off, no glitch on digital reset", MODULE_NAME)
 {
-    board.init();
     board.enableHeader3V3(false);
     board.enableSTEMMAQT3V3(false);
     board.setEN(false);
@@ -59,7 +54,6 @@ TEST_CASE("rtc outputs off, no glitch on digital reset", MODULE_NAME)
 
 TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
 {
-    board.init();
     board.enableHeader3V3(true);
     board.enableSTEMMAQT3V3(true);
     board.setEN(true);
@@ -69,7 +63,6 @@ TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
 extern "C" void determine_power_source()
 {
     // No reset when removing external supply (usb/dc) with battery connected.
-    board.init();
     board.enableHeader3V3(true);
 
     #define LEDC_TIMER              LEDC_TIMER_0
@@ -221,8 +214,6 @@ TEST_CASE("temperature sense", MODULE_NAME)
 {
     // Tie potentiometer to temperature sense
     // Check interrupt, may be combined with another test
-    board.init();
-
     board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
 
     gpio_set_intr_type(Board::Signal::INT, GPIO_INTR_NEGEDGE);
@@ -245,7 +236,6 @@ TEST_CASE("temperature sense", MODULE_NAME)
 
 TEST_CASE("charger status and flags", MODULE_NAME)
 {
-    board.init();
     printf("\nflag0: 0x%02x ", board.getCharger().getFlags(0));
     printf("flag1: 0x%02x ", board.getCharger().getFlags(1));
     printf("stat0: 0x%02x ", board.getCharger().getStat(0));
@@ -262,8 +252,6 @@ TEST_CASE("button and led", MODULE_NAME)
 {
     // Tie potentiometer to temperature sense
     // Check interrupt, may be combined with another test
-    board.init();
-
     gpio_set_level(Board::Signal::LED, true);
 
     gpio_set_intr_type(Board::Signal::BTN, GPIO_INTR_ANYEDGE);
@@ -278,7 +266,6 @@ TEST_CASE("button and led", MODULE_NAME)
 
 TEST_CASE("charger i2c communicaton", MODULE_NAME)
 {
-    board.init();
     uint8_t partNum = 0, rev = 0;
     board.getCharger().readReg(BYTE(0x38), 0, 2, rev);
     board.getCharger().readReg(BYTE(0x38), 3, 5, partNum);
@@ -289,7 +276,6 @@ TEST_CASE("charger i2c communicaton", MODULE_NAME)
 TEST_CASE("fuel guage interrupt", MODULE_NAME)
 {
     // Write a high temperature to register
-    board.init();
 }
 
 TEST_CASE("discharging and charging", MODULE_NAME)
@@ -297,7 +283,6 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     // Measure VBAT, IBAT
     // Disable charging initially, until certain SOC
     // Enable charging, then disable again once another SOC is reached
-    board.init();
 }
 
 TEST_CASE("current loading", MODULE_NAME)
@@ -306,7 +291,6 @@ TEST_CASE("current loading", MODULE_NAME)
     // 5V is loaded up to 2.5A
     // 3.3V is loaded up to 500mA
     // Measure ibus current
-    board.init();
 }
 
 void wait_for_battery(uint32_t delay_ms)
@@ -323,7 +307,6 @@ void test_batctrl(BQ2562x::BATFETControl control)
     // Test ship mode can be entered
     // Measure ship mode current
     // Tie QON to reset, check that ship mode can be exited
-    board.init();
     board.getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms);
     wait_for_battery(1000);
     board.getCharger().setBATFETControl(control);
