@@ -58,6 +58,8 @@ namespace PowerFeather
 
             static constexpr gpio_num_t SCL =      GPIO_NUM_36; // Board SCL, shared with STEMMA QT, 5,1k pullup, Unconfigured
             static constexpr gpio_num_t SDA =      GPIO_NUM_45; // Board SDA, shared with STEMMA QT, 5.1k pullup, Unconfigured
+
+            static constexpr gpio_num_t CE =      GPIO_NUM_7; // Board BTN, Input
         };
 
         bool init();
