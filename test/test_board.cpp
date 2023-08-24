@@ -287,6 +287,7 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     // Enable charging, then disable again once another SOC is reached
     board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
     board.getCharger().enableCharging(true);
+    board.getCharger().setChargeCurrent(50);
 
     while (true)
     {
