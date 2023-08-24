@@ -149,7 +149,6 @@ namespace PowerFeather
 
 	void BQ2562x::enableCharging(bool state)
 	{
-		// gpio_set_level(GPIO_NUM_7, !state);
 		writeReg(BYTE(0x16), 5, state);
 	}
 
