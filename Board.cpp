@@ -50,7 +50,7 @@ namespace PowerFeather
 
         // Initialize digital pins always.
         // _initDigitalPin(Board::Signal::EN, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Signal::CE, GPIO_MODE_OUTPUT_OD);
+        // _initDigitalPin(Board::Signal::CE, GPIO_MODE_OUTPUT_OD);
         _initDigitalPin(Board::Signal::INT, GPIO_MODE_INPUT);
         _initDigitalPin(Board::Signal::BTN, GPIO_MODE_INPUT);
 
