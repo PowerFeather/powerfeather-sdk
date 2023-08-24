@@ -98,7 +98,9 @@ namespace PowerFeather
         bool enableTS(bool enable);
         bool enableWD(bool enable);
         float getBatteryVoltage();
-        float getVBUSVoltage();
+        float getVBUS();
+        float getIBAT();
+        float getVBAT();
         void enableADC(bool enable, ADCRate rate = ADCRate::Oneshot, ADCSampling sampling = ADCSampling::LastValue, 
                         ADCAverage average = ADCAverage::LastValue, ADCAverageInit averageInit = ADCAverageInit::LastValue);
         bool checkADC();

@@ -164,12 +164,37 @@ namespace PowerFeather
 		return false;
     }
 
-    float BQ2562x::getVBUSVoltage()
+    float BQ2562x::getVBUS()
     {
 		uint16_t value = 0;
-		readReg(SHORT(0x2c), value);
-		printf("value: %d\n", value);
-		return value / 1000.0f;
+		readReg(SHORT(0x2c), 2, 14, value);
+		return (value * 3.97f) / 1000.0f;
+    }
+
+    float BQ2562x::getIBAT()
+    {
+		uint16_t value = 0;
+		readReg(SHORT(0x2a), 2, 15, value);
+
+		float partial = 0.0f;
+
+		if (value >= 0x38AD && value <= 0x3FFF)
+		{
+			partial = (0x3FFF - value + 1) * -4.0f;
+		}
+		else
+		{
+			partial = value * 4.0f;
+		}
+
+		return partial / 1000.0f;
+    }
+
+    float BQ2562x::getVBAT()
+    {
+		uint16_t value = 0;
+		readReg(SHORT(0x30), 1, 12, value);
+		return (value * 1.99f) / 1000.0f;
     }
 
     void BQ2562x::setVINDPM(float voltage)

@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include <esp_private/system_internal.h>
 #include <esp_sleep.h>
 #include <driver/ledc.h>
@@ -283,6 +285,42 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     // Measure VBAT, IBAT
     // Disable charging initially, until certain SOC
     // Enable charging, then disable again once another SOC is reached
+    board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
+    board.getCharger().enableCharging(true);
+
+    while (true)
+    {
+        float vbat = board.getCharger().getVBAT();
+        float ibat = board.getCharger().getIBAT();
+
+        BQ2562x::ChargeStat stat = board.getCharger().getChargeStat();
+
+        char *stat_str = NULL;
+
+        switch (stat)
+        {
+        case BQ2562x::ChargeStat::Trickle:
+            stat_str = "trickle";
+            break;
+
+        case BQ2562x::ChargeStat::Taper:
+            stat_str = "taper";
+            break;
+
+        case BQ2562x::ChargeStat::TopOff:
+            stat_str = "topoff";
+            break;
+
+        case BQ2562x::ChargeStat::Terminated:
+        default:
+            stat_str = "terminated";
+            break;
+        }
+
+        printf("time: %ld\tstat: %s\tvbat: %.2f\tibat: %.2f\n", time(NULL), stat_str, vbat, ibat);
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
 }
 
 TEST_CASE("current loading", MODULE_NAME)
