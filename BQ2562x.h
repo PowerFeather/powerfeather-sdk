@@ -101,6 +101,7 @@ namespace PowerFeather
         float getVBUS();
         float getIBAT();
         float getVBAT();
+        float getIBUS();
         void enableADC(bool enable, ADCRate rate = ADCRate::Oneshot, ADCSampling sampling = ADCSampling::LastValue, 
                         ADCAverage average = ADCAverage::LastValue, ADCAverageInit averageInit = ADCAverageInit::LastValue);
         bool checkADC();

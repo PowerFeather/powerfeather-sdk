@@ -190,6 +190,25 @@ namespace PowerFeather
 		return partial / 1000.0f;
     }
 
+    float BQ2562x::getIBUS()
+    {
+		uint16_t value = 0;
+		readReg(SHORT(0x28), 1, 15, value);
+
+		float partial = 0.0f;
+
+		if (value >= 0x7830 && value <= 0x7FFF)
+		{
+			partial = (0x7FFF - value + 1) * -2.0f;
+		}
+		else
+		{
+			partial = value * 4.0f;
+		}
+
+		return partial / 1000.0f;
+    }
+
     float BQ2562x::getVBAT()
     {
 		uint16_t value = 0;
