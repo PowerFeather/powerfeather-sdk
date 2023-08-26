@@ -339,17 +339,16 @@ static void start_iperf_server()
     esp_netif_get_ip_info(wifi_netif, &ip);
 
     cfg.flag |= IPERF_FLAG_SERVER | IPERF_FLAG_TCP;
-    // cfg.destination_ip4;
     cfg.source_ip4 = ip.ip.addr;
     cfg.type = IPERF_IP_TYPE_IPV4;
     cfg.dport = IPERF_DEFAULT_PORT;
     cfg.sport = IPERF_DEFAULT_PORT;
     cfg.interval = IPERF_DEFAULT_INTERVAL;
-    cfg.time = IPERF_DEFAULT_TIME;
+    cfg.time = UINT32_MAX;
     cfg.len_send_buf = 0;
     cfg.bw_lim = IPERF_DEFAULT_NO_BW_LIMIT;
 
-    printf("mode=%s-%s sip=%d.%d.%d.%d:%d, dip=%d.%d.%d.%d:%d, interval=%d, time=%d",
+    printf("mode=%s-%s sip=%d.%d.%d.%d:%d, dip=%d.%d.%d.%d:%d, interval=%d, time=%d\n",
              cfg.flag & IPERF_FLAG_TCP ? "tcp" : "udp",
              cfg.flag & IPERF_FLAG_SERVER ? "server" : "client",
              cfg.source_ip4 & 0xFF, (cfg.source_ip4 >> 8) & 0xFF, (cfg.source_ip4 >> 16) & 0xFF,
