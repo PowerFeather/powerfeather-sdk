@@ -327,21 +327,9 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     }
 }
 
-static void wifi_event_handler(void* arg, esp_event_base_t event_base,
-                                    int32_t event_id, void* event_data)
-{
-    if (event_id == WIFI_EVENT_AP_STACONNECTED) {
-        wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-        printf("station "MACSTR" join, AID=%d\n", MAC2STR(event->mac), event->aid);
-    } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
-        wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-        printf("station "MACSTR" leave, AID=%d\n", MAC2STR(event->mac), event->aid);
-    }
-}
-
 static esp_netif_t *wifi_netif = NULL;
 
-static void iperf_server()
+static void start_iperf_server()
 {
     // Start iperf
     iperf_cfg_t cfg;
@@ -361,7 +349,28 @@ static void iperf_server()
     cfg.len_send_buf = 0;
     cfg.bw_lim = IPERF_DEFAULT_NO_BW_LIMIT;
 
+    printf("mode=%s-%s sip=%d.%d.%d.%d:%d, dip=%d.%d.%d.%d:%d, interval=%d, time=%d",
+             cfg.flag & IPERF_FLAG_TCP ? "tcp" : "udp",
+             cfg.flag & IPERF_FLAG_SERVER ? "server" : "client",
+             cfg.source_ip4 & 0xFF, (cfg.source_ip4 >> 8) & 0xFF, (cfg.source_ip4 >> 16) & 0xFF,
+             (cfg.source_ip4 >> 24) & 0xFF, cfg.sport,
+             cfg.destination_ip4 & 0xFF, (cfg.destination_ip4 >> 8) & 0xFF,
+             (cfg.destination_ip4 >> 16) & 0xFF, (cfg.destination_ip4 >> 24) & 0xFF, cfg.dport,
+             cfg.interval, cfg.time);
+
     iperf_start(&cfg);
+}
+
+static void wifi_event_handler(void* arg, esp_event_base_t event_base,
+                                    int32_t event_id, void* event_data)
+{
+    if (event_id == WIFI_EVENT_AP_STACONNECTED) {
+        wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
+        printf("station "MACSTR" join, AID=%d\n", MAC2STR(event->mac), event->aid);
+    } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+        wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
+        printf("station "MACSTR" leave, AID=%d\n", MAC2STR(event->mac), event->aid);
+    }
 }
 
 static void start_ap()
@@ -397,7 +406,7 @@ static void start_ap()
 
     wifi_config.ap.ssid_len = strlen(SSID);
     wifi_config.ap.channel = 6;
-    wifi_config.ap.max_connection = 4;
+    wifi_config.ap.max_connection = 1;
     wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
     if (strlen(PASS) == 0) {
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;
@@ -406,6 +415,12 @@ static void start_ap()
     esp_wifi_set_mode(WIFI_MODE_AP);
     esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
     esp_wifi_start();
+}
+
+bool is_iperf_running()
+{
+    TaskHandle_t iperf_task = xTaskGetHandle("iperf_traffic");
+    return iperf_task;
 }
 
 TEST_CASE("current loading", MODULE_NAME)
@@ -417,12 +432,17 @@ TEST_CASE("current loading", MODULE_NAME)
     board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
 
     start_ap();
-    // iperf_server();
 
     while (true)
     {
+        if (!is_iperf_running())
+        {
+            start_iperf_server();
+        }
+
         float ibus = board.getCharger().getIBUS();
         printf("ibus: %.2f\n", ibus);
+
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
