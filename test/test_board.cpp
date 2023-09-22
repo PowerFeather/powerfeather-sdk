@@ -21,46 +21,46 @@ static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
 TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
 {
-    board.enableHeader3V3(false);
-    board.enableSTEMMAQT3V3(false);
+    board.enable3V3(false);
+    board.enableSQT(false);
     board.setEN(false);
     esp_deep_sleep(MS_TO_US(100));
 }
 
 TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
 {
-    board.enableHeader3V3(true);
-    board.enableSTEMMAQT3V3(true);
+    board.enable3V3(true);
+    board.enableSQT(true);
     board.setEN(true);
     esp_deep_sleep(MS_TO_US(100));
 }
 
 TEST_CASE("3.3v power outputs on, deep sleep current draw", MODULE_NAME)
 {
-    board.enableHeader3V3(true);
-    board.enableSTEMMAQT3V3(true);
+    board.enable3V3(true);
+    board.enableSQT(true);
     esp_deep_sleep(MS_TO_US(10000));
 }
 
 TEST_CASE("3.3V power outputs off, deep sleep current draw", MODULE_NAME)
 {
-    board.enableHeader3V3(false);
-    board.enableSTEMMAQT3V3(false);
+    board.enable3V3(false);
+    board.enableSQT(false);
     esp_deep_sleep(MS_TO_US(10000));
 }
 
 TEST_CASE("rtc outputs off, no glitch on digital reset", MODULE_NAME)
 {
-    board.enableHeader3V3(false);
-    board.enableSTEMMAQT3V3(false);
+    board.enable3V3(false);
+    board.enableSQT(false);
     board.setEN(false);
     esp_restart_noos_dig();
 }
 
 TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
 {
-    board.enableHeader3V3(true);
-    board.enableSTEMMAQT3V3(true);
+    board.enable3V3(true);
+    board.enableSQT(true);
     board.setEN(true);
     esp_restart_noos_dig();
 }
@@ -68,11 +68,11 @@ TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
 extern "C" void determine_power_source()
 {
     // No reset when removing external supply (usb/dc) with battery connected.
-    board.enableHeader3V3(true);
+    board.enable3V3(true);
 
     #define LEDC_TIMER              LEDC_TIMER_0
     #define LEDC_MODE               LEDC_LOW_SPEED_MODE
-    #define LEDC_OUTPUT_IO          (Board::Signal::LED) // Define the output GPIO
+    #define LEDC_OUTPUT_IO          (Board::Pin::FF::LED) // Define the output GPIO
     #define LEDC_CHANNEL            LEDC_CHANNEL_0
     #define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
     #define LEDC_FREQUENCY          (5000) // Frequency in Hertz. Set frequency at 5 kHz
@@ -221,9 +221,9 @@ TEST_CASE("temperature sense", MODULE_NAME)
     // Check interrupt, may be combined with another test
     board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
 
-    gpio_set_intr_type(Board::Signal::INT, GPIO_INTR_NEGEDGE);
+    gpio_set_intr_type(Board::Pin::FF::INT, GPIO_INTR_NEGEDGE);
     gpio_install_isr_service(0);
-    gpio_isr_handler_add(Board::Signal::INT, charger_int_handler, &board);
+    gpio_isr_handler_add(Board::Pin::FF::INT, charger_int_handler, &board);
 
     board.getCharger().enableTS(true);
 
@@ -250,18 +250,18 @@ TEST_CASE("charger status and flags", MODULE_NAME)
 
 static void button_anyedge_handler(void *arg)
 {
-    gpio_set_level(Board::Signal::LED, gpio_get_level(Board::Signal::BTN));
+    gpio_set_level(Board::Pin::FF::LED, gpio_get_level(Board::Pin::FF::BTN));
 }
 
 TEST_CASE("button and led", MODULE_NAME)
 {
     // Tie potentiometer to temperature sense
     // Check interrupt, may be combined with another test
-    gpio_set_level(Board::Signal::LED, true);
+    gpio_set_level(Board::Pin::FF::LED, true);
 
-    gpio_set_intr_type(Board::Signal::BTN, GPIO_INTR_ANYEDGE);
+    gpio_set_intr_type(Board::Pin::FF::BTN, GPIO_INTR_ANYEDGE);
     gpio_install_isr_service(0);
-    gpio_isr_handler_add(Board::Signal::BTN, button_anyedge_handler, NULL);
+    gpio_isr_handler_add(Board::Pin::FF::BTN, button_anyedge_handler, NULL);
 
     while (true)
     {

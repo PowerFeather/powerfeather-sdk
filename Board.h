@@ -18,6 +18,8 @@ namespace PowerFeather
 
         class Pin
         {
+        public:
+            friend Board;
             class GP // General-Purpose
             {
             // Pins that are not connected to anything on the board, and
@@ -65,23 +67,20 @@ namespace PowerFeather
         private:
             class FFI // Fixed function internal
             {
-                class InternalFixedFunction
-                {
-                public:
-                    static constexpr gpio_num_t USB_DP =    GPIO_NUM_4;
-                    static constexpr gpio_num_t USB_DM =    GPIO_NUM_14;
+            public:
+                static constexpr gpio_num_t USB_DP =    GPIO_NUM_4;
+                static constexpr gpio_num_t USB_DM =    GPIO_NUM_14;
 
-                    static constexpr gpio_num_t EN_3V3 =    GPIO_NUM_4;
-                    static constexpr gpio_num_t EN_SQT =    GPIO_NUM_14;
-                    static constexpr gpio_num_t EN =        GPIO_NUM_13;
+                static constexpr gpio_num_t EN_3V3 =    GPIO_NUM_4;
+                static constexpr gpio_num_t EN_SQT =    GPIO_NUM_14;
+                static constexpr gpio_num_t EN =        GPIO_NUM_13;
 
-                    static constexpr gpio_num_t SCL0 =      GPIO_NUM_47;
-                    static constexpr gpio_num_t SDA0 =      GPIO_NUM_48;
+                static constexpr gpio_num_t SCL0 =      GPIO_NUM_47;
+                static constexpr gpio_num_t SDA0 =      GPIO_NUM_48;
 
-                    static constexpr gpio_num_t SRC =       GPIO_NUM_38; // Board VDD_TYPE, Input
-                };
-            }
-        }
+                static constexpr gpio_num_t SRC =       GPIO_NUM_38; // Board SRC, Input
+            };
+        };
 
         bool init();
 
