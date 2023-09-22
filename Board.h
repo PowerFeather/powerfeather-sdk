@@ -87,62 +87,62 @@ namespace PowerFeather
 
         /**
          * Enable the header 3.3 V power output.
-         * 
+         *
          * @param enable Enable if true, disable if false.
          */
         void enable3V3(bool enable);
 
         /**
          * Enable the STEMMA QT 3.3 V power output.
-         * 
+         *
          * @param enable Enable if true, disable if false.
          */
         void enableSQT(bool enable);
 
         /**
          * Enable 5 V power output in battery-only mode.
-         * 
+         *
          * @param enable Enable if true, disable if false.
          */
         void enable5VOnBattery(bool enable);
 
         /**
          * Set 5 V power output voltage.
-         * 
+         *
          * Somewhat contrary to its name, the 5 V output is adjustable from 3.8 V - 5.2 V.
          * By default, it is set to 5.04V.
-         * 
+         *
          * @param voltage Voltage to set 5 V output to, valid input range [3.8, 5.2]
          */
         void set5V(float voltage);
 
         /**
          * Set VBAT minimum output voltage.
-         * 
+         *
          * Set the minimum output voltage on VBAT even if there is no battery or the
          * battery is fully depleted. The default value is 3.7 V.
-         *   
+         *
          * @param voltage Minimum voltage to set VBAT output to, valid input range [2.2, 4.3]
          */
         void setVBATMin(float voltage);
 
         /**
          * Set EN pin state.
-         * 
+         *
          * @param value EN pin is set high if true, set low if false
          */
         void setEN(bool value);
 
         /**
          * Get EN pin state.
-         * 
+         *
          * @return EN pin is high if true, low if false
          */
         bool getEN();
 
         /**
          * Enable the battery temperature sense pin, TS.
-         * 
+         *
          * @param enable  Enable if true, disable if false.
          */
         void enableTS(bool enable);
@@ -151,14 +151,32 @@ namespace PowerFeather
 
         /**
          * Determine the active power input, i.e. the input that is currently supplying power to the board.
-         * 
+         *
          * @return  The current active power input
          */
         PowerInput getPowerInput();
 
+        /**
+         * Enter ship mode.
+         *
+         * Ship mode is a low power state that consumes about 1.5 uA. It is only possible to
+         * exit this mode by pulling down QON or by plugging in USB or DC.
+         */
         void enterShipMode();
+
+        /**
+         * Enter shutdown mode.
+         *
+         * Ship mode is a low power state that consumes about 1.5 uA. It is only possible
+         * to exit this mode by plugging in USB or DC.
+         */
         void enterShutdownMode();
 
+
+        /**
+         * Enable battery charging.
+         *
+         */
         void enableCharging(bool enable);
         void setChargingMaxCurrent(float current);
         void setChargingTimer(uint32_t ms);
