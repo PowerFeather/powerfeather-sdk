@@ -46,10 +46,10 @@ namespace PowerFeather
                 static constexpr gpio_num_t TX0 =       GPIO_NUM_43;
             };
 
-            class FF // Fixed-function
-            {
             // Pins that are connected to a component on the board and has a
             // pre-determined/pre-configured function.
+            class FF // Fixed-function
+            {
             public:
                 static constexpr gpio_num_t ALARM =     GPIO_NUM_7; // FuelGauge ALARM, Input
                 static constexpr gpio_num_t INT =       GPIO_NUM_5; // Charger INT, Input
@@ -85,18 +85,75 @@ namespace PowerFeather
 
         bool init();
 
+        /**
+         * Enable the header 3.3 V power output.
+         * 
+         * @param enable Enable if true, disable if false.
+         */
         void enable3V3(bool enable);
+
+        /**
+         * Enable the STEMMA QT 3.3 V power output.
+         * 
+         * @param enable Enable if true, disable if false.
+         */
         void enableSQT(bool enable);
+
+        /**
+         * Enable 5 V power output in battery-only mode.
+         * 
+         * @param enable Enable if true, disable if false.
+         */
         void enable5VOnBattery(bool enable);
+
+        /**
+         * Set 5 V power output voltage.
+         * 
+         * Somewhat contrary to its name, the 5 V output is adjustable from 3.8 V - 5.2 V.
+         * By default, it is set to 5.04V.
+         * 
+         * @param voltage Voltage to set 5 V output to, valid input range [3.8, 5.2]
+         */
         void set5V(float voltage);
+
+        /**
+         * Set VBAT minimum output voltage.
+         * 
+         * Set the minimum output voltage on VBAT even if there is no battery or the
+         * battery is fully depleted. The default value is 3.7 V.
+         *   
+         * @param voltage Minimum voltage to set VBAT output to, valid input range [2.2, 4.3]
+         */
         void setVBATMin(float voltage);
 
+        /**
+         * Set EN pin state.
+         * 
+         * @param value EN pin is set high if true, set low if false
+         */
         void setEN(bool value);
-        void getEN(bool value);
 
-        // Enable the battery temperature sense pin.
+        /**
+         * Get EN pin state.
+         * 
+         * @return EN pin is high if true, low if false
+         */
+        bool getEN();
+
+        /**
+         * Enable the battery temperature sense pin, TS.
+         * 
+         * @param enable  Enable if true, disable if false.
+         */
         void enableTS(bool enable);
+
         // Get the power input currently supplying power to the board.
+
+        /**
+         * Determine the active power input, i.e. the input that is currently supplying power to the board.
+         * 
+         * @return  The current active power input
+         */
         PowerInput getPowerInput();
 
         void enterShipMode();
