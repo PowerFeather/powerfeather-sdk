@@ -66,8 +66,8 @@ namespace PowerFeather
         if (init != magic)
         {
             // By default, enable both the 3V3 power outputs.
-            enableHeader3V3(true);
-            enableSTEMMAQT3V3(true);
+            enable3V3(true);
+            enableSQT(true);
             setEN(true);
         }
 
@@ -84,12 +84,12 @@ namespace PowerFeather
         rtc_gpio_hold_en(pin);
     }
 
-    void Board::enableHeader3V3(bool enable)
+    void Board::enable3V3(bool enable)
     {
         _setRTCPin(Board::_Signal::EN_3V3_HEADER, enable);
     }
 
-    void Board::enableSTEMMAQT3V3(bool enable)
+    void Board::enableSQT(bool enable)
     {
         _setRTCPin(Board::_Signal::EN_3V3_STEMMAQT, enable);
     }
