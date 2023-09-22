@@ -85,21 +85,21 @@ namespace PowerFeather
         bool init();
 
         /**
-         * Enable the header 3.3 V power output.
+         * Enable or disable the header 3.3 V power output.
          *
          * @param enable Enable if true, disable if false.
          */
         void enable3V3(bool enable);
 
         /**
-         * Enable the STEMMA QT 3.3 V power output.
+         * Enable or disable the STEMMA QT 3.3 V power output.
          *
          * @param enable Enable if true, disable if false.
          */
         void enableSQT(bool enable);
 
         /**
-         * Enable 5 V power output in battery-only mode.
+         * Enable or disable 5 V power output in battery-only mode.
          *
          * @param enable Enable if true, disable if false.
          */
@@ -160,6 +160,8 @@ namespace PowerFeather
          *
          * Ship mode is a low power state that consumes about 1.5 uA. It is only possible to
          * exit this mode by pulling down QON or by plugging in USB or DC.
+         * 
+         * Only able to enter shutdown in battery-only.
          */
         void enterShipMode();
 
@@ -168,34 +170,59 @@ namespace PowerFeather
          *
          * Ship mode is a low power state that consumes about 1.5 uA. It is only possible
          * to exit this mode by plugging in USB or DC.
+         * 
+         * Only able to enter shutdown in battery-only.
          */
         void enterShutdownMode();
 
 
         /**
-         * Enable battery charging.
-         *
+         * Enable or disable battery charging.
          */
         void enableCharging(bool enable);
-        void setChargingMaxCurrent(float current);
-        void setChargingTimer(uint32_t ms);
 
-        // Get current battery voltage measurement.
+        /**
+         * Set maximum charging current.
+         * 
+         * Set value depending on preference between safety and speed. A charging 
+         * current of 1C is usually a good value, i.e. if battery has capacity of 520 mAh, set charging
+         * current to 520 mA (520 * 1 = 520). Check datasheet for your battery for maximum charging current.
+         *
+         */
+        void setChargingMaxCurrent(uint32_t mA);
+
+        /**
+         * Set the safety timer, after which the charging will be terminated.
+         *
+         * @param ms Safety timer in minutes; set to 0 to disable safety timer (not recommended).
+         */
+        void setChargingSafetyTimer(uint32_t minutes);
+
+        /**
+         * Get current battery voltage measurement.
+         */
         float getBatteryVoltage();
 
-        // Get an estimate of battery state-of-charge from 0 to 1, i.e. getting .68 means
-        // that charge is 68% of capacity.
+        /**
+         * Get an estimate of battery state-of-charge from 0 to 1, i.e. getting .68 means
+         * that charge is 68% of capacity.
+         */
         float getBatteryCharge();
 
-        // Get an estimate of battery state-of-health from 0 to 1, i.e. getting 0.68 means
-        // the battery only has max capacity 68% of the original design capacity.
+        /**
+         * Get an estimate of battery state-of-health from 0 to 1, i.e. getting 0.68 means
+         * the battery only has max capacity 68% of the original design capacity.
+         */
         float getBatteryHealth();
 
-        // Returns remaining battery runtime when discharging;
-        // returns time-to-full charge when charging.
+        /** Returns remaining battery runtime when discharging;
+         * returns time-to-full charge when charging.
+         */
         uint32_t getBatteryTimeLeft();
 
-        // Get the battery temperature, if TS is enabled.
+        /**
+         * Get the battery temperature, if TS is enabled.
+         */
         float getBatteryTemp();
 
         BQ2562x& getCharger() { return _charger; }

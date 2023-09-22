@@ -455,12 +455,8 @@ void wait_for_battery(uint32_t delay_ms)
     vTaskDelay(pdMS_TO_TICKS(delay_ms));
 }
 
-void test_batctrl(BQ2562x::BATFETControl control)
+void test_mode(BQ2562x::BATFETControl control)
 {
-    // Test ship mode can be entered
-    // Measure ship mode current
-    // Tie QON to reset, check that ship mode can be exited
-    board.getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms);
     wait_for_battery(1000);
     board.getCharger().setBATFETControl(control);
 }
@@ -470,7 +466,7 @@ TEST_CASE("ship mode", MODULE_NAME)
     // Test ship mode can be entered
     // Measure ship mode current
     // Tie QON to reset, check that ship mode can be exited
-    test_batctrl(BQ2562x::BATFETControl::ShipMode);
+    test_mode(BQ2562x::BATFETControl::ShipMode);
 }
 
 TEST_CASE("shutdown mode", MODULE_NAME)
@@ -478,7 +474,7 @@ TEST_CASE("shutdown mode", MODULE_NAME)
     // Test shutdown mode can be entered
     // Measure shutdown mode current
     // Tie QON to reset, check that ship mode can be exited
-    test_batctrl(BQ2562x::BATFETControl::ShutdownMode);
+    test_mode(BQ2562x::BATFETControl::ShutdownMode);
 }
 
 TEST_CASE("power cycle", MODULE_NAME)
@@ -486,5 +482,5 @@ TEST_CASE("power cycle", MODULE_NAME)
     // Test shutdown mode can be entered
     // Measure shutdown mode current
     // Tie QON to reset, check that ship mode can be exited
-    test_batctrl(BQ2562x::BATFETControl::SystemPowerReset);
+    test_mode(BQ2562x::BATFETControl::SystemPowerReset);
 }
