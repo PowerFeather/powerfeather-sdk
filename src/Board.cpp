@@ -116,4 +116,9 @@ namespace PowerFeather
     {
         _setRTCPin(Board::Pin::FFI::EN, value);
     }
+
+    bool Board::getEN()
+    {
+        return rtc_gpio_get_level(Board::Pin::FFI::EN);
+    }
 }

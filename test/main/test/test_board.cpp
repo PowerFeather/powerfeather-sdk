@@ -24,6 +24,7 @@ TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
     board.enable3V3(false);
     board.enableSQT(false);
     board.setEN(false);
+    TEST_ASSERT_FALSE(board.getEN());
     esp_deep_sleep(MS_TO_US(100));
 }
 
@@ -32,6 +33,7 @@ TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
     board.enable3V3(true);
     board.enableSQT(true);
     board.setEN(true);
+    TEST_ASSERT_TRUE(board.getEN());
     esp_deep_sleep(MS_TO_US(100));
 }
 
@@ -54,6 +56,7 @@ TEST_CASE("rtc outputs off, no glitch on digital reset", MODULE_NAME)
     board.enable3V3(false);
     board.enableSQT(false);
     board.setEN(false);
+    TEST_ASSERT_FALSE(board.getEN());
     esp_restart_noos_dig();
 }
 
@@ -62,6 +65,7 @@ TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
     board.enable3V3(true);
     board.enableSQT(true);
     board.setEN(true);
+    TEST_ASSERT_TRUE(board.getEN());
     esp_restart_noos_dig();
 }
 
