@@ -121,4 +121,34 @@ namespace PowerFeather
     {
         return rtc_gpio_get_level(Board::Pin::FFI::EN);
     }
+
+    void Board::set5V(float voltage)
+    {
+        // TODO
+    }
+
+    void Board::enable5VOnBattery(bool enable)
+    {
+        // TODO
+    }
+
+    void Board::enterShipMode()
+    {
+        // TODO
+    }
+
+    void Board::enterShutdownMode()
+    {
+        // TODO
+    }
+
+    void Board::setVBATMin(float voltage)
+    {
+        // TODO
+    }
+
+    void Board::doPowerCycle()
+    {
+        // TODO
+    }
 }

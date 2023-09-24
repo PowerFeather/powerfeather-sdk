@@ -231,6 +231,18 @@ TEST_CASE("temperature sense", MODULE_NAME)
 
     board.getCharger().enableTS(true);
 
+    /**
+     * Enable the battery temperature sense pin, TS.
+     *
+     * @param enable  Enable if true, disable if false.
+     */
+    void enableTS(bool enable);
+
+    /**
+     * Get the battery temperature, if TS is enabled.
+     */
+    float getBatteryTemp();
+
     while (true)
     {
         if (charger_int)
@@ -459,18 +471,13 @@ void wait_for_battery(uint32_t delay_ms)
     vTaskDelay(pdMS_TO_TICKS(delay_ms));
 }
 
-void test_mode(BQ2562x::BATFETControl control)
-{
-    wait_for_battery(1000);
-    board.getCharger().setBATFETControl(control);
-}
-
 TEST_CASE("ship mode", MODULE_NAME)
 {
     // Test ship mode can be entered
     // Measure ship mode current
     // Tie QON to reset, check that ship mode can be exited
-    test_mode(BQ2562x::BATFETControl::ShipMode);
+    wait_for_battery(1000);
+    board.enterShipMode();
 }
 
 TEST_CASE("shutdown mode", MODULE_NAME)
@@ -478,7 +485,8 @@ TEST_CASE("shutdown mode", MODULE_NAME)
     // Test shutdown mode can be entered
     // Measure shutdown mode current
     // Tie QON to reset, check that ship mode can be exited
-    test_mode(BQ2562x::BATFETControl::ShutdownMode);
+    wait_for_battery(1000);
+    board.enterShutdownMode();
 }
 
 TEST_CASE("power cycle", MODULE_NAME)
@@ -486,5 +494,24 @@ TEST_CASE("power cycle", MODULE_NAME)
     // Test shutdown mode can be entered
     // Measure shutdown mode current
     // Tie QON to reset, check that ship mode can be exited
-    test_mode(BQ2562x::BATFETControl::SystemPowerReset);
+    wait_for_battery(1000);
+    board.doPowerCycle();
+}
+
+TEST_CASE("configure 5V output", MODULE_NAME)
+{
+    board.set5V(4.2);
+    board.enable5VOnBattery(true);
+
+    printf("waiting for battery active...\n");
+    wait_for_battery(1000);
+    printf("battery active detected\n");
+
+    board.set5V(5.04);
+    board.enable5VOnBattery(false);
+}
+
+TEST_CASE("set VBAT min", MODULE_NAME)
+{
+    board.setVBATMin(3.7);
 }

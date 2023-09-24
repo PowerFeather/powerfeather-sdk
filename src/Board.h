@@ -139,13 +139,6 @@ namespace PowerFeather
          */
         bool getEN();
 
-        /**
-         * Enable the battery temperature sense pin, TS.
-         *
-         * @param enable  Enable if true, disable if false.
-         */
-        void enableTS(bool enable);
-
         // Get the power input currently supplying power to the board.
 
         /**
@@ -174,6 +167,14 @@ namespace PowerFeather
          * Only able to enter shutdown in battery-only.
          */
         void enterShutdownMode();
+
+
+        /**
+         * Power cycle board.
+         *
+         * Only able to enter shutdown in battery-only.
+         */
+        void doPowerCycle();
 
 
         /**
@@ -220,10 +221,6 @@ namespace PowerFeather
          */
         uint32_t getBatteryTimeLeft();
 
-        /**
-         * Get the battery temperature, if TS is enabled.
-         */
-        float getBatteryTemp();
 
         BQ2562x& getCharger() { return _charger; }
         LC70924F& getFuelGauge() { return _fuelGauge; }
