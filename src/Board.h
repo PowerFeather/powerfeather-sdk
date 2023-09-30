@@ -75,8 +75,8 @@ namespace PowerFeather
                 static constexpr gpio_num_t EN_SQT =    GPIO_NUM_14;
                 static constexpr gpio_num_t EN =        GPIO_NUM_13;
 
-                static constexpr gpio_num_t SCL0 =      GPIO_NUM_47;
-                static constexpr gpio_num_t SDA0 =      GPIO_NUM_48;
+                static constexpr gpio_num_t SCL0 =      GPIO_NUM_48;
+                static constexpr gpio_num_t SDA0 =      GPIO_NUM_47;
 
                 static constexpr gpio_num_t SRC =       GPIO_NUM_38; // Board SRC, Input
             };
