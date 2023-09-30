@@ -32,20 +32,21 @@ namespace PowerFeather
 	template <typename T>
 	bool BQ2562x::writeReg(T reg, uint8_t start, uint8_t end, T value)
 	{
-		static_assert(sizeof(T) == 1 || sizeof(T) == 2);
-		assert(end < sizeof(T) * CHAR_BIT);
-		assert(start <= end);
-		T data = 0;
-		bool res = _i2c.read(_i2c_address, reg, data);
-		if (res)
-		{
-			uint8_t bits = end - start + 1;
-			T mask = ((0b1 << bits) - 1) << start;
-			value <<= start;
-			data = (data & ~mask) | (mask & value);
-			res = _i2c.write(_i2c_address, reg, data);
-		}
-		return res;
+		// static_assert(sizeof(T) == 1 || sizeof(T) == 2);
+		// assert(end < sizeof(T) * CHAR_BIT);
+		// assert(start <= end);
+		// T data = 0;
+		// bool res = _i2c.read(_i2c_address, reg, data);
+		// if (res)
+		// {
+		// 	uint8_t bits = end - start + 1;
+		// 	T mask = ((0b1 << bits) - 1) << start;
+		// 	value <<= start;
+		// 	data = (data & ~mask) | (mask & value);
+		// 	res = _i2c.write(_i2c_address, reg, data);
+		// }
+		// return res;
+		return false;
 	}
 
 	template <typename T>
@@ -63,19 +64,21 @@ namespace PowerFeather
 	template <typename T>
 	bool BQ2562x::readReg(T address, uint8_t start, uint8_t end, T &value)
 	{
-		static_assert(sizeof(T) == 1 || sizeof(T) == 2);
-		assert(end < sizeof(T) * CHAR_BIT);
-		assert(start <= end);
-		T data = 0;
-		bool res = _i2c.read(_i2c_address, address, data);
-		if (res)
-		{
-			int left = (((sizeof(value) * CHAR_BIT) - 1) - end);
-			data <<= left;
-			data >>= left + start;
-			value = data;
-		}
-		return res;
+		value = 0;
+		// static_assert(sizeof(T) == 1 || sizeof(T) == 2);
+		// assert(end < sizeof(T) * CHAR_BIT);
+		// assert(start <= end);
+		// T data = 0;
+		// bool res = _i2c.read(_i2c_address, (uint8_t)address, (uint8_t*)&data, sizeof(data));
+		// if (res)
+		// {
+		// 	int left = (((sizeof(value) * CHAR_BIT) - 1) - end);
+		// 	data <<= left;
+		// 	data >>= left + start;
+		// 	value = data;
+		// }
+		// return res;
+		return false;
 	}
 
 	template <typename T>

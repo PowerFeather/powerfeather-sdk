@@ -2,32 +2,71 @@
 
 namespace PowerFeather
 {
-
-    bool MasterI2C::init(i2c_port_t port, gpio_num_t sda, gpio_num_t scl, uint32_t freq)
+    bool MasterI2C::init(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq)
     {
-        _port = port;
+        _wire = port == 0 ? &Wire : &Wire1;
+        return _wire->begin(sdaPin, sclPin, freq);
+    }
 
-        // Initialize I2C bus
-        i2c_config_t i2c_conf;
-        memset(&i2c_conf, 0, sizeof(i2c_conf));
-        i2c_conf.mode = I2C_MODE_MASTER;
-        i2c_conf.sda_io_num = sda;
-        i2c_conf.scl_io_num = scl;
-        i2c_conf.sda_pullup_en = GPIO_PULLUP_DISABLE;
-        i2c_conf.scl_pullup_en = GPIO_PULLUP_DISABLE;
-        i2c_conf.master.clk_speed = freq;
+    /**
+     * I2C Write.
+     *
+     * @param buffer
+     * @param len
+     * @return True on successful I2C operation
+     */
+    bool MasterI2C::write(uint8_t address, const uint8_t *buffer, size_t len) {
+        _wire->beginTransmission(address);
 
-        esp_err_t res;
-        if ((res = i2c_param_config(_port, &i2c_conf)) != ESP_OK)
-        {
+        // Write the data itself
+        if (_wire->write(buffer, len) != len) {
             return false;
         }
 
-        if ((res = i2c_driver_install(_port, i2c_conf.mode, 0, 0, 0)) != ESP_OK)
-        {
+        if (_wire->endTransmission(false) == 0) {
+            return true;
+        } else {
             return false;
+        }
+    }
+
+    /**
+     * I2C Read helper.
+     *
+     * @param buffer
+     * @param len
+     * @return True on successful I2C operation
+     */
+    bool MasterI2C::_read(uint8_t address, uint8_t *buffer, size_t len) {
+        size_t recv = _wire->requestFrom(address, (uint8_t) len);
+
+        if (recv != len) {
+            // Not enough data available to fulfill our obligation!
+            return false;
+        }
+
+        for (uint16_t i = 0; i < len; i++) {
+            buffer[i] = _wire->read();
         }
 
         return true;
     }
+
+    /**
+     * I2C Read.
+     * @param buffer
+     * @param len
+     * @return True on successful I2C operation
+     */
+    bool MasterI2C::read(uint8_t address, uint8_t *buffer, size_t len) {
+        size_t pos = 0;
+        while (pos < len) {
+            size_t read_len = (len - pos);
+            if (!_read(address, buffer + pos, read_len))
+                return false;
+            pos += read_len;
+        }
+        return true;
+    }
+
 }

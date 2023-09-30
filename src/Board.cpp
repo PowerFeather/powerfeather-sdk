@@ -38,7 +38,7 @@ namespace PowerFeather
         static RTC_NOINIT_ATTR uint32_t init;
         static constexpr uint32_t magic = 0xDEADBEEF;
 
-        _masterI2C.init(_i2c_port, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2c_freq);
+        _i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq);
 
         // Disable charging.
         _charger.enableCharging(false);

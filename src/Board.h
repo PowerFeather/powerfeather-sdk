@@ -223,16 +223,16 @@ namespace PowerFeather
 
 
         BQ2562x& getCharger() { return _charger; }
-        LC70924F& getFuelGauge() { return _fuelGauge; }
+        LC709204F& getFuelGauge() { return _fuelGauge; }
 
     private:
-        static constexpr int _i2c_port = 1;
-        static constexpr uint32_t _i2c_freq = 400000;
-        static constexpr uint32_t _i2c_timeout = 1000;
+        static constexpr int _i2cPort = 1;
+        static constexpr uint32_t _i2cFreq = 400000;
+        static constexpr uint32_t _i2cTimeout = 1000;
 
-        MasterI2C _masterI2C {};
-        BQ2562x _charger {_masterI2C};
-        LC70924F _fuelGauge {_masterI2C};
+        MasterI2C _i2c {};
+        BQ2562x _charger {_i2c};
+        LC709204F _fuelGauge {_i2c};
 
         bool _initDigitalPin(gpio_num_t pin, gpio_mode_t mode);
 
