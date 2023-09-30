@@ -29,16 +29,21 @@ namespace PowerFeather
 	// enable 3V3 by default
 	// enable 5V by default
 
-	bool BQ2562x::writeReg(Register reg, uint16_t value)
+	template <typename T>
+	bool BQ2562x::writeReg(Register reg, T value)
 	{
+		assert(reg.size <= sizeof(value));
+		assert(reg.start <= reg.end);
+		assert(reg.end < reg.size * CHAR_BIT);
+		assert(reg.end - reg.start < reg.size * CHAR_BIT);
+
 		uint16_t data = 0;
 
 		if (readReg(reg, data))
 		{
 			uint8_t bits = reg.end - reg.start + 1;
 			uint16_t mask = ((0b1 << bits) - 1) << reg.start;
-			value <<= reg.start;
-			uint16_t data = (data & ~mask) | (mask & value);
+			data = (data & ~mask) | ((value << reg.start) & mask);
 
 			return _i2c.write(_i2cAddress, reinterpret_cast<uint8_t*>(&data), reg.size);
 		}
@@ -46,22 +51,23 @@ namespace PowerFeather
 		return false;
 	}
 
-	bool BQ2562x::readReg(Register reg, uint16_t& value)
+	template <typename T>
+	bool BQ2562x::readReg(Register reg, T& value)
 	{
 		assert(reg.size <= sizeof(value));
 		assert(reg.start <= reg.end);
 		assert(reg.end < reg.size * CHAR_BIT);
 		assert(reg.end - reg.start < reg.size * CHAR_BIT);
 
-		value = 0;
-        if (!_i2c.writeThenRead(_i2cAddress, reinterpret_cast<uint8_t*>(&reg.address), reg.size, reinterpret_cast<uint8_t*>(&value), reg.size))
+		uint16_t data = 0;
+        if (!_i2c.writeThenRead(_i2cAddress, reinterpret_cast<uint8_t*>(&reg.address), sizeof(reg.address), reinterpret_cast<uint8_t*>(&data), reg.size))
 		{
             return false;
         }
-
-		int left = (((sizeof(value) * CHAR_BIT) - 1) - reg.end);
-		value <<= left;
-		value >>= left + reg.start;
+		int left = (((reg.size * CHAR_BIT) - 1) - reg.end);
+		data <<= left;
+		data >>= left + reg.start;
+		value = data;
 		return true;
 	}
 
@@ -178,13 +184,7 @@ namespace PowerFeather
 
 	bool BQ2562x::getPartInformation(uint8_t& value)
 	{
-		uint16_t data = 0;
-		if (readReg(Registers::Part_Information, data))
-		{
-			value = data;
-			return true;
-		}
-		return false;
+		return readReg(Registers::Part_Information, value);
 	}
 
 	void BQ2562x::enableCharging(bool state)

@@ -98,8 +98,10 @@ namespace PowerFeather
 
         BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
 
-        bool writeReg(Register reg, uint16_t value);
-        bool readReg(Register reg, uint16_t& value);
+        template <typename T>
+        bool writeReg(Register reg, T value);
+        template <typename T>
+        bool readReg(Register reg, T& value);
 
         template <typename T>
         bool writeReg(T address, uint8_t start, uint8_t end, T value);
