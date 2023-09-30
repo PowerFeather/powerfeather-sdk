@@ -30,22 +30,20 @@ namespace PowerFeather
 	// enable 5V by default
 
 	template <typename T>
-	bool BQ2562x::writeReg(T reg, uint8_t start, uint8_t end, T value)
+	bool BQ2562x::writeReg(T address, uint8_t start, uint8_t end, T value)
 	{
-		// static_assert(sizeof(T) == 1 || sizeof(T) == 2);
-		// assert(end < sizeof(T) * CHAR_BIT);
-		// assert(start <= end);
-		// T data = 0;
-		// bool res = _i2c.read(_i2cAddress, reg, data);
-		// if (res)
-		// {
-		// 	uint8_t bits = end - start + 1;
-		// 	T mask = ((0b1 << bits) - 1) << start;
-		// 	value <<= start;
-		// 	data = (data & ~mask) | (mask & value);
-		// 	res = _i2c.write(_i2cAddress, reg, data);
-		// }
-		// return res;
+		T data = 0;
+
+		if (readReg(address, data))
+		{
+			uint8_t bits = end - start + 1;
+			T mask = ((0b1 << bits) - 1) << start;
+			value <<= start;
+			data = (data & ~mask) | (mask & value);
+
+			return _i2c.write(_i2cAddress, reinterpret_cast<uint8_t*>(&data), sizeof(data));
+		}
+
 		return false;
 	}
 
@@ -62,31 +60,30 @@ namespace PowerFeather
 	}
 
 	template <typename T>
-	bool BQ2562x::readReg(T address, uint8_t start, uint8_t end, T &value)
+	bool BQ2562x::readReg(T address, uint8_t start, uint8_t end, T& value)
 	{
-		value = 0;
-		// static_assert(sizeof(T) == 1 || sizeof(T) == 2);
-		// assert(end < sizeof(T) * CHAR_BIT);
-		// assert(start <= end);
-		// T data = 0;
-		// bool res = _i2c.read(_i2cAddress, (uint8_t)address, (uint8_t*)&data, sizeof(data));
-		// if (res)
-		// {
-		// 	int left = (((sizeof(value) * CHAR_BIT) - 1) - end);
-		// 	data <<= left;
-		// 	data >>= left + start;
-		// 	value = data;
-		// }
-		// return res;
-		return false;
+		static_assert(sizeof(value) == sizeof(uint8_t) || sizeof(value) == sizeof(uint16_t));
+		assert(end < (sizeof(value) * CHAR_BIT));
+		assert(start <= end);
+		assert((start - end + 1) < (sizeof(T) * CHAR_BIT));
+
+        if (!_i2c.writeThenRead(_i2cAddress, reinterpret_cast<uint8_t*>(&address), 1, reinterpret_cast<uint8_t*>(&value), sizeof(value)))
+		{
+            return false;
+        }
+
+		int left = (((sizeof(value) * CHAR_BIT) - 1) - end);
+		value <<= left;
+		value >>= left + start;
+		return true;
 	}
 
 	template <typename T>
 	bool BQ2562x::readReg(T address, uint8_t bit, bool &value)
 	{
-		T value2 = 0;
-		bool res = readReg(address, bit, bit, value2);
-		value = value2;
+		T data = 0;
+		bool res = readReg(address, bit, bit, data);
+		value = data;
 		return res;
 	}
 

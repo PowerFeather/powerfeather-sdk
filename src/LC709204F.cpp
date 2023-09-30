@@ -9,7 +9,7 @@ namespace PowerFeather
         reply[1] = command;                       // command / register
         reply[2] = reply[0] | 0x1;                // read byte
 
-        if (!writeThenReadReg(&command, 1, reply + 3, 3)) {
+        if (!_i2c.writeThenRead(_i2cAddress, &command, 1, reply + 3, 3)) {
             return false;
         }
 
@@ -52,15 +52,5 @@ namespace PowerFeather
             }
         }
         return crc;
-    }
-
-    bool LC709204F::writeThenReadReg(const uint8_t *writeBuf, size_t writeLen, uint8_t *readBuf, size_t readLen)
-    {
-        if (_i2c.write(_i2cAddress, writeBuf, writeLen))
-        {
-            return _i2c.read(_i2cAddress, readBuf, readLen);
-        }
-
-        return false;
     }
 }

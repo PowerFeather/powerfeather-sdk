@@ -51,4 +51,15 @@ namespace PowerFeather
         }
         return true;
     }
+
+
+    bool MasterI2C::writeThenRead(uint8_t address, const uint8_t *writeBuf, size_t writeLen, uint8_t *readBuf, size_t readLen)
+    {
+        if (write(address, writeBuf, writeLen))
+        {
+            return read(address, readBuf, readLen);
+        }
+
+        return false;
+    }
 }
