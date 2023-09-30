@@ -48,6 +48,11 @@ namespace PowerFeather
 
 	bool BQ2562x::readReg(Register reg, uint16_t& value)
 	{
+		assert(reg.size <= sizeof(value));
+		assert(reg.start <= reg.end);
+		assert(reg.end < reg.size * CHAR_BIT);
+		assert(reg.end - reg.start < reg.size * CHAR_BIT);
+
 		value = 0;
         if (!_i2c.writeThenRead(_i2cAddress, reinterpret_cast<uint8_t*>(&reg.address), reg.size, reinterpret_cast<uint8_t*>(&value), reg.size))
 		{
@@ -171,11 +176,15 @@ namespace PowerFeather
 		return data;
 	}
 
-	uint8_t BQ2562x::getPartInformation()
+	bool BQ2562x::getPartInformation(uint8_t& value)
 	{
-		uint8_t data = 0;
-		readReg(BYTE(0x38), data);
-		return data;
+		uint16_t data = 0;
+		if (readReg(Registers::Part_Information, data))
+		{
+			value = data;
+			return true;
+		}
+		return false;
 	}
 
 	void BQ2562x::enableCharging(bool state)
