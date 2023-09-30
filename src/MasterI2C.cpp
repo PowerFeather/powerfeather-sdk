@@ -12,7 +12,6 @@ namespace PowerFeather
     {
         _wire->beginTransmission(address);
 
-        // Write the data itself
         if (_wire->write(buffer, len) != len)
         {
             return false;

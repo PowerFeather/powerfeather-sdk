@@ -2,14 +2,14 @@
 
 namespace PowerFeather
 {
-    bool LC709204F::readWord(uint8_t command, uint16_t *data)
+    bool LC709204F::readReg(uint8_t command, uint16_t& data)
     {
         uint8_t reply[6];
         reply[0] = _i2cAddress * 2; // write byte
         reply[1] = command;                       // command / register
         reply[2] = reply[0] | 0x1;                // read byte
 
-        if (!writeThenRead(&command, 1, reply + 3, 3)) {
+        if (!writeThenReadReg(&command, 1, reply + 3, 3)) {
             return false;
         }
 
@@ -18,14 +18,14 @@ namespace PowerFeather
         if (crc != reply[5])
             return false;
 
-        *data = reply[4];
-        *data <<= 8;
-        *data |= reply[3];
+        data = reply[4];
+        data <<= 8;
+        data |= reply[3];
 
         return true;
     }
 
-    bool LC709204F::writeWord(uint8_t command, uint16_t data)
+    bool LC709204F::writeReg(uint8_t command, uint16_t data)
     {
         uint8_t send[5];
         send[0] = _i2cAddress * 2;
@@ -54,7 +54,7 @@ namespace PowerFeather
         return crc;
     }
 
-    bool LC709204F::writeThenRead(const uint8_t *writeBuf, size_t writeLen, uint8_t *readBuf, size_t readLen)
+    bool LC709204F::writeThenReadReg(const uint8_t *writeBuf, size_t writeLen, uint8_t *readBuf, size_t readLen)
     {
         if (_i2c.write(_i2cAddress, writeBuf, writeLen))
         {
