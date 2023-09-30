@@ -29,6 +29,37 @@ namespace PowerFeather
 	// enable 3V3 by default
 	// enable 5V by default
 
+	bool BQ2562x::writeReg(Register reg, uint16_t value)
+	{
+		uint16_t data = 0;
+
+		if (readReg(reg, data))
+		{
+			uint8_t bits = reg.end - reg.start + 1;
+			uint16_t mask = ((0b1 << bits) - 1) << reg.start;
+			value <<= reg.start;
+			uint16_t data = (data & ~mask) | (mask & value);
+
+			return _i2c.write(_i2cAddress, reinterpret_cast<uint8_t*>(&data), reg.size);
+		}
+
+		return false;
+	}
+
+	bool BQ2562x::readReg(Register reg, uint16_t& value)
+	{
+		value = 0;
+        if (!_i2c.writeThenRead(_i2cAddress, reinterpret_cast<uint8_t*>(&reg.address), reg.size, reinterpret_cast<uint8_t*>(&value), reg.size))
+		{
+            return false;
+        }
+
+		int left = (((sizeof(value) * CHAR_BIT) - 1) - reg.end);
+		value <<= left;
+		value >>= left + reg.start;
+		return true;
+	}
+
 	template <typename T>
 	bool BQ2562x::writeReg(T address, uint8_t start, uint8_t end, T value)
 	{
@@ -105,17 +136,17 @@ namespace PowerFeather
 
 	bool BQ2562x::enableWD(bool enable)
 	{
-		return writeReg(BYTE(0x16), 0, 1, BYTE(enable));
+		return writeReg(Registers::Charger_Control_0_WATCHDOG, enable);
 	}
 
 	bool BQ2562x::enableTS(bool enable)
 	{
-		bool inspect = 0;
-		readReg(BYTE(0x1a), 7, inspect);
-		printf("before: %d\n", inspect);
-		bool res = writeReg(BYTE(0x1a), 7, !enable);
-		readReg(BYTE(0x1a), 7, inspect);
-		printf("after: %d\n", inspect);
+		// uint16_t inspect = 0;
+		// readReg(Registers::NTC_Control_0_TS_IGNORE, inspect);
+		// printf("before: %d\n", inspect);
+		bool res = writeReg(Registers::NTC_Control_0_TS_IGNORE, !enable);
+		// readReg(Registers::NTC_Control_0_TS_IGNORE, inspect);
+		// printf("after: %d\n", inspect);
 		return res;
 	}
 
@@ -149,7 +180,7 @@ namespace PowerFeather
 
 	void BQ2562x::enableCharging(bool state)
 	{
-		writeReg(BYTE(0x16), 5, state);
+		writeReg(Registers::Charger_Control_0_EN_CHG, state);
 	}
 
     bool BQ2562x::setOTGMode(BQ2562x::OTGMode mode)

@@ -10,6 +10,27 @@ namespace PowerFeather
     class BQ2562x
     {
     public:
+
+        struct Register
+        {
+            uint8_t address;
+            uint8_t size;
+            uint8_t start;
+            uint8_t end;
+        };
+
+        class Registers
+        {
+        public:
+            static constexpr Register Charger_Control_0_EN_CHG =             { 0x16, 1, 5, 5 };
+            static constexpr Register Charger_Control_0_WATCHDOG =           { 0x16, 1, 0, 1 };
+
+            static constexpr Register NTC_Control_0_TS_IGNORE =              { 0x1a, 1, 7, 7 };
+
+            static constexpr Register Part_Information_PN =                  { 0x38, 1, 0, 2 };
+            static constexpr Register Part_Information_DEV_REV =             { 0x38, 1, 0, 2 };
+        };
+
         enum class OTGMode
         {
             None,
@@ -75,6 +96,9 @@ namespace PowerFeather
         };
 
         BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
+
+        bool writeReg(Register reg, uint16_t value);
+        bool readReg(Register reg, uint16_t& value);
 
         template <typename T>
         bool writeReg(T address, uint8_t start, uint8_t end, T value);
