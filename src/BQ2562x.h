@@ -118,7 +118,7 @@ namespace PowerFeather
         ChargeStat getChargeStat();
 
     private:
-        static constexpr uint8_t _i2c_address = 0x6a;
+        static constexpr uint8_t _i2cAddress = 0x6a;
         MasterI2C& _i2c;
     };
 }

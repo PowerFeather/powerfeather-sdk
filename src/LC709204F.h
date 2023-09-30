@@ -7,10 +7,14 @@ namespace PowerFeather
     {
     public:
         LC709204F(MasterI2C& i2c):_i2c(i2c) {}
-        bool readReg(uint8_t reg, uint16_t& value);
-        uint16_t getChipID();
+
     private:
-        static constexpr uint8_t _i2c_address = 0x0b;
+        static constexpr uint8_t _i2cAddress = 0x0b;
         MasterI2C& _i2c;
+
+        bool readWord(uint8_t command, uint16_t *data);
+        bool writeWord(uint8_t command, uint16_t data);
+        uint8_t computeCRC8(uint8_t *data, int len);
+        bool writeThenRead(const uint8_t *writeBuf, size_t writeLen, uint8_t *readBuf, size_t readLen);
     };
 }
