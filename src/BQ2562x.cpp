@@ -65,7 +65,7 @@ namespace PowerFeather
 		static_assert(sizeof(value) == sizeof(uint8_t) || sizeof(value) == sizeof(uint16_t));
 		assert(end < (sizeof(value) * CHAR_BIT));
 		assert(start <= end);
-		assert((start - end + 1) < (sizeof(T) * CHAR_BIT));
+		assert((end - start) < (sizeof(T) * CHAR_BIT));
 
         if (!_i2c.writeThenRead(_i2cAddress, reinterpret_cast<uint8_t*>(&address), 1, reinterpret_cast<uint8_t*>(&value), sizeof(value)))
 		{
