@@ -32,20 +32,20 @@ namespace PowerFeather
 	template <typename T>
 	bool BQ2562x::writeReg(Register reg, T value)
 	{
+		uint8_t last = reg.size * CHAR_BIT - 1;
+
 		assert(reg.size <= sizeof(value));
 		assert(reg.start <= reg.end);
-		assert(reg.end < reg.size * CHAR_BIT);
-		assert(reg.end - reg.start < reg.size * CHAR_BIT);
+		assert(reg.end <= last);
 
 		uint16_t data = 0;
 
-		if (readReg(reg, data))
+		if (readReg(Register{reg.address, reg.size, 0, last}, data))
 		{
 			uint8_t bits = reg.end - reg.start + 1;
 			uint16_t mask = ((0b1 << bits) - 1) << reg.start;
 			data = (data & ~mask) | ((value << reg.start) & mask);
-
-			return _i2c.write(_i2cAddress, reinterpret_cast<uint8_t*>(&data), reg.size);
+			return _i2c.write(_i2cAddress, reg.address, reinterpret_cast<uint8_t*>(&data), reg.size);
 		}
 
 		return false;
@@ -54,37 +54,38 @@ namespace PowerFeather
 	template <typename T>
 	bool BQ2562x::readReg(Register reg, T& value)
 	{
+		uint8_t last = reg.size * CHAR_BIT - 1;
+
 		assert(reg.size <= sizeof(value));
 		assert(reg.start <= reg.end);
-		assert(reg.end < reg.size * CHAR_BIT);
-		assert(reg.end - reg.start < reg.size * CHAR_BIT);
+		assert(reg.end <= last);
 
 		uint16_t data = 0;
-        if (!_i2c.writeThenRead(_i2cAddress, reinterpret_cast<uint8_t*>(&reg.address), sizeof(reg.address), reinterpret_cast<uint8_t*>(&data), reg.size))
+        if (_i2c.read(_i2cAddress, reg.address, reinterpret_cast<uint8_t*>(&data), reg.size))
 		{
-            return false;
+			int left = (((reg.size * CHAR_BIT) - 1) - reg.end);
+			data <<= left;
+			data >>= left + reg.start;
+			value = data;
+			return true;
         }
-		int left = (((reg.size * CHAR_BIT) - 1) - reg.end);
-		data <<= left;
-		data >>= left + reg.start;
-		value = data;
-		return true;
+		return false;
 	}
 
 	template <typename T>
 	bool BQ2562x::writeReg(T address, uint8_t start, uint8_t end, T value)
 	{
-		T data = 0;
+		// T data = 0;
 
-		if (readReg(address, data))
-		{
-			uint8_t bits = end - start + 1;
-			T mask = ((0b1 << bits) - 1) << start;
-			value <<= start;
-			data = (data & ~mask) | (mask & value);
+		// if (readReg(address, data))
+		// {
+		// 	uint8_t bits = end - start + 1;
+		// 	T mask = ((0b1 << bits) - 1) << start;
+		// 	value <<= start;
+		// 	data = (data & ~mask) | (mask & value);
 
-			return _i2c.write(_i2cAddress, reinterpret_cast<uint8_t*>(&data), sizeof(data));
-		}
+		// 	return _i2c.write(_i2cAddress,  reinterpret_cast<uint8_t*>(&data), sizeof(data));
+		// }
 
 		return false;
 	}
@@ -104,19 +105,20 @@ namespace PowerFeather
 	template <typename T>
 	bool BQ2562x::readReg(T address, uint8_t start, uint8_t end, T& value)
 	{
-		static_assert(sizeof(value) == sizeof(uint8_t) || sizeof(value) == sizeof(uint16_t));
-		assert(end < (sizeof(value) * CHAR_BIT));
-		assert(start <= end);
-		assert((end - start) < (sizeof(T) * CHAR_BIT));
+		value = 0;
+		// static_assert(sizeof(value) == sizeof(uint8_t) || sizeof(value) == sizeof(uint16_t));
+		// assert(end < (sizeof(value) * CHAR_BIT));
+		// assert(start <= end);
+		// assert((end - start) < (sizeof(T) * CHAR_BIT));
 
-        if (!_i2c.writeThenRead(_i2cAddress, reinterpret_cast<uint8_t*>(&address), 1, reinterpret_cast<uint8_t*>(&value), sizeof(value)))
-		{
-            return false;
-        }
+        // if (!_i2c.read(_i2cAddress, nt8_t*>(&address), 1, reinterpret_cast<uint8_t*>(&value), sizeof(value)))
+		// {
+        //     return false;
+        // }
 
-		int left = (((sizeof(value) * CHAR_BIT) - 1) - end);
-		value <<= left;
-		value >>= left + start;
+		// int left = (((sizeof(value) * CHAR_BIT) - 1) - end);
+		// value <<= left;
+		// value >>= left + start;
 		return true;
 	}
 
@@ -153,11 +155,15 @@ namespace PowerFeather
 	bool BQ2562x::enableTS(bool enable)
 	{
 		// uint16_t inspect = 0;
-		// readReg(Registers::NTC_Control_0_TS_IGNORE, inspect);
-		// printf("before: %d\n", inspect);
+		// if (readReg(Registers::NTC_Control_0_TS_IGNORE, inspect))
+		// {
+		// 	printf("before: %d\n", inspect);
+		// }
 		bool res = writeReg(Registers::NTC_Control_0_TS_IGNORE, !enable);
-		// readReg(Registers::NTC_Control_0_TS_IGNORE, inspect);
-		// printf("after: %d\n", inspect);
+		// if (res && readReg(Registers::NTC_Control_0_TS_IGNORE, inspect))
+		// {
+		// 	printf("after: %d\n", inspect);
+		// }
 		return res;
 	}
 

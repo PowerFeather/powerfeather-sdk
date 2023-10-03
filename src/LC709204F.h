@@ -8,6 +8,8 @@ namespace PowerFeather
     public:
         LC709204F(MasterI2C& i2c):_i2c(i2c) {}
 
+        uint16_t getCellVoltage(void);
+
     private:
         static constexpr uint8_t _i2cAddress = 0x0b;
         MasterI2C& _i2c;

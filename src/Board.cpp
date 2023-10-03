@@ -40,13 +40,13 @@ namespace PowerFeather
 
         _i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq);
 
-        // Disable charging.
-        _charger.enableCharging(false);
-        // Disable charger TS pin; since it registers as a TS_COLD/TS_OTG_COLD
-        // (TS_STAT = 0x1) if no thermistor is connected.
-        _charger.enableTS(false);
+        // // // Disable charging.
+        // _charger.enableCharging(false);
+        // // Disable charger TS pin; since it registers as a TS_COLD/TS_OTG_COLD
+        // // (TS_STAT = 0x1) if no thermistor is connected.
+        // _charger.enableTS(false);
         // Disable the charger watchdog to keep the charger in host mode.
-        _charger.enableWD(false);
+        // _charger.enableWD(false);
 
         // Initialize digital pins always.
         // _initDigitalPin(Board::Pin::FF::EN, GPIO_MODE_INPUT);
