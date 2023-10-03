@@ -367,8 +367,8 @@ namespace PowerFeather
 	BQ2562x::VBUSStat BQ2562x::getVBUSStat()
 	{
 		uint8_t data = 0;
-		readReg(BYTE(0x1e), data);
-		if ((data & 0b111) == 0b100)
+		readReg(Registers::Charger_Status_1_VBUS_STAT, data);
+		if (data == 0b100)
 		{
 			return VBUSStat::Adapter;
 		}

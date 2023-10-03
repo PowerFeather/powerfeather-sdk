@@ -89,7 +89,7 @@ namespace PowerFeather
     {
         BQ2562x::VBUSStat vbusStat = _charger.getVBUSStat();
 
-        if (vbusStat != BQ2562x::VBUSStat::None)
+        if (vbusStat == BQ2562x::VBUSStat::Adapter)
         {
             if (gpio_get_level(Board::Pin::FFI::SRC))
             {
