@@ -40,26 +40,11 @@ namespace PowerFeather
 
         _i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq);
 
-        // // // Disable charging.
-        // _charger.enableCharging(false);
-        // // Disable charger TS pin; since it registers as a TS_COLD/TS_OTG_COLD
-        // // (TS_STAT = 0x1) if no thermistor is connected.
-        // _charger.enableTS(false);
-        // Disable the charger watchdog to keep the charger in host mode.
-        // _charger.enableWD(false);
-
         // Initialize digital pins always.
-        // _initDigitalPin(Board::Pin::FF::EN, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Pin::FF::ALARM, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Pin::FF::INT, GPIO_MODE_INPUT);
-        _initDigitalPin(Board::Pin::FF::BTN, GPIO_MODE_INPUT);
-
-        _initDigitalPin(Board::Pin::FF::LED, GPIO_MODE_OUTPUT);
-
         _initRTCPin(Board::Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD);
-
         _initRTCPin(Board::Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
         _initRTCPin(Board::Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY);
+        _initDigitalPin(Board::Pin::FFI::SRC, GPIO_MODE_INPUT);
 
         // Only initialize RTC pins if the RTC core has been reset - this
         // happens on system and chip-level resets.
@@ -71,8 +56,15 @@ namespace PowerFeather
             setEN(true);
         }
 
-        _initDigitalPin(Board::Pin::FFI::SRC, GPIO_MODE_INPUT);
+        // Disable charging.
+        _charger.enableCharging(false);
+        // Disable charger TS pin; since it registers as a TS_COLD/TS_OTG_COLD
+        // (TS_STAT = 0x1) if no thermistor is connected.
+        _charger.enableTS(false);
+        // Disable the charger watchdog to keep the charger in host mode.
+        _charger.enableWD(false);
 
+        
         return true;
     }
 
