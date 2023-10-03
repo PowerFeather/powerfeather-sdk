@@ -152,17 +152,7 @@ namespace PowerFeather
 
 	bool BQ2562x::enableTS(bool enable)
 	{
-		// uint16_t inspect = 0;
-		// if (readReg(Registers::NTC_Control_0_TS_IGNORE, inspect))
-		// {
-		// 	printf("before: %d\n", inspect);
-		// }
-		bool res = writeReg(Registers::NTC_Control_0_TS_IGNORE, !enable);
-		// if (res && readReg(Registers::NTC_Control_0_TS_IGNORE, inspect))
-		// {
-		// 	printf("after: %d\n", inspect);
-		// }
-		return res;
+		return writeReg(Registers::NTC_Control_0_TS_IGNORE, !enable);
 	}
 
 	uint8_t BQ2562x::getStat(int num)
