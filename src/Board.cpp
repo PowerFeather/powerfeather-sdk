@@ -10,7 +10,7 @@ namespace PowerFeather
 {
     static_assert(CHAR_BIT == 8, "Unsupported architecture");
 
-    bool Board::_initRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode)
+    bool Board::_initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode)
     {
         rtc_gpio_init(pin);
         rtc_gpio_set_direction(pin, mode);
@@ -20,7 +20,7 @@ namespace PowerFeather
         return true;
     }
 
-    bool Board::_initDigitalPin(gpio_num_t pin, gpio_mode_t mode)
+    bool Board::_initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode)
     {
         gpio_config_t io_conf = {};
         memset(&io_conf, 0, sizeof(io_conf));
@@ -41,10 +41,10 @@ namespace PowerFeather
         _i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq);
 
         // Initialize digital pins always.
-        _initRTCPin(Board::Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD);
-        _initRTCPin(Board::Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _initRTCPin(Board::Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _initDigitalPin(Board::Pin::FFI::SRC, GPIO_MODE_INPUT);
+        _initInternalRTCPin(Board::Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD);
+        _initInternalRTCPin(Board::Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
+        _initInternalRTCPin(Board::Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY);
+        _initInternalDigitalPin(Board::Pin::FFI::SRC, GPIO_MODE_INPUT);
 
         // Only initialize RTC pins if the RTC core has been reset - this
         // happens on system and chip-level resets.
@@ -64,7 +64,8 @@ namespace PowerFeather
         // Disable the charger watchdog to keep the charger in host mode.
         _charger.enableWD(false);
 
-        
+        init = magic;
+
         return true;
     }
 
