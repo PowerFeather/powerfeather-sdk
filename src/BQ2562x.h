@@ -28,7 +28,7 @@ namespace PowerFeather
             static constexpr Register NTC_Control_0_TS_IGNORE =              { 0x1a, 1, 7, 7 };
 
             static constexpr Register Part_Information =                     { 0x38, 1, 0, 7 };
-            static constexpr Register Part_Information_PN =                  { 0x38, 1, 0, 2 };
+            static constexpr Register Part_Information_PN =                  { 0x38, 1, 3, 5 };
             static constexpr Register Part_Information_DEV_REV =             { 0x38, 1, 0, 2 };
         };
 

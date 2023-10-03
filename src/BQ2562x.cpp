@@ -32,7 +32,7 @@ namespace PowerFeather
 	template <typename T>
 	bool BQ2562x::writeReg(Register reg, T value)
 	{
-		uint8_t last = reg.size * CHAR_BIT - 1;
+		uint8_t last = (reg.size * CHAR_BIT) - 1;
 
 		assert(reg.size <= sizeof(value));
 		assert(reg.start <= reg.end);
@@ -54,16 +54,14 @@ namespace PowerFeather
 	template <typename T>
 	bool BQ2562x::readReg(Register reg, T& value)
 	{
-		uint8_t last = reg.size * CHAR_BIT - 1;
-
 		assert(reg.size <= sizeof(value));
 		assert(reg.start <= reg.end);
-		assert(reg.end <= last);
+		assert(reg.end <= (reg.size * CHAR_BIT) - 1);
 
 		uint16_t data = 0;
         if (_i2c.read(_i2cAddress, reg.address, reinterpret_cast<uint8_t*>(&data), reg.size))
 		{
-			int left = (((reg.size * CHAR_BIT) - 1) - reg.end);
+			int left = (((sizeof(data) * CHAR_BIT) - 1) - reg.end);
 			data <<= left;
 			data >>= left + reg.start;
 			value = data;
