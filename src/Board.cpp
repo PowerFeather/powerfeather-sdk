@@ -86,24 +86,6 @@ namespace PowerFeather
         _setRTCPin(Board::Pin::FFI::EN_SQT, enable);
     }
 
-    Board::PowerInput Board::getPowerInput()
-    {
-        BQ2562x::VBUSStat vbusStat = _charger.getVBUSStat();
-
-        if (vbusStat == BQ2562x::VBUSStat::Adapter)
-        {
-            if (gpio_get_level(Board::Pin::FFI::SRC))
-            {
-                return PowerInput::DC;
-            }
-            else
-            {
-                return PowerInput::USB;
-            }
-        }
-
-        return PowerInput::Battery;
-    }
 
     void Board::setEN(bool value)
     {
@@ -115,14 +97,9 @@ namespace PowerFeather
         return rtc_gpio_get_level(Board::Pin::FFI::EN);
     }
 
-    void Board::set5V(float voltage)
+    bool Board::checkVSPresent()
     {
-        // TODO
-    }
-
-    void Board::enable5VOnBattery(bool enable)
-    {
-        // TODO
+        return false;
     }
 
     void Board::enterShipMode()

@@ -69,85 +69,6 @@ TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
     esp_restart_noos_dig();
 }
 
-extern "C" void determine_power_source()
-{
-    // No reset when removing external supply (usb/dc) with battery connected.
-    board.enable3V3(true);
-
-    #define LEDC_TIMER              LEDC_TIMER_0
-    #define LEDC_MODE               LEDC_LOW_SPEED_MODE
-    #define LEDC_OUTPUT_IO          (Board::Pin::FF::LED) // Define the output GPIO
-    #define LEDC_CHANNEL            LEDC_CHANNEL_0
-    #define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
-    #define LEDC_FREQUENCY          (5000) // Frequency in Hertz. Set frequency at 5 kHz
-    #define LEDC_DUTY(x)            (((1 << 13 ) - 1) * x) // Set duty to 50%. ((2 ** 13) - 1) * 50% = 4095
-
-    ledc_timer_config_t ledc_timer;
-    ledc_timer.speed_mode       = LEDC_MODE;
-    ledc_timer.timer_num        = LEDC_TIMER;
-    ledc_timer.duty_resolution  = LEDC_DUTY_RES;
-    ledc_timer.freq_hz          = LEDC_FREQUENCY;
-    ledc_timer.clk_cfg          = LEDC_AUTO_CLK;
-    ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
-
-    // Prepare and then apply the LEDC PWM channel configuration
-    ledc_channel_config_t ledc_channel;
-    ledc_channel.speed_mode     = LEDC_MODE;
-    ledc_channel.channel        = LEDC_CHANNEL;
-    ledc_channel.timer_sel      = LEDC_TIMER;
-    ledc_channel.intr_type      = LEDC_INTR_DISABLE;
-    ledc_channel.gpio_num       = LEDC_OUTPUT_IO;
-    ledc_channel.duty           = 0;
-    ledc_channel.hpoint         = 0;
-    ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
-
-    Board::PowerInput last = board.getPowerInput();
-    bool first = true;
-
-    while (true)
-    {
-        Board::PowerInput current = board.getPowerInput();
-        if (current != last || first)
-        {
-            switch (current)
-            {
-            case Board::PowerInput::Battery:
-                // Barely lit
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.001f));
-                printf("battery\n");
-                break;
-
-            case Board::PowerInput::USB:
-                // Faint
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(0.01));
-                printf("usb\n");
-                break;
-
-            case Board::PowerInput::DC:
-                // Bright
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY(1.0f));
-                printf("dc\n");
-                break;
-
-            default:
-                break;
-            }
-
-            ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
-            last = current;
-        }
-
-        first = false;
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
-}
-
-TEST_CASE("determine power source", MODULE_NAME)
-{
-    determine_power_source();
-}
-
-
 static void periodic_timer_callback(void* arg)
 {
     gpio_num_t pin = static_cast<gpio_num_t>((int)arg);
@@ -464,9 +385,9 @@ TEST_CASE("current loading", MODULE_NAME)
 
 void wait_for_battery(uint32_t delay_ms)
 {
-    Board::PowerInput input = board.getPowerInput();
-    while (input != Board::PowerInput::Battery) {
-        input = board.getPowerInput();
+    while (!board.checkVSPresent())
+    {
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
     vTaskDelay(pdMS_TO_TICKS(delay_ms));
 }
@@ -496,19 +417,6 @@ TEST_CASE("power cycle", MODULE_NAME)
     // Tie QON to reset, check that ship mode can be exited
     wait_for_battery(1000);
     board.doPowerCycle();
-}
-
-TEST_CASE("configure 5V output", MODULE_NAME)
-{
-    board.set5V(4.2);
-    board.enable5VOnBattery(true);
-
-    printf("waiting for battery active...\n");
-    wait_for_battery(1000);
-    printf("battery active detected\n");
-
-    board.set5V(5.04);
-    board.enable5VOnBattery(false);
 }
 
 TEST_CASE("set VBAT min", MODULE_NAME)

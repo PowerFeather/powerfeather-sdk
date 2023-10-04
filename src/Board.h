@@ -9,12 +9,6 @@ namespace PowerFeather
     class Board
     {
     public:
-        enum class PowerInput
-        {
-            USB,
-            DC,
-            Battery,
-        };
 
         class Pin
         {
@@ -99,23 +93,6 @@ namespace PowerFeather
         void enableSQT(bool enable);
 
         /**
-         * Enable or disable 5 V power output in battery-only mode.
-         *
-         * @param enable Enable if true, disable if false.
-         */
-        void enable5VOnBattery(bool enable);
-
-        /**
-         * Set 5 V power output voltage.
-         *
-         * Somewhat contrary to its name, the 5 V output is adjustable from 3.8 V - 5.2 V.
-         * By default, it is set to 5.04V.
-         *
-         * @param voltage Voltage to set 5 V output to, valid input range [3.8, 5.2]
-         */
-        void set5V(float voltage);
-
-        /**
          * Set VBAT minimum output voltage.
          *
          * Set the minimum output voltage on VBAT even if there is no battery or the
@@ -124,6 +101,8 @@ namespace PowerFeather
          * @param voltage Minimum voltage to set VBAT output to, valid input range [2.2, 4.3]
          */
         void setVBATMin(float voltage);
+
+        void setRegVoltage(float voltage);
 
         /**
          * Set EN pin state.
@@ -140,13 +119,6 @@ namespace PowerFeather
         bool getEN();
 
         // Get the power input currently supplying power to the board.
-
-        /**
-         * Determine the active power input, i.e. the input that is currently supplying power to the board.
-         *
-         * @return  The current active power input
-         */
-        PowerInput getPowerInput();
 
         /**
          * Enter ship mode.
@@ -175,6 +147,9 @@ namespace PowerFeather
          * Only able to enter shutdown in battery-only.
          */
         void doPowerCycle();
+
+
+        bool checkVSPresent();
 
 
         /**
