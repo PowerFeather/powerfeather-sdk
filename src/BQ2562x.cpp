@@ -413,7 +413,7 @@ namespace PowerFeather
 			break;
 		}
 
-		writeReg(BYTE(0x18), 0, 1, value);
+		writeReg(Registers::Charger_Control_2_BATFET_CTRL, value);
 	}
 
 	void BQ2562x::setBATFETDelay(BATFETDelay delay)
@@ -429,7 +429,7 @@ namespace PowerFeather
 			break;
 		}
 
-		writeReg(BYTE(0x18), 2, value);
+		writeReg(Registers::Charger_Control_2_BATFET_DLY, value);
 	}
 
 	float BQ2562x::getBatteryTemperature()

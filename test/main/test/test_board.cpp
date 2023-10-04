@@ -385,7 +385,7 @@ TEST_CASE("current loading", MODULE_NAME)
 
 void wait_for_battery(uint32_t delay_ms)
 {
-    while (!board.checkVSPresent())
+    while (!board.checkVSGood())
     {
         vTaskDelay(pdMS_TO_TICKS(100));
     }

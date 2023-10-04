@@ -58,6 +58,7 @@ namespace PowerFeather
 
         // Disable charging.
         _charger.enableCharging(false);
+
         // Disable charger TS pin; since it registers as a TS_COLD/TS_OTG_COLD
         // (TS_STAT = 0x1) if no thermistor is connected.
         _charger.enableTS(false);
@@ -86,7 +87,6 @@ namespace PowerFeather
         _setRTCPin(Board::Pin::FFI::EN_SQT, enable);
     }
 
-
     void Board::setEN(bool value)
     {
         _setRTCPin(Board::Pin::FFI::EN, value);
@@ -97,28 +97,28 @@ namespace PowerFeather
         return rtc_gpio_get_level(Board::Pin::FFI::EN);
     }
 
-    bool Board::checkVSPresent()
+    bool Board::checkVSGood()
     {
-        return false;
+        return gpio_get_level(Board::Pin::FFI::PG) == 0;
     }
 
     void Board::enterShipMode()
     {
-        // TODO
+        _charger.setBATFETControl(BQ2562x::BATFETControl::ShipMode);
     }
 
     void Board::enterShutdownMode()
     {
-        // TODO
+        _charger.setBATFETControl(BQ2562x::BATFETControl::ShutdownMode);
     }
 
     void Board::setVBATMin(float voltage)
     {
-        // TODO
+        _charger.setVINDPM(voltage);
     }
 
     void Board::doPowerCycle()
     {
-        // TODO
+        _charger.setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset);
     }
 }

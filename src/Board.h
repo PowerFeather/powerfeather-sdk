@@ -9,7 +9,6 @@ namespace PowerFeather
     class Board
     {
     public:
-
         class Pin
         {
         public:
@@ -76,7 +75,40 @@ namespace PowerFeather
             };
         };
 
+
+        /**
+         * Initialize and set defaults.
+         *
+         * Max input current - 1000 mA.
+         * Max charging current - 250 mA.
+         * Charging - disabled.
+         * 3V3 and SQT enabled.
+         *
+         * @param current The maximum current draw.
+         */
         bool init();
+
+        /**
+         * Set the maximum current draw from the power supply (USB/external DC adapter).
+         *
+         * This includes current draw from on-board components, the load on the VS pin,
+         * and the charger current. The sum of all these current draws must not exceed this
+         * current. Default is 1000 mA.
+         *
+         * @param current The maximum current draw.
+         */
+        void setVSMaxCurrent(uint32_t current);
+
+
+        /**
+         * Check that the power supply (USB/external DC adapter), is good
+         * (as determined by the battery charger).
+         *
+         * If false, the system is being powered by the battery.
+         *
+         * @return
+         */
+        bool checkVSGood();
 
         /**
          * Enable or disable the header 3.3 V power output.
@@ -102,7 +134,9 @@ namespace PowerFeather
          */
         void setVBATMin(float voltage);
 
-        void setRegVoltage(float voltage);
+        /*
+         */
+        void setVDCMin(float voltage);
 
         /**
          * Set EN pin state.
@@ -125,7 +159,7 @@ namespace PowerFeather
          *
          * Ship mode is a low power state that consumes about 1.5 uA. It is only possible to
          * exit this mode by pulling down QON or by plugging in USB or DC.
-         * 
+         *
          * Only able to enter shutdown in battery-only.
          */
         void enterShipMode();
@@ -135,11 +169,10 @@ namespace PowerFeather
          *
          * Ship mode is a low power state that consumes about 1.5 uA. It is only possible
          * to exit this mode by plugging in USB or DC.
-         * 
+         *
          * Only able to enter shutdown in battery-only.
          */
         void enterShutdownMode();
-
 
         /**
          * Power cycle board.
@@ -148,9 +181,12 @@ namespace PowerFeather
          */
         void doPowerCycle();
 
-
-        bool checkVSPresent();
-
+        /**
+         * Power cycle board.
+         *
+         * Only able to enter shutdown in battery-only.
+         */
+        void enableTSPin(bool enable);
 
         /**
          * Enable or disable battery charging.
@@ -159,20 +195,13 @@ namespace PowerFeather
 
         /**
          * Set maximum charging current.
-         * 
-         * Set value depending on preference between safety and speed. A charging 
+         *
+         * Set value depending on preference between safety and speed. A charging
          * current of 1C is usually a good value, i.e. if battery has capacity of 520 mAh, set charging
          * current to 520 mA (520 * 1 = 520). Check datasheet for your battery for maximum charging current.
          *
          */
         void setChargingMaxCurrent(uint32_t mA);
-
-        /**
-         * Set the safety timer, after which the charging will be terminated.
-         *
-         * @param ms Safety timer in minutes; set to 0 to disable safety timer (not recommended).
-         */
-        void setChargingSafetyTimer(uint32_t minutes);
 
         /**
          * Get current battery voltage measurement.
@@ -190,6 +219,7 @@ namespace PowerFeather
          * the battery only has max capacity 68% of the original design capacity.
          */
         float getBatteryHealth();
+
 
         /** Returns remaining battery runtime when discharging;
          * returns time-to-full charge when charging.

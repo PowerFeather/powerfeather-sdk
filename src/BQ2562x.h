@@ -26,6 +26,8 @@ namespace PowerFeather
             static constexpr Register Charger_Control_0_WATCHDOG =           { 0x16, 1, 0, 1 };
 
             static constexpr Register Charger_Control_2 =                    { 0x18, 1, 0, 7 };
+            static constexpr Register Charger_Control_2_BATFET_CTRL =        { 0x18, 1, 0, 1 };
+            static constexpr Register Charger_Control_2_BATFET_DLY =         { 0x18, 1, 2, 2 };
 
             static constexpr Register NTC_Control_0_TS_IGNORE =              { 0x1a, 1, 7, 7 };
 
