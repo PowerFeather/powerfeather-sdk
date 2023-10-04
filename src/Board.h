@@ -97,7 +97,7 @@ namespace PowerFeather
          *
          * @param current The maximum current draw.
          */
-        void setVSMaxCurrent(uint32_t current);
+        void setVSMaxCurrent(uint32_t mA);
 
 
         /**

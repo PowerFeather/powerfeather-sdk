@@ -56,12 +56,11 @@ namespace PowerFeather
             setEN(true);
         }
 
-        // Disable charging.
-        _charger.enableCharging(false);
+        enableTSPin(false);
+        enableCharging(false);
+        setVSMaxCurrent(1000);
+        setChargingMaxCurrent(250);
 
-        // Disable charger TS pin; since it registers as a TS_COLD/TS_OTG_COLD
-        // (TS_STAT = 0x1) if no thermistor is connected.
-        _charger.enableTS(false);
         // Disable the charger watchdog to keep the charger in host mode.
         _charger.enableWD(false);
 
@@ -90,6 +89,26 @@ namespace PowerFeather
     void Board::setEN(bool value)
     {
         _setRTCPin(Board::Pin::FFI::EN, value);
+    }
+
+    void Board::enableTSPin(bool enable)
+    {
+        _charger.enableTS(enable);
+    }
+
+    void Board::setVSMaxCurrent(uint32_t mA)
+    {
+        _charger.setIINDPM(mA);
+    }
+
+    void Board::enableCharging(bool enable)
+    {
+        _charger.enableCharging(enable);
+    }
+
+    void Board::setChargingMaxCurrent(uint32_t mA)
+    {
+        _charger.setChargeCurrent(mA);
     }
 
     bool Board::getEN()

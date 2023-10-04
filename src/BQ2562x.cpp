@@ -140,7 +140,7 @@ namespace PowerFeather
 		current /= 40;
 		if (current >= 0x1 && current <= 0x32)
 		{
-			return writeReg(SHORT(0x02), 5, 11, current);
+			return writeReg(Registers::Charge_Current_Limit_ICHG, current);
 		}
 		return false;
 	}
@@ -250,12 +250,20 @@ namespace PowerFeather
 		return (value * 1.99f) / 1000.0f;
     }
 
-    void BQ2562x::setVINDPM(float voltage)
+    void BQ2562x::setVINDPM(uint32_t mV)
     {
-		uint16_t value = 0;
-		writeReg(SHORT(0x08), 5, 13, static_cast<uint16_t>((voltage * 1000.0) / 40));
-		readReg(SHORT(0x08), 5, 13, value);
-		printf("vindpm: %d\n", value * 40);
+		writeReg(Registers::Input_Current_Limit_VINDPM, static_cast<uint16_t>((mV) / 40));
+		// uint16_t value = 0;
+		// readReg(Registers::Input_Current_Limit_VINDPM, value);
+		// printf("vindpm: %d\n", value * 40);
+    }
+
+    void BQ2562x::setIINDPM(uint32_t mA)
+    {
+		writeReg(Registers::Input_Current_Limit_IINDPM, static_cast<uint16_t>((mA) / 40));
+		// uint16_t value = 0;
+		// readReg(Registers::Input_Current_Limit_IINDPM, value);
+		// printf("vindpm: %d\n", value * 40);
     }
 
 	void BQ2562x::enableADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)

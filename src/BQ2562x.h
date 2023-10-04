@@ -22,6 +22,11 @@ namespace PowerFeather
         class Registers
         {
         public:
+            static constexpr Register Charge_Current_Limit_ICHG =            { 0x02, 2, 5, 11 };
+
+            static constexpr Register Input_Current_Limit_IINDPM =           { 0x06, 2, 4, 11 };
+            static constexpr Register Input_Current_Limit_VINDPM =           { 0x08, 2, 5, 13 };
+
             static constexpr Register Charger_Control_0_EN_CHG =             { 0x16, 1, 5, 5 };
             static constexpr Register Charger_Control_0_WATCHDOG =           { 0x16, 1, 0, 1 };
 
@@ -142,7 +147,8 @@ namespace PowerFeather
                         ADCAverage average = ADCAverage::LastValue, ADCAverageInit averageInit = ADCAverageInit::LastValue);
         bool checkADC();
         bool getPartInformation(uint8_t& value);
-        void setVINDPM(float voltage);
+        void setVINDPM(uint32_t mV);
+        void setIINDPM(uint32_t mA);
         void setBATFETControl(BATFETControl control);
         void setBATFETDelay(BATFETDelay delay);
 
