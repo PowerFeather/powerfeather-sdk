@@ -25,10 +25,14 @@ namespace PowerFeather
             static constexpr Register Charger_Control_0_EN_CHG =             { 0x16, 1, 5, 5 };
             static constexpr Register Charger_Control_0_WATCHDOG =           { 0x16, 1, 0, 1 };
 
+            static constexpr Register Charger_Control_2 =                    { 0x18, 1, 0, 7 };
+
             static constexpr Register NTC_Control_0_TS_IGNORE =              { 0x1a, 1, 7, 7 };
 
             static constexpr Register Charger_Status_1 =                     { 0x1e, 1, 0, 7 };
             static constexpr Register Charger_Status_1_VBUS_STAT =           { 0x1e, 1, 0, 2 };
+
+            static constexpr Register ADC_Control =                          { 0x26, 1, 0, 7 };
 
             static constexpr Register Part_Information =                     { 0x38, 1, 0, 7 };
             static constexpr Register Part_Information_PN =                  { 0x38, 1, 3, 5 };

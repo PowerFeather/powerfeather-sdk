@@ -40,6 +40,9 @@ namespace PowerFeather
                 static constexpr gpio_num_t MOSI =      GPIO_NUM_40;
                 static constexpr gpio_num_t SCK =       GPIO_NUM_39;
                 static constexpr gpio_num_t TX0 =       GPIO_NUM_43;
+
+                static constexpr gpio_num_t SCL =       GPIO_NUM_36;
+                static constexpr gpio_num_t SDA =       GPIO_NUM_35;
             };
 
             // Pins that are connected to a component on the board and has a
@@ -47,23 +50,20 @@ namespace PowerFeather
             class FF // Fixed-function
             {
             public:
-                static constexpr gpio_num_t ALARM =     GPIO_NUM_7; // FuelGauge ALARM, Input
+                static constexpr gpio_num_t ALARM =     GPIO_NUM_21; // FuelGauge ALARM, Input
                 static constexpr gpio_num_t INT =       GPIO_NUM_5; // Charger INT, Input
 
                 static constexpr gpio_num_t LED =       GPIO_NUM_46; // Board LED, Output
                 static constexpr gpio_num_t BTN =       GPIO_NUM_0; // Board BTN, Input
-                static constexpr gpio_num_t EN =        GPIO_NUM_13; // Board EN, Input
-
-                static constexpr gpio_num_t SCL =       GPIO_NUM_36; // Board SCL, shared with STEMMA QT, 5,1k pullup, Unconfigured
-                static constexpr gpio_num_t SDA =       GPIO_NUM_35; // Board SDA, shared with STEMMA QT, 5.1k pullup, Unconfigured
+                static constexpr gpio_num_t EN =        GPIO_NUM_7; // Board EN, Input
             };
 
         private:
             class FFI // Fixed function internal
             {
             public:
-                static constexpr gpio_num_t USB_DP =    GPIO_NUM_4;
-                static constexpr gpio_num_t USB_DM =    GPIO_NUM_14;
+                static constexpr gpio_num_t USB_DP =    GPIO_NUM_20;
+                static constexpr gpio_num_t USB_DM =    GPIO_NUM_19;
 
                 static constexpr gpio_num_t EN_3V3 =    GPIO_NUM_4;
                 static constexpr gpio_num_t EN_SQT =    GPIO_NUM_14;
@@ -72,7 +72,7 @@ namespace PowerFeather
                 static constexpr gpio_num_t SCL0 =      GPIO_NUM_48;
                 static constexpr gpio_num_t SDA0 =      GPIO_NUM_47;
 
-                static constexpr gpio_num_t SRC =       GPIO_NUM_38; // Board SRC, Input
+                static constexpr gpio_num_t PG =        GPIO_NUM_38;
             };
         };
 

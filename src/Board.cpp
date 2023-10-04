@@ -44,7 +44,7 @@ namespace PowerFeather
         _initInternalRTCPin(Board::Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD);
         _initInternalRTCPin(Board::Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
         _initInternalRTCPin(Board::Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _initInternalDigitalPin(Board::Pin::FFI::SRC, GPIO_MODE_INPUT);
+        _initInternalDigitalPin(Board::Pin::FFI::PG, GPIO_MODE_INPUT);
 
         // Only initialize RTC pins if the RTC core has been reset - this
         // happens on system and chip-level resets.
