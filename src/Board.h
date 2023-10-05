@@ -224,7 +224,7 @@ namespace PowerFeather
         /** Returns remaining battery runtime when discharging;
          * returns time-to-full charge when charging.
          */
-        uint32_t getBatteryTimeLeft();
+        int getBatteryTimeLeft();
 
 
         BQ2562x& getCharger() { return _charger; }

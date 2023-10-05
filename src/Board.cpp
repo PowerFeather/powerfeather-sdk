@@ -168,4 +168,29 @@ namespace PowerFeather
     {
         _charger.setChargeCurrent(current * 1000);
     }
+
+    float Board::getBatteryVoltage()
+    {
+        return _fuelGauge.getCellVoltage();
+    }
+
+    float Board::getBatteryCharge()
+    {
+        return _fuelGauge.getRSOC() / 100.0f;
+    }
+
+    float Board::getBatteryHealth()
+    {
+        return _fuelGauge.getSOH() / 100.0f;
+    }
+
+    int32_t Board::getBatteryTimeLeft()
+    {
+        if (_charger.isCharging())
+        {
+            return _fuelGauge.getTimeToFull();
+        }
+
+        return _fuelGauge.getTimeToEmpty() * -1;
+    }
 }

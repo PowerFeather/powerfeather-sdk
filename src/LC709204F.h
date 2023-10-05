@@ -8,7 +8,11 @@ namespace PowerFeather
     public:
         LC709204F(MasterI2C& i2c):_i2c(i2c) {}
 
-        uint16_t getCellVoltage(void);
+        uint16_t getCellVoltage();
+        uint16_t getRSOC();
+        uint16_t getSOH();
+        uint16_t getTimeToEmpty();
+        uint16_t getTimeToFull();
 
     private:
         static constexpr uint8_t _i2cAddress = 0x0b;

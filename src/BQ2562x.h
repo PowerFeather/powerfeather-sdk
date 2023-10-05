@@ -151,6 +151,7 @@ namespace PowerFeather
         void setIINDPM(uint32_t mA);
         void setBATFETControl(BATFETControl control);
         void setBATFETDelay(BATFETDelay delay);
+        bool isCharging() { return false; }
 
         uint8_t getStat(int num);
         uint8_t getFlags(int num);
