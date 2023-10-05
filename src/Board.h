@@ -89,6 +89,38 @@ namespace PowerFeather
         bool init();
 
         /**
+         * Set EN pin state.
+         *
+         * @param value EN pin is set high if true, set low if false
+         */
+        void setEN(bool value);
+
+        /**
+         * Get EN pin state.
+         *
+         * @return EN pin is high if true, low if false
+         */
+        bool getEN();
+
+        /**
+         * Enable or disable the header 3.3 V power output.
+         *
+         * @param enable Enable if true, disable if false.
+         */
+        void enable3V3(bool enable);
+
+        /**
+         * Enable or disable the STEMMA QT 3.3 V power output.
+         *
+         * @param enable Enable if true, disable if false.
+         */
+        void enableSQT(bool enable);
+
+        /*
+         */
+        void setVSMinVoltage(float voltage);
+
+        /**
          * Set the maximum current draw from the power supply (USB/external DC adapter).
          *
          * This includes current draw from on-board components, the load on the VS pin,
@@ -111,20 +143,6 @@ namespace PowerFeather
         bool checkVSGood();
 
         /**
-         * Enable or disable the header 3.3 V power output.
-         *
-         * @param enable Enable if true, disable if false.
-         */
-        void enable3V3(bool enable);
-
-        /**
-         * Enable or disable the STEMMA QT 3.3 V power output.
-         *
-         * @param enable Enable if true, disable if false.
-         */
-        void enableSQT(bool enable);
-
-        /**
          * Set VBAT minimum output voltage.
          *
          * Set the minimum output voltage on VBAT even if there is no battery or the
@@ -132,25 +150,7 @@ namespace PowerFeather
          *
          * @param voltage Minimum voltage to set VBAT output to, valid input range [2.2, 4.3]
          */
-        void setVBATMin(float voltage);
-
-        /*
-         */
-        void setVDCMin(float voltage);
-
-        /**
-         * Set EN pin state.
-         *
-         * @param value EN pin is set high if true, set low if false
-         */
-        void setEN(bool value);
-
-        /**
-         * Get EN pin state.
-         *
-         * @return EN pin is high if true, low if false
-         */
-        bool getEN();
+        void setVBATMinVoltage(float voltage);
 
         // Get the power input currently supplying power to the board.
 
@@ -201,7 +201,7 @@ namespace PowerFeather
          * current to 520 mA (520 * 1 = 520). Check datasheet for your battery for maximum charging current.
          *
          */
-        void setChargingMaxCurrent(uint32_t mA);
+        void setChargingMaxCurrent(float current);
 
         /**
          * Get current battery voltage measurement.

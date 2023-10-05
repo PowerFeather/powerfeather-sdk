@@ -33,6 +33,36 @@ namespace PowerFeather
         return true;
     }
 
+    void Board::_setRTCPin(gpio_num_t pin, bool value)
+    {
+        if (value)
+        {
+            // Set the pin high.
+            rtc_gpio_set_level(pin, value);
+            // Hold the pin high, even in deep sleep.
+            rtc_gpio_hold_en(pin);
+        }
+        else
+        {
+            // Disable pin hold during deep sleep
+            rtc_gpio_hold_dis(pin);
+
+            if (pin == Board::Pin::FFI::EN)
+            {
+                // The enable pin is in open-drain configuration with external pull-up
+                // resistor. Setting the pin to 0 means pulling it down.
+                rtc_gpio_set_level(pin, 0);
+            }
+            else
+            {
+                // The rest of the output RTC pins is by default pulled down by an
+                // external resistor, this means setting them to 0 entails just
+                // just disconnecting the pin from the chip.
+                rtc_gpio_isolate(pin);
+            }
+        }
+    }
+
     bool Board::init()
     {
         static RTC_NOINIT_ATTR uint32_t init;
@@ -69,11 +99,14 @@ namespace PowerFeather
         return true;
     }
 
-    void Board::_setRTCPin(gpio_num_t pin, bool value)
+    void Board::setEN(bool value)
     {
-        rtc_gpio_hold_dis(pin);
-        rtc_gpio_set_level(pin, value);
-        rtc_gpio_hold_en(pin);
+        _setRTCPin(Board::Pin::FFI::EN, value);
+    }
+
+    bool Board::getEN()
+    {
+        return rtc_gpio_get_level(Board::Pin::FFI::EN);
     }
 
     void Board::enable3V3(bool enable)
@@ -86,14 +119,9 @@ namespace PowerFeather
         _setRTCPin(Board::Pin::FFI::EN_SQT, enable);
     }
 
-    void Board::setEN(bool value)
+    void Board::setVSMinVoltage(float voltage)
     {
-        _setRTCPin(Board::Pin::FFI::EN, value);
-    }
-
-    void Board::enableTSPin(bool enable)
-    {
-        _charger.enableTS(enable);
+        _charger.setVINDPM(voltage * 1000);
     }
 
     void Board::setVSMaxCurrent(uint32_t mA)
@@ -101,24 +129,14 @@ namespace PowerFeather
         _charger.setIINDPM(mA);
     }
 
-    void Board::enableCharging(bool enable)
-    {
-        _charger.enableCharging(enable);
-    }
-
-    void Board::setChargingMaxCurrent(uint32_t mA)
-    {
-        _charger.setChargeCurrent(mA);
-    }
-
-    bool Board::getEN()
-    {
-        return rtc_gpio_get_level(Board::Pin::FFI::EN);
-    }
-
     bool Board::checkVSGood()
     {
         return gpio_get_level(Board::Pin::FFI::PG) == 0;
+    }
+
+    void Board::setVBATMinVoltage(float voltage)
+    {
+        _charger.setVINDPM(voltage * 1000);
     }
 
     void Board::enterShipMode()
@@ -131,13 +149,23 @@ namespace PowerFeather
         _charger.setBATFETControl(BQ2562x::BATFETControl::ShutdownMode);
     }
 
-    void Board::setVBATMin(float voltage)
-    {
-        _charger.setVINDPM(voltage);
-    }
-
     void Board::doPowerCycle()
     {
         _charger.setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset);
+    }
+
+    void Board::enableTSPin(bool enable)
+    {
+        _charger.enableTS(enable);
+    }
+
+    void Board::enableCharging(bool enable)
+    {
+        _charger.enableCharging(enable);
+    }
+
+    void Board::setChargingMaxCurrent(float current)
+    {
+        _charger.setChargeCurrent(current * 1000);
     }
 }

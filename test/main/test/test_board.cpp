@@ -421,5 +421,5 @@ TEST_CASE("power cycle", MODULE_NAME)
 
 TEST_CASE("set VBAT min", MODULE_NAME)
 {
-    board.setVBATMin(3.7);
+    board.setVBATMinVoltage(3.7);
 }
