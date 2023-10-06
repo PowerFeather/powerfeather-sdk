@@ -15,8 +15,7 @@ namespace PowerFeather
 
     /*static*/ MainBoard& MainBoard::get()
     {
-        static RTC_NOINIT_ATTR uint32_t inited;
-        static MainBoard board(&inited);
+        static MainBoard board;
         return board;
     }
 
@@ -80,7 +79,7 @@ namespace PowerFeather
 
     bool MainBoard::_isInited()
     {
-        return *_inited == MainBoard::_initMagic;
+        return _inited == MainBoard::_initMagic;
     }
 
     bool MainBoard::init(uint16_t)
@@ -110,7 +109,7 @@ namespace PowerFeather
         // Disable the charger watchdog to keep the charger in host mode.
         _charger.enableWD(false);
  
-        *_inited = MainBoard::_initMagic;
+        _inited = MainBoard::_initMagic;
 
         return true;
     }
@@ -257,4 +256,6 @@ namespace PowerFeather
 
         return 0;
     }
+
+    /*static*/ RTC_NOINIT_ATTR uint32_t MainBoard::_inited;
 }

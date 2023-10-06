@@ -234,7 +234,7 @@ namespace PowerFeather
         static MainBoard& get();
 
     private:
-        MainBoard(uint32_t* mem): _inited(mem) {}
+        MainBoard() {}
 
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 400000;
@@ -245,7 +245,7 @@ namespace PowerFeather
         BQ2562x _charger {_i2c};
         LC709204F _fuelGauge {_i2c};
 
-        uint32_t* _inited;
+        static RTC_NOINIT_ATTR uint32_t _inited;
 
         bool _sqtOn;
         uint16_t _mAh;
