@@ -4,7 +4,7 @@
 #include <BQ2562x.h>
 #include <LC709204F.h>
 
-#include <Errors.h>
+#include <Error.h>
 
 namespace PowerFeather
 {
@@ -89,7 +89,7 @@ namespace PowerFeather
          *
          * @param current The maximum current draw.
          */
-        bool init(uint16_t _mAh);
+        Error init(uint16_t _mAh);
 
         /**
          * Set EN pin state.
@@ -248,15 +248,12 @@ namespace PowerFeather
         static RTC_NOINIT_ATTR uint32_t _inited;
 
         bool _sqtOn;
-        uint16_t _mAh;
-
-        Errors _initFuelGauge();
-
-        bool _isInited();
 
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
         void _setRTCPin(gpio_num_t pin, bool value);
+        bool _isInited();
+        Error _initChargerAndFuelGauge();
     };
 
     extern MainBoard& Board;

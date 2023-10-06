@@ -72,46 +72,66 @@ namespace PowerFeather
         }
     }
 
-    Errors MainBoard::_initFuelGauge()
-    {
-        return Errors::None;
-    }
-
     bool MainBoard::_isInited()
     {
         return _inited == MainBoard::_initMagic;
     }
 
-    bool MainBoard::init(uint16_t)
+    Error MainBoard::_initChargerAndFuelGauge()
     {
-        _i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq);
+        Error res = Error::None;
 
-        // Initialize digital pins always.
-        _initInternalRTCPin(MainBoard::Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD);
-        _initInternalRTCPin(MainBoard::Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _initInternalRTCPin(MainBoard::Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _initInternalDigitalPin(MainBoard::Pin::FFI::PG, GPIO_MODE_INPUT);
-
-        // Only initialize RTC pins if the RTC core has been reset - this
-        // happens on system and chip-level resets.
-        if (_isInited())
+        if (_i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq))
         {
-            // By default, enable both the 3V3 power outputs.
-            enable3V3(true);
-            enableSQT(true);
-            setEN(true);
+            // Only initialize RTC pins if the RTC core has been reset - this
+            // happens on system and chip-level resets.
+            if (!_isInited())
+            {
+                _initInternalRTCPin(MainBoard::Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY);
+
+                enableSQT(true);
+
+                enableCharging(false);
+                enableTSPin(false);
+                setVSMaxCurrent(1000);
+                setChargingMaxCurrent(250);
+
+                // Disable the charger watchdog to keep the charger in host mode.
+                _charger.enableWD(false);
+            }
+        }
+        else
+        {
+            res = Error::Failure;
         }
 
-        enableTSPin(false);
-        enableCharging(false);
-        setVSMaxCurrent(1000);
-        setChargingMaxCurrent(250);
-        // Disable the charger watchdog to keep the charger in host mode.
-        _charger.enableWD(false);
- 
-        _inited = MainBoard::_initMagic;
+        return res;
+    }
 
-        return true;
+    Error MainBoard::init(uint16_t)
+    {
+        Error res = Error::None;
+
+        if ((res = _initChargerAndFuelGauge()) == Error::None)
+        {
+            _initInternalRTCPin(MainBoard::Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD);
+            _initInternalRTCPin(MainBoard::Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
+            _initInternalDigitalPin(MainBoard::Pin::FFI::PG, GPIO_MODE_INPUT);
+
+            // By default, enable both the 3V3 power outputs.
+            if (_isInited())
+            {
+                // Initialize digital pins always.
+
+                enable3V3(true);
+
+                setEN(true);
+            }
+
+            _inited = MainBoard::_initMagic;
+        }
+ 
+        return res;
     }
 
     void MainBoard::setEN(bool value)
