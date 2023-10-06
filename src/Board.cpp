@@ -117,16 +117,23 @@ namespace PowerFeather
     void Board::enableSQT(bool enable)
     {
         _setRTCPin(Board::Pin::FFI::EN_SQT, enable);
+        _sqtOn = enable;
     }
 
     void Board::setVSMinVoltage(float voltage)
     {
-        _charger.setVINDPM(voltage * 1000);
+        if (_sqtOn)
+        {
+            _charger.setVINDPM(voltage * 1000);
+        }
     }
 
     void Board::setVSMaxCurrent(uint32_t mA)
     {
-        _charger.setIINDPM(mA);
+        if (_sqtOn)
+        {
+            _charger.setIINDPM(mA);
+        }
     }
 
     bool Board::checkVSGood()
@@ -136,61 +143,102 @@ namespace PowerFeather
 
     void Board::setVBATMinVoltage(float voltage)
     {
-        _charger.setVINDPM(voltage * 1000);
+        if (_sqtOn)
+        {
+            _charger.setVINDPM(voltage * 1000);
+        }
     }
 
     void Board::enterShipMode()
     {
-        _charger.setBATFETControl(BQ2562x::BATFETControl::ShipMode);
+        if (_sqtOn)
+        {
+            _charger.setBATFETControl(BQ2562x::BATFETControl::ShipMode);
+        }
     }
 
     void Board::enterShutdownMode()
     {
-        _charger.setBATFETControl(BQ2562x::BATFETControl::ShutdownMode);
+        if (_sqtOn)
+        {
+            _charger.setBATFETControl(BQ2562x::BATFETControl::ShutdownMode);
+        }
     }
 
     void Board::doPowerCycle()
     {
-        _charger.setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset);
+        if (_sqtOn)
+        {
+            _charger.setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset);
+        }
     }
 
     void Board::enableTSPin(bool enable)
     {
-        _charger.enableTS(enable);
+        if (_sqtOn)
+        {
+            _charger.enableTS(enable);
+        }
     }
 
     void Board::enableCharging(bool enable)
     {
-        _charger.enableCharging(enable);
+        if (_sqtOn)
+        {
+            _charger.enableCharging(enable);
+        }
     }
 
     void Board::setChargingMaxCurrent(float current)
     {
-        _charger.setChargeCurrent(current * 1000);
+        if (_sqtOn)
+        {
+            _charger.setChargeCurrent(current * 1000);
+        }
     }
 
     float Board::getBatteryVoltage()
     {
-        return _fuelGauge.getCellVoltage();
+        if (_sqtOn)
+        {
+            return _fuelGauge.getCellVoltage();
+        }
+
+        return 0.0f;
     }
 
     float Board::getBatteryCharge()
     {
-        return _fuelGauge.getRSOC() / 100.0f;
+        if (_sqtOn)
+        {
+            return _fuelGauge.getRSOC() / 100.0f;
+        }
+
+        return 0.0f;
     }
 
     float Board::getBatteryHealth()
     {
-        return _fuelGauge.getSOH() / 100.0f;
+        if (_sqtOn)
+        {
+            return _fuelGauge.getSOH() / 100.0f;
+        }
+
+        return 0.0f;
     }
 
     int32_t Board::getBatteryTimeLeft()
     {
-        if (_charger.isCharging())
+        if (_sqtOn)
         {
-            return _fuelGauge.getTimeToFull();
+            if (_charger.isCharging())
+            {
+                return _fuelGauge.getTimeToFull();
+            }
+
+            return _fuelGauge.getTimeToEmpty() * -1;
         }
 
-        return _fuelGauge.getTimeToEmpty() * -1;
+        return 0;
     }
 }
