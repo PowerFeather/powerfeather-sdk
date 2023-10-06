@@ -14,7 +14,7 @@
 
 using namespace PowerFeather;
 
-Board board;
+Board board(650);
 
 static constexpr char MODULE_NAME[] = "[Board]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }

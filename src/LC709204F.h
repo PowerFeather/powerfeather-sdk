@@ -25,6 +25,12 @@ namespace PowerFeather
         uint16_t getTimeToEmpty();
         uint16_t getTimeToFull();
 
+        uint16_t setAPA(uint16_t apa);
+        uint16_t setChangeOfParameter(uint16_t param);
+        uint16_t enableTSENSE1(bool enable);
+        uint16_t enableTSENSE2(bool enable);
+        uint16_t enableOperation(bool enable);
+
     private:
         static constexpr uint8_t _i2cAddress = 0x0b;
 

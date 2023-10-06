@@ -63,6 +63,11 @@ namespace PowerFeather
         }
     }
 
+    Errors Board::_initFuelGauge()
+    {
+        return Errors::None;
+    }
+
     bool Board::init()
     {
         static RTC_NOINIT_ATTR uint32_t init;

@@ -4,6 +4,8 @@
 #include <BQ2562x.h>
 #include <LC709204F.h>
 
+#include <Errors.h>
+
 namespace PowerFeather
 {
     class Board
@@ -13,6 +15,7 @@ namespace PowerFeather
         {
         public:
             friend Board;
+
             class GP // General-Purpose
             {
             // Pins that are not connected to anything on the board, and
@@ -75,6 +78,9 @@ namespace PowerFeather
             };
         };
 
+        
+
+        Board(uint16_t mAh): _mAh(mAh) {}
 
         /**
          * Initialize and set defaults.
@@ -220,12 +226,10 @@ namespace PowerFeather
          */
         float getBatteryHealth();
 
-
         /** Returns remaining battery runtime when discharging;
          * returns time-to-full charge when charging.
          */
         int getBatteryTimeLeft();
-
 
         BQ2562x& getCharger() { return _charger; }
         LC709204F& getFuelGauge() { return _fuelGauge; }
@@ -240,9 +244,11 @@ namespace PowerFeather
         LC709204F _fuelGauge {_i2c};
 
         bool _sqtOn;
+        uint16_t _mAh;
+
+        Errors _initFuelGauge();
 
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
-
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
         void _setRTCPin(gpio_num_t pin, bool value);
     };
