@@ -25,14 +25,6 @@ namespace PowerFeather
         return true;
     }
 
-    uint16_t LC709204F::getCellVoltage(void)
-    {
-        #define LC709204F_REG_CELL_VOLTAGE                         0x09 /// R - Displays Cell Voltage.
-        uint16_t val = 0;
-        readReg(LC709204F_REG_CELL_VOLTAGE, val);
-        return val;
-    }
-
     bool LC709204F::writeReg(uint8_t command, uint16_t data)
     {
         uint8_t send[5];
@@ -60,5 +52,40 @@ namespace PowerFeather
             }
         }
         return crc;
+    }
+
+    uint16_t LC709204F::getCellVoltage(void)
+    {
+        uint16_t val = 0;
+        readReg(Registers::Cell_Voltage, val);
+        return val;
+    }
+
+    uint16_t LC709204F::getRSOC(void)
+    {
+        uint16_t val = 0;
+        readReg(Registers::RSOC, val);
+        return val;
+    }
+
+    uint16_t LC709204F::getSOH(void)
+    {
+        uint16_t val = 0;
+        readReg(Registers::State_Of_Health, val);
+        return val;
+    }
+
+    uint16_t LC709204F::getTimeToEmpty(void)
+    {
+        uint16_t val = 0;
+        readReg(Registers::TimeToEmpty, val);
+        return val;
+    }
+
+    uint16_t LC709204F::getTimeToFull(void)
+    {
+        uint16_t val = 0;
+        readReg(Registers::TimeToFull, val);
+        return val;
     }
 }
