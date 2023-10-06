@@ -3,13 +3,9 @@
 #include <MainBoard.h>
 #include <BQ2562x.h>
 
-using namespace PowerFeather;
-
-extern MainBoard& board;
-
 extern "C" void app_main(void)
 {
-    board.init(650);
+    PowerFeather::Board.init(650);
 
     // printf("cell voltage: %u\n", board.getFuelGauge().getCellVoltage());
 
