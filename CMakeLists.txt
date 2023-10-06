@@ -1,4 +1,4 @@
-idf_component_register(SRCS "${CMAKE_CURRENT_LIST_DIR}/src/Board.cpp"
+idf_component_register(SRCS "${CMAKE_CURRENT_LIST_DIR}/src/MainBoard.cpp"
                             "${CMAKE_CURRENT_LIST_DIR}/src/MasterI2C.cpp"
                             "${CMAKE_CURRENT_LIST_DIR}/src/BQ2562x.cpp"
                             "${CMAKE_CURRENT_LIST_DIR}/src/LC709204F.cpp"

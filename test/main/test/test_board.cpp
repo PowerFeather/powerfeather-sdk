@@ -9,14 +9,14 @@
 #include <unity.h>
 #include <iperf.h>
 
-#include <Board.h>
+#include <MainBoard.h>
 #include <BQ2562x.h>
 
 using namespace PowerFeather;
 
-Board board(650);
+MainBoard& board = Board;
 
-static constexpr char MODULE_NAME[] = "[Board]";
+static constexpr char MODULE_NAME[] = "[MainBoard]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
 TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
@@ -41,14 +41,17 @@ TEST_CASE("3.3v power outputs on, deep sleep current draw", MODULE_NAME)
 {
     board.enable3V3(true);
     board.enableSQT(true);
-    esp_deep_sleep(MS_TO_US(10000));
+    board.setEN(true);
+    esp_deep_sleep(MS_TO_US(10000000));
 }
 
 TEST_CASE("3.3V power outputs off, deep sleep current draw", MODULE_NAME)
 {
     board.enable3V3(false);
     board.enableSQT(false);
-    esp_deep_sleep(MS_TO_US(10000));
+
+    board.getCharger().getStat(0);
+    esp_deep_sleep(MS_TO_US(10000000));
 }
 
 TEST_CASE("rtc outputs off, no glitch on digital reset", MODULE_NAME)
@@ -146,9 +149,9 @@ TEST_CASE("temperature sense", MODULE_NAME)
     // Check interrupt, may be combined with another test
     board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
 
-    gpio_set_intr_type(Board::Pin::FF::INT, GPIO_INTR_NEGEDGE);
+    gpio_set_intr_type(MainBoard::Pin::FF::INT, GPIO_INTR_NEGEDGE);
     gpio_install_isr_service(0);
-    gpio_isr_handler_add(Board::Pin::FF::INT, charger_int_handler, &board);
+    gpio_isr_handler_add(MainBoard::Pin::FF::INT, charger_int_handler, &board);
 
     board.getCharger().enableTS(true);
 
@@ -187,18 +190,18 @@ TEST_CASE("charger status and flags", MODULE_NAME)
 
 static void button_anyedge_handler(void *arg)
 {
-    gpio_set_level(Board::Pin::FF::LED, gpio_get_level(Board::Pin::FF::BTN));
+    gpio_set_level(MainBoard::Pin::FF::LED, gpio_get_level(MainBoard::Pin::FF::BTN));
 }
 
 TEST_CASE("button and led", MODULE_NAME)
 {
     // Tie potentiometer to temperature sense
     // Check interrupt, may be combined with another test
-    gpio_set_level(Board::Pin::FF::LED, true);
+    gpio_set_level(MainBoard::Pin::FF::LED, true);
 
-    gpio_set_intr_type(Board::Pin::FF::BTN, GPIO_INTR_ANYEDGE);
+    gpio_set_intr_type(MainBoard::Pin::FF::BTN, GPIO_INTR_ANYEDGE);
     gpio_install_isr_service(0);
-    gpio_isr_handler_add(Board::Pin::FF::BTN, button_anyedge_handler, NULL);
+    gpio_isr_handler_add(MainBoard::Pin::FF::BTN, button_anyedge_handler, NULL);
 
     while (true)
     {

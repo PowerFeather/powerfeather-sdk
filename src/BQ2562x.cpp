@@ -157,9 +157,13 @@ namespace PowerFeather
 
 	uint8_t BQ2562x::getStat(int num)
 	{
-		uint8_t data = 0;
-		readReg(BYTE(0x1d + num), data);
-		return data;
+		uint16_t data = 0;
+		readReg(Registers::Charger_Control_2, data);
+		printf("data: 0x%02x\n", data);
+
+		readReg(Registers::ADC_Control, data);
+		printf("data: 0x%02x\n", data);
+		return 0;
 	}
 
 	uint8_t BQ2562x::getFault()

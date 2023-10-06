@@ -8,13 +8,13 @@
 
 namespace PowerFeather
 {
-    class Board
+    class MainBoard
     {
     public:
         class Pin
         {
         public:
-            friend Board;
+            friend MainBoard;
 
             class GP // General-Purpose
             {
@@ -55,9 +55,9 @@ namespace PowerFeather
                 static constexpr gpio_num_t ALARM =     GPIO_NUM_21; // FuelGauge ALARM, Input
                 static constexpr gpio_num_t INT =       GPIO_NUM_5; // Charger INT, Input
 
-                static constexpr gpio_num_t LED =       GPIO_NUM_46; // Board LED, Output
-                static constexpr gpio_num_t BTN =       GPIO_NUM_0; // Board BTN, Input
-                static constexpr gpio_num_t EN =        GPIO_NUM_7; // Board EN, Input
+                static constexpr gpio_num_t LED =       GPIO_NUM_46; // MainBoard LED, Output
+                static constexpr gpio_num_t BTN =       GPIO_NUM_0; // MainBoard BTN, Input
+                static constexpr gpio_num_t EN =        GPIO_NUM_7; // MainBoard EN, Input
             };
 
         private:
@@ -78,9 +78,6 @@ namespace PowerFeather
             };
         };
 
-        
-
-        Board(uint16_t mAh): _mAh(mAh) {}
 
         /**
          * Initialize and set defaults.
@@ -92,7 +89,7 @@ namespace PowerFeather
          *
          * @param current The maximum current draw.
          */
-        bool init();
+        bool init(uint16_t _mAh);
 
         /**
          * Set EN pin state.
@@ -234,22 +231,33 @@ namespace PowerFeather
         BQ2562x& getCharger() { return _charger; }
         LC709204F& getFuelGauge() { return _fuelGauge; }
 
+        static MainBoard& get();
+
     private:
+        MainBoard(uint32_t* mem): _inited(mem) {}
+
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 400000;
         static constexpr uint32_t _i2cTimeout = 1000;
+        static constexpr uint32_t _initMagic = 0xDEADBEEF;
 
         MasterI2C _i2c {};
         BQ2562x _charger {_i2c};
         LC709204F _fuelGauge {_i2c};
+
+        uint32_t* _inited;
 
         bool _sqtOn;
         uint16_t _mAh;
 
         Errors _initFuelGauge();
 
+        bool _isInited();
+
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
         void _setRTCPin(gpio_num_t pin, bool value);
     };
+
+    extern MainBoard& Board;
 }

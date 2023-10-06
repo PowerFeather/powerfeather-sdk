@@ -4,13 +4,23 @@
 
 #include <soc/reset_reasons.h>
 
-#include <Board.h>
+#include <MainBoard.h>
+
 
 namespace PowerFeather
 {
+    MainBoard& Board = MainBoard::get();
+
     static_assert(CHAR_BIT == 8, "Unsupported architecture");
 
-    bool Board::_initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode)
+    /*static*/ MainBoard& MainBoard::get()
+    {
+        static RTC_NOINIT_ATTR uint32_t inited;
+        static MainBoard board(&inited);
+        return board;
+    }
+
+    bool MainBoard::_initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode)
     {
         rtc_gpio_init(pin);
         rtc_gpio_set_direction(pin, mode);
@@ -20,7 +30,7 @@ namespace PowerFeather
         return true;
     }
 
-    bool Board::_initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode)
+    bool MainBoard::_initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode)
     {
         gpio_config_t io_conf = {};
         memset(&io_conf, 0, sizeof(io_conf));
@@ -33,7 +43,7 @@ namespace PowerFeather
         return true;
     }
 
-    void Board::_setRTCPin(gpio_num_t pin, bool value)
+    void MainBoard::_setRTCPin(gpio_num_t pin, bool value)
     {
         if (value)
         {
@@ -47,7 +57,7 @@ namespace PowerFeather
             // Disable pin hold during deep sleep
             rtc_gpio_hold_dis(pin);
 
-            if (pin == Board::Pin::FFI::EN)
+            if (pin == MainBoard::Pin::FFI::EN)
             {
                 // The enable pin is in open-drain configuration with external pull-up
                 // resistor. Setting the pin to 0 means pulling it down.
@@ -63,27 +73,29 @@ namespace PowerFeather
         }
     }
 
-    Errors Board::_initFuelGauge()
+    Errors MainBoard::_initFuelGauge()
     {
         return Errors::None;
     }
 
-    bool Board::init()
+    bool MainBoard::_isInited()
     {
-        static RTC_NOINIT_ATTR uint32_t init;
-        static constexpr uint32_t magic = 0xDEADBEEF;
+        return *_inited == MainBoard::_initMagic;
+    }
 
+    bool MainBoard::init(uint16_t)
+    {
         _i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq);
 
         // Initialize digital pins always.
-        _initInternalRTCPin(Board::Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD);
-        _initInternalRTCPin(Board::Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _initInternalRTCPin(Board::Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY);
-        _initInternalDigitalPin(Board::Pin::FFI::PG, GPIO_MODE_INPUT);
+        _initInternalRTCPin(MainBoard::Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD);
+        _initInternalRTCPin(MainBoard::Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY);
+        _initInternalRTCPin(MainBoard::Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY);
+        _initInternalDigitalPin(MainBoard::Pin::FFI::PG, GPIO_MODE_INPUT);
 
         // Only initialize RTC pins if the RTC core has been reset - this
         // happens on system and chip-level resets.
-        if (init != magic)
+        if (_isInited())
         {
             // By default, enable both the 3V3 power outputs.
             enable3V3(true);
@@ -95,37 +107,36 @@ namespace PowerFeather
         enableCharging(false);
         setVSMaxCurrent(1000);
         setChargingMaxCurrent(250);
-
         // Disable the charger watchdog to keep the charger in host mode.
         _charger.enableWD(false);
-
-        init = magic;
+ 
+        *_inited = MainBoard::_initMagic;
 
         return true;
     }
 
-    void Board::setEN(bool value)
+    void MainBoard::setEN(bool value)
     {
-        _setRTCPin(Board::Pin::FFI::EN, value);
+        _setRTCPin(MainBoard::Pin::FFI::EN, value);
     }
 
-    bool Board::getEN()
+    bool MainBoard::getEN()
     {
-        return rtc_gpio_get_level(Board::Pin::FFI::EN);
+        return rtc_gpio_get_level(MainBoard::Pin::FFI::EN);
     }
 
-    void Board::enable3V3(bool enable)
+    void MainBoard::enable3V3(bool enable)
     {
-        _setRTCPin(Board::Pin::FFI::EN_3V3, enable);
+        _setRTCPin(MainBoard::Pin::FFI::EN_3V3, enable);
     }
 
-    void Board::enableSQT(bool enable)
+    void MainBoard::enableSQT(bool enable)
     {
-        _setRTCPin(Board::Pin::FFI::EN_SQT, enable);
+        _setRTCPin(MainBoard::Pin::FFI::EN_SQT, enable);
         _sqtOn = enable;
     }
 
-    void Board::setVSMinVoltage(float voltage)
+    void MainBoard::setVSMinVoltage(float voltage)
     {
         if (_sqtOn)
         {
@@ -133,7 +144,7 @@ namespace PowerFeather
         }
     }
 
-    void Board::setVSMaxCurrent(uint32_t mA)
+    void MainBoard::setVSMaxCurrent(uint32_t mA)
     {
         if (_sqtOn)
         {
@@ -141,12 +152,12 @@ namespace PowerFeather
         }
     }
 
-    bool Board::checkVSGood()
+    bool MainBoard::checkVSGood()
     {
-        return gpio_get_level(Board::Pin::FFI::PG) == 0;
+        return gpio_get_level(MainBoard::Pin::FFI::PG) == 0;
     }
 
-    void Board::setVBATMinVoltage(float voltage)
+    void MainBoard::setVBATMinVoltage(float voltage)
     {
         if (_sqtOn)
         {
@@ -154,7 +165,7 @@ namespace PowerFeather
         }
     }
 
-    void Board::enterShipMode()
+    void MainBoard::enterShipMode()
     {
         if (_sqtOn)
         {
@@ -162,7 +173,7 @@ namespace PowerFeather
         }
     }
 
-    void Board::enterShutdownMode()
+    void MainBoard::enterShutdownMode()
     {
         if (_sqtOn)
         {
@@ -170,7 +181,7 @@ namespace PowerFeather
         }
     }
 
-    void Board::doPowerCycle()
+    void MainBoard::doPowerCycle()
     {
         if (_sqtOn)
         {
@@ -178,7 +189,7 @@ namespace PowerFeather
         }
     }
 
-    void Board::enableTSPin(bool enable)
+    void MainBoard::enableTSPin(bool enable)
     {
         if (_sqtOn)
         {
@@ -186,7 +197,7 @@ namespace PowerFeather
         }
     }
 
-    void Board::enableCharging(bool enable)
+    void MainBoard::enableCharging(bool enable)
     {
         if (_sqtOn)
         {
@@ -194,7 +205,7 @@ namespace PowerFeather
         }
     }
 
-    void Board::setChargingMaxCurrent(float current)
+    void MainBoard::setChargingMaxCurrent(float current)
     {
         if (_sqtOn)
         {
@@ -202,7 +213,7 @@ namespace PowerFeather
         }
     }
 
-    float Board::getBatteryVoltage()
+    float MainBoard::getBatteryVoltage()
     {
         if (_sqtOn)
         {
@@ -212,7 +223,7 @@ namespace PowerFeather
         return 0.0f;
     }
 
-    float Board::getBatteryCharge()
+    float MainBoard::getBatteryCharge()
     {
         if (_sqtOn)
         {
@@ -222,7 +233,7 @@ namespace PowerFeather
         return 0.0f;
     }
 
-    float Board::getBatteryHealth()
+    float MainBoard::getBatteryHealth()
     {
         if (_sqtOn)
         {
@@ -232,7 +243,7 @@ namespace PowerFeather
         return 0.0f;
     }
 
-    int32_t Board::getBatteryTimeLeft()
+    int32_t MainBoard::getBatteryTimeLeft()
     {
         if (_sqtOn)
         {

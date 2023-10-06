@@ -57,7 +57,7 @@
 	// return timeout;
 
 
-    // PowerFeather::Board board;
+    // PowerFeather::MainBoard board;
     // board.Initialize(1000);
 
     // printf("PowerFeather!\n");
@@ -65,7 +65,7 @@
     // while (true)
     // {
         // // Display the power source
-        // PowerFeather::Board::PowerSource power_source = board.GetPowerSource();
+        // PowerFeather::MainBoard::PowerSource power_source = board.GetPowerSource();
 
         // // Battery status
         // //  - is charging/discharghing
@@ -89,7 +89,7 @@
 
 const unsigned int BATTERY_CAPACITY = 600; // e.g. 850mAh battery
 
-// #include <Board.hpp>
+// #include <MainBoard.hpp>
 void print_bytes(BQ2562x &bq, uint8_t address)
 {
     uint8_t data[1] = { 0 };
