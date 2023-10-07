@@ -4,7 +4,7 @@
 #include <BQ2562x.h>
 #include <LC709204F.h>
 
-#include <Error.h>
+#include <Result.h>
 
 namespace PowerFeather
 {
@@ -89,14 +89,14 @@ namespace PowerFeather
          *
          * @param current The maximum current draw.
          */
-        Error init(uint16_t _mAh);
+        Result init(uint16_t _mAh);
 
         /**
          * Set EN pin state.
          *
          * @param value EN pin is set high if true, set low if false
          */
-        void setEN(bool value);
+        Result setEN(bool value);
 
         /**
          * Get EN pin state.
@@ -110,14 +110,14 @@ namespace PowerFeather
          *
          * @param enable Enable if true, disable if false.
          */
-        void enable3V3(bool enable);
+        Result enable3V3(bool enable);
 
         /**
          * Enable or disable the STEMMA QT 3.3 V power output.
          *
          * @param enable Enable if true, disable if false.
          */
-        void enableSQT(bool enable);
+        Result enableSQT(bool enable);
 
         /*
          */
@@ -132,7 +132,7 @@ namespace PowerFeather
          *
          * @param current The maximum current draw.
          */
-        void setVSMaxCurrent(uint32_t mA);
+        Result setVSMaxCurrent(uint32_t mA);
 
 
         /**
@@ -189,12 +189,12 @@ namespace PowerFeather
          *
          * Only able to enter shutdown in battery-only.
          */
-        void enableTSPin(bool enable);
+        Result enableTSPin(bool enable);
 
         /**
          * Enable or disable battery charging.
          */
-        void enableCharging(bool enable);
+        Result enableCharging(bool enable);
 
         /**
          * Set maximum charging current.
@@ -204,7 +204,7 @@ namespace PowerFeather
          * current to 520 mA (520 * 1 = 520). Check datasheet for your battery for maximum charging current.
          *
          */
-        void setChargingMaxCurrent(float current);
+        Result setChargingMaxCurrent(float current);
 
         /**
          * Get current battery voltage measurement.
@@ -240,6 +240,8 @@ namespace PowerFeather
         static constexpr uint32_t _i2cFreq = 400000;
         static constexpr uint32_t _i2cTimeout = 1000;
         static constexpr uint32_t _initMagic = 0xDEADBEEF;
+        static constexpr uint32_t _defaultChargingMaxCurrent = 100;
+        static constexpr uint32_t _defaultVSMaxCurrent = 500;
 
         MasterI2C _i2c {};
         BQ2562x _charger {_i2c};
@@ -251,9 +253,9 @@ namespace PowerFeather
 
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
-        void _setRTCPin(gpio_num_t pin, bool value);
-        bool _isInited();
-        Error _initChargerAndFuelGauge();
+        bool _setRTCPin(gpio_num_t pin, bool value);
+        bool _isFirst();
+        Result _initChargerAndFuelGauge();
     };
 
     extern MainBoard& Board;

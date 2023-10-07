@@ -1,11 +1,13 @@
 #include "test_utils.h"
 
+#include <unity.h>
+
 #include <MainBoard.h>
 #include <BQ2562x.h>
 
 extern "C" void app_main(void)
 {
-    PowerFeather::Board.init(650);
+    TEST_ASSERT_EQUAL(PowerFeather::Board.init(650), PowerFeather::Result::Ok);
 
     // printf("cell voltage: %u\n", board.getFuelGauge().getCellVoltage());
 

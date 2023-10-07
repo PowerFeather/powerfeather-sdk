@@ -17,7 +17,7 @@
     // if (!lipo.begin()) // begin() will return true if communication is successful
     // {
     //     // If communication fails, print an error message and loop forever.
-    //     printf("Error: Unable to communicate with BQ27441.");
+    //     printf("Result: Unable to communicate with BQ27441.");
     //     printf("  Check wiring and try again.");
     //     printf("  (Battery must be plugged into Battery Babysitter!)");
     //     while (1) ;
