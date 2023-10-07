@@ -61,7 +61,7 @@ namespace PowerFeather
         {
             // The enable pin is in open-drain configuration with external pull-up
             // resistor. Setting the pin to 0 means pulling it down continuously.
-            if (pin != MainBoard::Pin::FFI::EN)
+            if (pin != Pin::FFI::EN)
             {
                 // The rest of the output RTC pins is push pull, connected to GND via
                 // capacitor. This means the GPIO can be disconnected from the chip.
@@ -86,7 +86,7 @@ namespace PowerFeather
 
         if (_isFirst())
         {
-            RET_IF_FALSE(_initInternalRTCPin(MainBoard::Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
+            RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
             RET_IF_ERR(enableSQT(false));
 
             RET_IF_ERR(enableCharging(false));
@@ -95,8 +95,10 @@ namespace PowerFeather
             RET_IF_ERR(setChargingMaxCurrent(MainBoard::_defaultChargingMaxCurrent));
             // Disable the charger watchdog to keep the charger in host mode and to
             // keep some registers from resetting to their POR values.
-            RET_IF_FALSE(_charger.enableWD(false), Result::Failure);
+            RET_IF_FALSE(!_sqtOn && _charger.enableWD(false), Result::Failure);
         }
+
+        _sqtOn = rtc_gpio_get_level(Pin::FFI::EN_SQT);
 
         return Result::Ok;
     }
@@ -107,14 +109,14 @@ namespace PowerFeather
 
         if (_isFirst())
         {
-            RET_IF_FALSE(_initInternalRTCPin(MainBoard::Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
+            RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
             RET_IF_ERR(setEN(true));
-            RET_IF_FALSE(_initInternalRTCPin(MainBoard::Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
+            RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
             RET_IF_ERR(enable3V3(true));
         }
 
         // Initialize digital pins always.
-        RET_IF_FALSE(_initInternalDigitalPin(MainBoard::Pin::FFI::PG, GPIO_MODE_INPUT), Result::Failure);
+        RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::PG, GPIO_MODE_INPUT), Result::Failure);
 
         _inited = MainBoard::_initMagic;
         return Result::Ok;
@@ -122,30 +124,26 @@ namespace PowerFeather
 
     Result MainBoard::setEN(bool value)
     {
-        _setRTCPin(MainBoard::Pin::FFI::EN, value);
+        RET_IF_FALSE(_setRTCPin(Pin::FFI::EN, value), Result::Failure);
         return Result::Ok;
     }
 
     bool MainBoard::getEN()
     {
-        return rtc_gpio_get_level(MainBoard::Pin::FFI::EN);
+        return rtc_gpio_get_level(Pin::FFI::EN);
     }
 
     Result MainBoard::enable3V3(bool enable)
     {
-        _setRTCPin(MainBoard::Pin::FFI::EN_3V3, enable);
+        RET_IF_FALSE(_setRTCPin(Pin::FFI::EN_3V3, enable), Result::Failure);
         return Result::Ok;
     }
 
     Result MainBoard::enableSQT(bool enable)
     {
-        if (_setRTCPin(MainBoard::Pin::FFI::EN_SQT, enable))
-        {
-            _sqtOn = enable;
-            return Result::Ok;
-        }
-
-        return Result::Failure;
+        RET_IF_FALSE(_setRTCPin(Pin::FFI::EN_SQT, enable), Result::Failure)
+        _sqtOn = enable;
+        return Result::Ok;
     }
 
     void MainBoard::setVSMinVoltage(float voltage)
@@ -158,17 +156,13 @@ namespace PowerFeather
 
     Result MainBoard::setVSMaxCurrent(uint32_t mA)
     {
-        if (_sqtOn)
-        {
-            _charger.setIINDPM(mA);
-        }
-
+        RET_IF_FALSE(!_sqtOn && _charger.setIINDPM(mA), Result::Failure);
         return Result::Ok;
     }
 
     bool MainBoard::checkVSGood()
     {
-        return gpio_get_level(MainBoard::Pin::FFI::PG) == 0;
+        return gpio_get_level(Pin::FFI::PG) == 0;
     }
 
     void MainBoard::setVBATMinVoltage(float voltage)
@@ -205,32 +199,19 @@ namespace PowerFeather
 
     Result MainBoard::enableTSPin(bool enable)
     {
-        if (_sqtOn)
-        {
-            _charger.enableTS(enable);
-        }
-
+        RET_IF_FALSE(!_sqtOn && _charger.enableTS(enable), Result::Failure);
         return Result::Ok;
     }
 
     Result MainBoard::enableCharging(bool enable)
     {
-        if (_sqtOn)
-        {
-            _charger.enableCharging(enable);
-            return Result::Ok;
-        }
-
-        return Result::InvalidState;
+        RET_IF_FALSE(!_sqtOn && _charger.enableCharging(enable), Result::Failure);
+        return Result::Ok;
     }
 
     Result MainBoard::setChargingMaxCurrent(float current)
     {
-        if (_sqtOn)
-        {
-            _charger.setChargeCurrent(current * 1000);
-        }
-
+        RET_IF_FALSE(!_sqtOn && _charger.setChargeCurrent(current), Result::Failure);
         return Result::Ok;
     }
 

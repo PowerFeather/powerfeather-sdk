@@ -134,7 +134,7 @@ namespace PowerFeather
         bool setOTGMode(OTGMode mode);
         bool setOTGVoltage(float voltage);
         bool setChargeCurrent(uint16_t current);
-        void enableCharging(bool state);
+        bool enableCharging(bool state);
         bool enableSTAT(bool enable);
         bool enableTS(bool enable);
         bool enableWD(bool enable);
@@ -148,7 +148,7 @@ namespace PowerFeather
         bool checkADC();
         bool getPartInformation(uint8_t& value);
         void setVINDPM(uint32_t mV);
-        void setIINDPM(uint32_t mA);
+        bool setIINDPM(uint32_t mA);
         void setBATFETControl(BATFETControl control);
         void setBATFETDelay(BATFETDelay delay);
         bool isCharging() { return false; }

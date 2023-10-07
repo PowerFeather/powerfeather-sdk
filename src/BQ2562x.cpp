@@ -185,9 +185,9 @@ namespace PowerFeather
 		return readReg(Registers::Part_Information, value);
 	}
 
-	void BQ2562x::enableCharging(bool state)
+	bool BQ2562x::enableCharging(bool state)
 	{
-		writeReg(Registers::Charger_Control_0_EN_CHG, state);
+		return writeReg(Registers::Charger_Control_0_EN_CHG, state);
 	}
 
     bool BQ2562x::setOTGMode(BQ2562x::OTGMode mode)
@@ -262,9 +262,9 @@ namespace PowerFeather
 		// printf("vindpm: %d\n", value * 40);
     }
 
-    void BQ2562x::setIINDPM(uint32_t mA)
+    bool BQ2562x::setIINDPM(uint32_t mA)
     {
-		writeReg(Registers::Input_Current_Limit_IINDPM, static_cast<uint16_t>((mA) / 40));
+		return writeReg(Registers::Input_Current_Limit_IINDPM, static_cast<uint16_t>((mA) / 40));
 		// uint16_t value = 0;
 		// readReg(Registers::Input_Current_Limit_IINDPM, value);
 		// printf("vindpm: %d\n", value * 40);
