@@ -89,7 +89,7 @@ namespace PowerFeather
          *
          * @param current The maximum current draw.
          */
-        Result init(uint16_t _mAh);
+        Result init(uint16_t mAh = 0);
 
         /**
          * Set EN pin state.
@@ -255,7 +255,7 @@ namespace PowerFeather
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
         bool _setRTCPin(gpio_num_t pin, bool value);
         bool _isFirst();
-        Result _initChargerAndFuelGauge();
+        Result _initChargerAndFuelGauge(uint16_t mAh);
     };
 
     extern MainBoard& Board;

@@ -80,7 +80,7 @@ namespace PowerFeather
         return _inited != MainBoard::_initMagic;
     }
 
-    Result MainBoard::_initChargerAndFuelGauge()
+    Result MainBoard::_initChargerAndFuelGauge(uint16_t mAh)
     {
         RET_IF_FALSE(_i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq), Result::Failure);
 
@@ -96,6 +96,14 @@ namespace PowerFeather
             // Disable the charger watchdog to keep the charger in host mode and to
             // keep some registers from resetting to their POR values.
             RET_IF_FALSE(!_sqtOn && _charger.enableWD(false), Result::Failure);
+
+            if (mAh > 0)
+            {
+                RET_IF_FALSE(_fuelGauge.setAPA(mAh), Result::Failure);
+                RET_IF_FALSE(_fuelGauge.setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);
+                RET_IF_FALSE(_fuelGauge.enableTSENSE(false, false), Result::Failure);
+                RET_IF_FALSE(_fuelGauge.enableOperation(true), Result::Failure);
+            }
         }
 
         _sqtOn = rtc_gpio_get_level(Pin::FFI::EN_SQT);
@@ -103,9 +111,9 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::init(uint16_t)
+    Result MainBoard::init(uint16_t mAh)
     {
-        RET_IF_ERR(_initChargerAndFuelGauge());
+        RET_IF_ERR(_initChargerAndFuelGauge(mAh));
 
         if (_isFirst())
         {
