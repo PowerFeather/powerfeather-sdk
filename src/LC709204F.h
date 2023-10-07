@@ -38,7 +38,7 @@ namespace PowerFeather
         uint16_t getTimeToEmpty();
         uint16_t getTimeToFull();
 
-        bool setAPA(uint16_t apa);
+        bool setAPA(uint16_t capacity);
         bool setChangeOfParameter(ChangeOfParameter param);
         bool enableTSENSE(bool tsense1, bool tsense2);
         bool enableOperation(bool enable);

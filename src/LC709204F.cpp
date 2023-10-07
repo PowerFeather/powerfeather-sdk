@@ -92,7 +92,11 @@ namespace PowerFeather
 
     bool LC709204F::setAPA(uint16_t capacity)
     {
-        return writeReg(Registers::APA, capacity);
+        if (capacity == 500)
+        {
+            return writeReg(Registers::APA, 0x2121);
+        }
+        return false;
     }
 
     bool LC709204F::setChangeOfParameter(ChangeOfParameter param)

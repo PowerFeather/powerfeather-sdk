@@ -100,8 +100,8 @@ namespace PowerFeather
             if (mAh > 0)
             {
                 RET_IF_FALSE(_fuelGauge.setAPA(mAh), Result::Failure);
-                RET_IF_FALSE(_fuelGauge.setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);
-                RET_IF_FALSE(_fuelGauge.enableTSENSE(false, false), Result::Failure);
+                // RET_IF_FALSE(_fuelGauge.setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);
+                // RET_IF_FALSE(_fuelGauge.enableTSENSE(false, false), Result::Failure);
                 RET_IF_FALSE(_fuelGauge.enableOperation(true), Result::Failure);
             }
         }
