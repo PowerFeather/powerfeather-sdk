@@ -112,6 +112,6 @@ namespace PowerFeather
 
     bool LC709204F::enableOperation(bool enable)
     {
-        return writeReg(Registers::IC_Power_Mode, enable);
+        return writeReg(Registers::IC_Power_Mode, enable ? 0x0001 : 0x0002);
     }
 }
