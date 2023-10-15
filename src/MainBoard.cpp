@@ -97,11 +97,11 @@ namespace PowerFeather
             // keep some registers from resetting to their POR values.
             RET_IF_FALSE(!_sqtOn && _charger.enableWD(false), Result::Failure);
 
-            if (mAh > 0)
+            if (mAh > 0 && checkBatteryConnected())
             {
                 RET_IF_FALSE(_fuelGauge.setAPA(mAh), Result::Failure);
-                // RET_IF_FALSE(_fuelGauge.setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);
-                // RET_IF_FALSE(_fuelGauge.enableTSENSE(false, false), Result::Failure);
+                RET_IF_FALSE(_fuelGauge.setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);
+                RET_IF_FALSE(_fuelGauge.enableTSENSE(false, false), Result::Failure);
                 RET_IF_FALSE(_fuelGauge.enableOperation(true), Result::Failure);
             }
         }
@@ -124,7 +124,7 @@ namespace PowerFeather
         }
 
         // Initialize digital pins always.
-        RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::PG, GPIO_MODE_INPUT), Result::Failure);
+        RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::REG, GPIO_MODE_INPUT_OUTPUT_OD), Result::Failure);
 
         _inited = MainBoard::_initMagic;
         return Result::Ok;
@@ -168,9 +168,14 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    bool MainBoard::checkVSGood()
+    bool MainBoard::checkBatteryConnected()
     {
-        return gpio_get_level(Pin::FFI::PG) == 0;
+        // Try to discharge the gauge regulator capacitor first if reading high.
+        gpio_set_level(Pin::FFI::REG, 0);
+        vTaskDelay(pdMS_TO_TICKS(20));
+        gpio_set_level(Pin::FFI::REG, 1);
+
+        return gpio_get_level(Pin::FFI::REG);
     }
 
     void MainBoard::setVBATMinVoltage(float voltage)
