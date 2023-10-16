@@ -113,6 +113,8 @@ namespace PowerFeather
 
         // Initialize digital pins always.
         RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::REG, GPIO_MODE_INPUT_OUTPUT_OD), Result::Failure);
+        gpio_set_level(Pin::FFI::REG, 1);
+
 
         _inited = MainBoard::_initMagic;
         return Result::Ok;
@@ -164,6 +166,11 @@ namespace PowerFeather
         gpio_set_level(Pin::FFI::REG, 1);
 
         return gpio_get_level(Pin::FFI::REG);
+    }
+
+    bool MainBoard::checkSupplyConnected()
+    {
+        return _charger.getVBUSStat() == BQ2562x::VBUSStat::Adapter;
     }
 
     void MainBoard::setVBATMinVoltage(float voltage)

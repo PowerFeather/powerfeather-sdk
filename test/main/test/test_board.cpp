@@ -19,6 +19,22 @@ MainBoard& board = Board;
 static constexpr char MODULE_NAME[] = "[MainBoard]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
+
+TEST_CASE("rtc outputs work normally", MODULE_NAME)
+{
+    bool enable = true;
+
+    while (true)
+    {
+        printf("enable: %d\n", enable);
+        board.enable3V3(enable);
+        board.enableSQT(enable);
+        board.setEN(enable);
+        enable = !enable;
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
 TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
 {
     board.enable3V3(false);
@@ -418,41 +434,41 @@ TEST_CASE("battery connected", MODULE_NAME)
     }
 }
 
-// void wait_for_battery(uint32_t delay_ms)
-// {
-//     while (board.checkBatteryConnected())
-//     {
-//         vTaskDelay(pdMS_TO_TICKS(100));
-//     }
-//     vTaskDelay(pdMS_TO_TICKS(delay_ms));
-// }
+void wait_for_battery(uint32_t delay_ms)
+{
+    while (board.checkSupplyConnected())
+    {
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+    vTaskDelay(pdMS_TO_TICKS(delay_ms));
+}
 
-// TEST_CASE("ship mode", MODULE_NAME)
-// {
-//     // Test ship mode can be entered
-//     // Measure ship mode current
-//     // Tie QON to reset, check that ship mode can be exited
-//     wait_for_battery(1000);
-//     board.enterShipMode();
-// }
+TEST_CASE("ship mode", MODULE_NAME)
+{
+    // Test ship mode can be entered
+    // Measure ship mode current
+    // Tie QON to reset, check that ship mode can be exited
+    wait_for_battery(1000);
+    board.enterShipMode();
+}
 
-// TEST_CASE("shutdown mode", MODULE_NAME)
-// {
-//     // Test shutdown mode can be entered
-//     // Measure shutdown mode current
-//     // Tie QON to reset, check that ship mode can be exited
-//     wait_for_battery(1000);
-//     board.enterShutdownMode();
-// }
+TEST_CASE("shutdown mode", MODULE_NAME)
+{
+    // Test shutdown mode can be entered
+    // Measure shutdown mode current
+    // Tie QON to reset, check that ship mode can be exited
+    wait_for_battery(1000);
+    board.enterShutdownMode();
+}
 
-// TEST_CASE("power cycle", MODULE_NAME)
-// {
-//     // Test shutdown mode can be entered
-//     // Measure shutdown mode current
-//     // Tie QON to reset, check that ship mode can be exited
-//     wait_for_battery(1000);
-//     board.doPowerCycle();
-// }
+TEST_CASE("power cycle", MODULE_NAME)
+{
+    // Test shutdown mode can be entered
+    // Measure shutdown mode current
+    // Tie QON to reset, check that ship mode can be exited
+    wait_for_battery(1000);
+    board.doPowerCycle();
+}
 
 TEST_CASE("set VBAT min", MODULE_NAME)
 {

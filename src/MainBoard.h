@@ -74,7 +74,7 @@ namespace PowerFeather
                 static constexpr gpio_num_t SCL0 =      GPIO_NUM_48;
                 static constexpr gpio_num_t SDA0 =      GPIO_NUM_47;
 
-                static constexpr gpio_num_t REG =       GPIO_NUM_38;
+                static constexpr gpio_num_t REG =       GPIO_NUM_6;
             };
         };
 
@@ -145,6 +145,7 @@ namespace PowerFeather
          */
         bool checkBatteryConnected();
 
+        bool checkSupplyConnected();
         /**
          * Set VBAT minimum output voltage.
          *
