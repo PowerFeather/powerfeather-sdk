@@ -404,7 +404,20 @@ TEST_CASE("battery connected", MODULE_NAME)
 {
     while (true)
     {
-        printf("battery connected: %d\n", board.checkBatteryConnected());
+        bool connected = board.checkBatteryConnected();
+        gpio_set_level(MainBoard::Pin::FF::LED, connected);
+        printf("battery connected: %d\n", connected);
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+
+TEST_CASE("supply connected", MODULE_NAME)
+{
+    while (true)
+    {
+        bool connected = board.checkSupplyConnected();
+        gpio_set_level(MainBoard::Pin::FF::LED, connected);
+        printf("supply connected: %d\n", connected);
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }

@@ -9,7 +9,7 @@ using namespace PowerFeather;
 
 extern "C" void app_main(void)
 {
-    Board.init(500);
+    TEST_ASSERT_EQUAL(Board.init(500), Result::Ok);
 
     // Tie potentiometer to temperature sense
     // Check interrupt, may be combined with another test
@@ -37,9 +37,6 @@ extern "C" void app_main(void)
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     gpio_config(&io_conf);
 
-    // esp_deep_sleep(5000000000);
-    // test_main();
-
-    gpio_set_level(MainBoard::Pin::FF::LED, Board.checkSupplyConnected());
-    vTaskDelay(pdMS_TO_TICKS(10));
+    esp_deep_sleep(5000000000);
+    test_main();
 }
