@@ -75,15 +75,15 @@ namespace PowerFeather
         if (_isFirst())
         {
             RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
-            RET_IF_ERR(enableSQT(false));
+            RET_IF_ERR(enableSQT(true));
 
             RET_IF_ERR(enableCharging(false));
             RET_IF_ERR(enableTSPin(false));
-            RET_IF_ERR(setVSMaxCurrent(MainBoard::_defaultVSMaxCurrent));
+            RET_IF_ERR(setSupplyMaxCurrent(MainBoard::_defaultVSMaxCurrent));
             RET_IF_ERR(setChargingMaxCurrent(MainBoard::_defaultChargingMaxCurrent));
             // Disable the charger watchdog to keep the charger in host mode and to
             // keep some registers from resetting to their POR values.
-            RET_IF_FALSE(!_sqtOn && _charger.enableWD(false), Result::Failure);
+            RET_IF_FALSE(_sqtOn && _charger.enableWD(false), Result::Failure);
 
             if (mAh > 0 && checkBatteryConnected())
             {
@@ -144,7 +144,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    void MainBoard::setVSMinVoltage(float voltage)
+    void MainBoard::setSupplyMinVoltage(float voltage)
     {
         if (_sqtOn)
         {
@@ -152,9 +152,9 @@ namespace PowerFeather
         }
     }
 
-    Result MainBoard::setVSMaxCurrent(uint32_t mA)
+    Result MainBoard::setSupplyMaxCurrent(uint32_t mA)
     {
-        RET_IF_FALSE(!_sqtOn && _charger.setIINDPM(mA), Result::Failure);
+        RET_IF_FALSE(_sqtOn && _charger.setIINDPM(mA), Result::Failure);
         return Result::Ok;
     }
 
@@ -207,19 +207,19 @@ namespace PowerFeather
 
     Result MainBoard::enableTSPin(bool enable)
     {
-        RET_IF_FALSE(!_sqtOn && _charger.enableTS(enable), Result::Failure);
+        RET_IF_FALSE(_sqtOn && _charger.enableTS(enable), Result::Failure);
         return Result::Ok;
     }
 
     Result MainBoard::enableCharging(bool enable)
     {
-        RET_IF_FALSE(!_sqtOn && _charger.enableCharging(enable), Result::Failure);
+        RET_IF_FALSE(_sqtOn && _charger.enableCharging(enable), Result::Failure);
         return Result::Ok;
     }
 
     Result MainBoard::setChargingMaxCurrent(float current)
     {
-        RET_IF_FALSE(!_sqtOn && _charger.setChargeCurrent(current), Result::Failure);
+        RET_IF_FALSE(_sqtOn && _charger.setChargeCurrent(current), Result::Failure);
         return Result::Ok;
     }
 
