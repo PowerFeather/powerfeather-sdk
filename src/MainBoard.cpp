@@ -51,33 +51,21 @@ namespace PowerFeather
         rtc_gpio_hold_dis(pin);
         // Set the pin high.
         rtc_gpio_set_level(pin, value);
-
-        if (value)
-        {
-            // Hold the pin high, even in deep sleep.
-            rtc_gpio_hold_en(pin);
-        }
-        else
-        {
-            // The enable pin is in open-drain configuration with external pull-up
-            // resistor. Setting the pin to 0 means pulling it down continuously.
-            if (pin != Pin::FFI::EN)
-            {
-                // The rest of the output RTC pins is push pull, connected to GND via
-                // capacitor. This means the GPIO can be disconnected from the chip.
-                rtc_gpio_hold_dis(pin);
-                rtc_gpio_isolate(pin);
-            }
-        }
-
+        rtc_gpio_hold_en(pin);
         return true;
     }
 
     bool MainBoard::_isFirst()
     {
-        // Only initialize RTC pins if the RTC core has been reset - this
-        // happens on system and chip-level resets.
-        return _inited != MainBoard::_initMagic;
+        soc_reset_reason_t reason = esp_rom_get_reset_reason(0);
+        return reason == RESET_REASON_CHIP_POWER_ON ||
+               reason == RESET_REASON_CHIP_BROWN_OUT ||
+               reason == RESET_REASON_CHIP_SUPER_WDT ||
+               reason == RESET_REASON_SYS_BROWN_OUT ||
+               reason == RESET_REASON_SYS_RTC_WDT ||
+               reason == RESET_REASON_SYS_SUPER_WDT ||
+               reason == RESET_REASON_SYS_CLK_GLITCH ||
+               reason == RESET_REASON_CORE_USB_UART;
     }
 
     Result MainBoard::_initChargerAndFuelGauge(uint16_t mAh)
