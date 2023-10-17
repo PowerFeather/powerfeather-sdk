@@ -40,6 +40,7 @@ namespace PowerFeather
             static constexpr Register Charger_Status_0 =                     { 0x1d, 1, 0, 7 };
             static constexpr Register Charger_Status_1 =                     { 0x1e, 1, 0, 7 };
             static constexpr Register Charger_Status_1_VBUS_STAT =           { 0x1e, 1, 0, 2 };
+            static constexpr Register Charger_Status_1_CHG_STAT =            { 0x1e, 1, 3, 4 };
             static constexpr Register FAULT_Status_0 =                       { 0x1f, 1, 0, 7 };
             static constexpr Register Charger_Flag_0 =                       { 0x20, 1, 0, 7 };
             static constexpr Register Charger_Flag_1 =                       { 0x21, 1, 0, 7 };
@@ -144,9 +145,14 @@ namespace PowerFeather
         bool getVBAT(float& value);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
                         ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
-        bool getPartInformation(uint8_t& value);
 
-        float getBatteryVoltage();
+        bool getVBUSStat(VBUSStat& stat);
+        bool getPartInformation(uint8_t& value);
+        bool getBatteryVoltage(float& voltage);
+        bool getChargeStat(ChargeStat& stat);
+
+        void displayInfo();
+
         float getVBUS();
         float getIBAT();
         float getIBUS();
@@ -154,9 +160,6 @@ namespace PowerFeather
         void setVINDPM(uint32_t mV);
         bool setIINDPM(uint32_t mA);
         bool isCharging() { return false; }
-
-        VBUSStat getVBUSStat();
-        ChargeStat getChargeStat();
 
     private:
         static constexpr uint8_t _i2cAddress = 0x6a;

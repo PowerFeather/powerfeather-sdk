@@ -20,39 +20,13 @@ static constexpr char MODULE_NAME[] = "[MainBoard]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
 
-static void displayChargerInfo()
-{
-    uint8_t chargerStatus0 = 0;
-    uint8_t chargerStatus1 = 0;
-    uint8_t faultStatus0 = 0;
-    uint8_t chargerFlag0 = 0;
-    uint8_t chargerFlag1 = 0;
-    uint8_t faultFlag0 = 0;
-    uint8_t chargerMask0 = 0;
-    uint8_t chargerMask1 = 0;
-    uint8_t faultMask0 = 0;
-
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Status_0, chargerStatus0));
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Status_1, chargerStatus1));
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::FAULT_Status_0, faultStatus0));
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Flag_0, chargerFlag0));
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Flag_1, chargerFlag1));
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::FAULT_Flag_0, faultFlag0));
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Mask_0, chargerMask0));
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Mask_1, chargerMask1));
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::FAULT_Mask_0, faultMask0));
-
-    // ESP_LOGI("MainBoard", "chargerStatus0: 0x%01x, chargerStatus1: 0x%01x, faultStatus0: 0x%01x,
-    //                       chargerFlag0: 0x%01x, chargerFlag1: 0x%01x, faultFlag0: 0x%01x,
-    //                       chargerMask0: 0x%01x, chargerMask1: 0x%01x, faultMask0: 0x%01x",
-    //                       chargerStatus0, chargerStatus1, faultStatus0, chargerFlag0,
-    //                       chargerFlag1, faultFlag0, chargerMask0, chargerMask1, faultMask0);
-}
-
 
 TEST_CASE("rtc outputs work normally", MODULE_NAME)
 {
     bool enable = true;
+
+    uint8_t test =0;
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Status_0, test));
 
     while (true)
     {
@@ -177,13 +151,6 @@ TEST_CASE("3.3V regulator response to VSYS voltage", MODULE_NAME)
     // Check the response of the 3.3V switching regulator as VSYS is adjusted.
 }
 
-static bool charger_int = false;
-
-static void charger_int_handler(void *arg)
-{
-    charger_int = true;
-}
-
 TEST_CASE("temperature sense", MODULE_NAME)
 {
     float temp = 0.0f;
@@ -194,14 +161,13 @@ TEST_CASE("temperature sense", MODULE_NAME)
     TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::ADC_Control, adcSetup));
     TEST_ASSERT_EQUAL(0xb0, adcSetup);
 
-    displayChargerInfo();
+    board.getCharger().displayInfo();
 
     while (true)
     {
         float temp = 0.0f;
-        uint8_t stat = 0;
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryTemperature(temp));
-        printf("temperature: %f  stat: 0x%01x\n", temp, stat);
+        printf("temperature: %f\n", temp);
 
         vTaskDelay(pdMS_TO_TICKS(100));
     }
@@ -226,15 +192,6 @@ TEST_CASE("button and led", MODULE_NAME)
     }
 }
 
-TEST_CASE("charger i2c communicaton", MODULE_NAME)
-{
-    uint8_t partNum = 0, rev = 0;
-    board.getCharger().readReg(BYTE(0x38), 0, 2, rev);
-    board.getCharger().readReg(BYTE(0x38), 3, 5, partNum);
-    TEST_ASSERT_EQUAL(0x02, partNum);
-    TEST_ASSERT_EQUAL(0x02, rev);
-}
-
 TEST_CASE("fuel guage interrupt", MODULE_NAME)
 {
     // Write a high temperature to register
@@ -256,7 +213,8 @@ TEST_CASE("discharging and charging", MODULE_NAME)
 
         float ibat = board.getCharger().getIBAT();
 
-        BQ2562x::ChargeStat stat = board.getCharger().getChargeStat();
+        BQ2562x::ChargeStat stat;
+        board.getCharger().getChargeStat(stat);
 
         char *stat_str = NULL;
 

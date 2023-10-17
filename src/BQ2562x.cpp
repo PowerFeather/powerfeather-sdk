@@ -273,51 +273,66 @@ namespace PowerFeather
         return writeReg(Registers::ADC_Control, value);
     }
 
-    float BQ2562x::getBatteryVoltage()
+    bool BQ2562x::getBatteryVoltage(float& value)
     {
         uint16_t data = 0;
-        readReg(SHORT(0x30), 1, 12, data);
-        return (data) / 1000.0f;
+        if (readReg(Registers::VBAT_ADC, data))
+        {
+            value = data / 1000.0f;
+            return true;
+        }
+        return false;
     }
 
-    BQ2562x::VBUSStat BQ2562x::getVBUSStat()
+    bool BQ2562x::getVBUSStat(VBUSStat& stat)
     {
         uint8_t data = 0;
-        readReg(Registers::Charger_Status_1_VBUS_STAT, data);
-        if (data == 0b100)
+        if (readReg(Registers::Charger_Status_1_VBUS_STAT, data))
         {
-            return VBUSStat::Adapter;
+            if (data == 0b100)
+            {
+                stat = VBUSStat::Adapter;
+            }
+            else
+            {
+                stat = VBUSStat::None;
+            }
+            return true;
         }
-        return VBUSStat::None;
+        return false;
     }
 
-    BQ2562x::ChargeStat BQ2562x::getChargeStat()
+    bool BQ2562x::getChargeStat(ChargeStat& stat)
     {
         uint8_t value = 0;
-        readReg(BYTE(0x1e), 3, 4, value);
-
-        ChargeStat res = ChargeStat::Terminated;
-
-        switch (value)
+        if (readReg(Registers::Charger_Status_1_CHG_STAT, value))
         {
-        case 0x01:
-            res = ChargeStat::Trickle;
-            break;
+            ChargeStat res = ChargeStat::Terminated;
 
-        case 0x02:
-            res = ChargeStat::Taper;
-            break;
+            switch (value)
+            {
+            case 0x01:
+                res = ChargeStat::Trickle;
+                break;
 
-        case 0x03:
-            res = ChargeStat::TopOff;
-            break;
+            case 0x02:
+                res = ChargeStat::Taper;
+                break;
 
-        case 0x00:
-        default:
-            break;
+            case 0x03:
+                res = ChargeStat::TopOff;
+                break;
+
+            case 0x00:
+            default:
+                break;
+            }
+
+            stat = res;
+            return true;
         }
 
-        return res;
+        return false;
     }
 
     bool BQ2562x::setBATFETControl(BATFETControl control)
@@ -372,5 +387,32 @@ namespace PowerFeather
             return true;
         }
         return false;
+    }
+
+    void BQ2562x::displayInfo()
+    {
+        uint8_t chargerStatus0 = 0;
+        uint8_t chargerStatus1 = 0;
+        uint8_t faultStatus0 = 0;
+        uint8_t chargerFlag0 = 0;
+        uint8_t chargerFlag1 = 0;
+        uint8_t faultFlag0 = 0;
+        uint8_t chargerMask0 = 0;
+        uint8_t chargerMask1 = 0;
+        uint8_t faultMask0 = 0;
+
+        readReg(BQ2562x::Registers::Charger_Status_0, chargerStatus0);
+        readReg(BQ2562x::Registers::Charger_Status_1, chargerStatus1);
+        readReg(BQ2562x::Registers::FAULT_Status_0, faultStatus0);
+        readReg(BQ2562x::Registers::Charger_Flag_0, chargerFlag0);
+        readReg(BQ2562x::Registers::Charger_Flag_1, chargerFlag1);
+        readReg(BQ2562x::Registers::FAULT_Flag_0, faultFlag0);
+        readReg(BQ2562x::Registers::Charger_Mask_0, chargerMask0);
+        readReg(BQ2562x::Registers::Charger_Mask_1, chargerMask1);
+        readReg(BQ2562x::Registers::FAULT_Mask_0, faultMask0);
+
+        printf("chargerStatus0: 0x%01x, chargerStatus1: 0x%01x, faultStatus0: 0x%01x, chargerFlag0: 0x%01x, chargerFlag1: 0x%01x, faultFlag0: 0x%01x, chargerMask0: 0x%01x, chargerMask1: 0x%01x, faultMask0: 0x%01x\n",
+                chargerStatus0, chargerStatus1, faultStatus0, chargerFlag0,
+                chargerFlag1, faultFlag0, chargerMask0, chargerMask1, faultMask0);
     }
 }
