@@ -47,7 +47,7 @@ namespace PowerFeather
             static constexpr Register FAULT_Flag_0 =                         { 0x22, 1, 0, 7 };
             static constexpr Register Charger_Mask_0 =                       { 0x23, 1, 0, 7 };
             static constexpr Register Charger_Mask_1 =                       { 0x24, 1, 0, 7 };
-            static constexpr Register FAULT_Mask_0 =                         { 0x24, 1, 0, 7 };
+            static constexpr Register FAULT_Mask_0 =                         { 0x25, 1, 0, 7 };
 
             static constexpr Register ADC_Control =                          { 0x26, 1, 0, 7 };
 

@@ -146,11 +146,6 @@ TEST_CASE("digital pin connections", MODULE_NAME)
     }
 }
 
-TEST_CASE("3.3V regulator response to VSYS voltage", MODULE_NAME)
-{
-    // Check the response of the 3.3V switching regulator as VSYS is adjusted.
-}
-
 TEST_CASE("temperature sense", MODULE_NAME)
 {
     float temp = 0.0f;
