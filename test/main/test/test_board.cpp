@@ -158,34 +158,14 @@ TEST_CASE("temperature sense", MODULE_NAME)
 {
     // Tie potentiometer to temperature sense
     // Check interrupt, may be combined with another test
-    board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
-
-    gpio_set_intr_type(MainBoard::Pin::FF::INT, GPIO_INTR_NEGEDGE);
-    gpio_install_isr_service(0);
-    gpio_isr_handler_add(MainBoard::Pin::FF::INT, charger_int_handler, &board);
-
     board.getCharger().enableTS(true);
-
-    /**
-     * Enable the battery temperature sense pin, TS.
-     *
-     * @param enable  Enable if true, disable if false.
-     */
-    void enableTS(bool enable);
-
-    /**
-     * Get the battery temperature, if TS is enabled.
-     */
-    float getBatteryTemp();
+    board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
 
     while (true)
     {
-        if (charger_int)
-        {
-            printf("charger interrupt\n");
-            charger_int = false;
-        }
-        printf("temperature: %f\n", board.getCharger().getBatteryTemperature());
+        float temp = 0.0f;
+        TEST_ASSERT_TRUE(board.getCharger().getBatteryTemperature(temp));
+        printf("temperature: %f\n", temp);
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }

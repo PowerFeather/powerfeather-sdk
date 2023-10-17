@@ -42,6 +42,8 @@ namespace PowerFeather
 
             static constexpr Register ADC_Control =                          { 0x26, 1, 0, 7 };
 
+            static constexpr Register TS_ADC =                               { 0x34, 2, 0, 11 };
+
             static constexpr Register Part_Information =                     { 0x38, 1, 0, 7 };
             static constexpr Register Part_Information_PN =                  { 0x38, 1, 3, 5 };
             static constexpr Register Part_Information_DEV_REV =             { 0x38, 1, 0, 2 };
@@ -131,7 +133,7 @@ namespace PowerFeather
         template <typename T>
         bool readReg(T address, T& value);
         
-        float getBatteryTemperature();
+        bool getBatteryTemperature(float& value);
         bool setOTGMode(OTGMode mode);
         bool setOTGVoltage(float voltage);
         bool setChargeCurrent(uint16_t current);

@@ -449,10 +449,14 @@ namespace PowerFeather
 		return writeReg(Registers::Charger_Control_2_WVBUS, enable);
 	}
 
-	float BQ2562x::getBatteryTemperature()
+	bool BQ2562x::getBatteryTemperature(float& value)
 	{
-		uint16_t value;
-		readReg(SHORT(0x34), 0, 11, value);
-		return value * 0.0961;
+		uint16_t res = 0;
+		if (readReg(Registers::TS_ADC, res))
+		{
+			value = res * 0.0961f;
+			return true;
+		}
+		return false;
 	}
 }
