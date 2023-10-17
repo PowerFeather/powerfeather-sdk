@@ -158,15 +158,16 @@ TEST_CASE("temperature sense", MODULE_NAME)
 {
     // Tie potentiometer to temperature sense
     // Check interrupt, may be combined with another test
-    board.getCharger().enableTS(true);
-    board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
+    float temp = 0.0f;
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableChargingTemperatureMonitor(true));
+    TEST_ASSERT_TRUE(board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous));
 
     while (true)
     {
         float temp = 0.0f;
-        TEST_ASSERT_TRUE(board.getCharger().getBatteryTemperature(temp));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryTemperature(temp));
         printf("temperature: %f\n", temp);
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
@@ -217,7 +218,7 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     // Measure VBAT, IBAT
     // Disable charging initially, until certain SOC
     // Enable charging, then disable again once another SOC is reached
-    board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
+    TEST_ASSERT_TRUE(board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous));
     // board.getCharger().enableCharging(true);
     // board.getCharger().setChargeCurrent(50);
 
@@ -359,7 +360,7 @@ TEST_CASE("current loading", MODULE_NAME)
     // 5V is loaded up to 2.5A
     // 3.3V is loaded up to 500mA
     // Measure ibus current
-    board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
+    TEST_ASSERT_TRUE(board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous));
 
     start_ap();
 

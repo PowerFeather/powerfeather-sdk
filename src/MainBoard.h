@@ -184,12 +184,6 @@ namespace PowerFeather
          */
         Result doPowerCycle();
 
-        /**
-         * Power cycle board.
-         *
-         * Only able to enter shutdown in battery-only.
-         */
-        Result enableTSPin(bool enable);
 
         /**
          * Enable or disable battery charging.
@@ -205,6 +199,8 @@ namespace PowerFeather
          *
          */
         Result setChargingMaxCurrent(float current);
+
+        Result enableChargingTemperatureMonitor(bool enable);
 
         /**
          * Get current battery voltage measurement.
@@ -227,6 +223,9 @@ namespace PowerFeather
          * returns time-to-full charge when charging.
          */
         int getBatteryTimeLeft();
+
+
+        Result getBatteryTemperature(float& temperature);
 
         BQ2562x& getCharger() { return _charger; }
         LC709204F& getFuelGauge() { return _fuelGauge; }

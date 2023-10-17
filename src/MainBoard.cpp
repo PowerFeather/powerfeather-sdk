@@ -73,7 +73,7 @@ namespace PowerFeather
             RET_IF_ERR(enableSQT(true));
 
             RET_IF_ERR(enableCharging(false));
-            RET_IF_ERR(enableTSPin(false));
+            RET_IF_ERR(enableChargingTemperatureMonitor(false));
             RET_IF_ERR(setSupplyMaxCurrent(MainBoard::_defaultVSMaxCurrent));
             RET_IF_ERR(setChargingMaxCurrent(MainBoard::_defaultChargingMaxCurrent));
             RET_IF_FALSE(_charger.setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
@@ -186,21 +186,31 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::enableTSPin(bool enable)
+    Result MainBoard::enableChargingTemperatureMonitor(bool enable)
     {
-        RET_IF_FALSE(_sqtOn && _charger.enableTS(enable), Result::Failure);
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.enableTS(enable), Result::Failure);
         return Result::Ok;
     }
 
     Result MainBoard::enableCharging(bool enable)
     {
-        RET_IF_FALSE(_sqtOn && _charger.enableCharging(enable), Result::Failure);
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.enableCharging(enable), Result::Failure);
         return Result::Ok;
     }
 
     Result MainBoard::setChargingMaxCurrent(float current)
     {
-        RET_IF_FALSE(_sqtOn && _charger.setChargeCurrent(current), Result::Failure);
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.setChargeCurrent(current), Result::Failure);
+        return Result::Ok;
+    }
+
+    Result MainBoard::getBatteryTemperature(float& temperature)
+    {
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.getBatteryTemperature(temperature), Result::Failure);
         return Result::Ok;
     }
 
