@@ -315,11 +315,7 @@ bool is_iperf_running()
 
 TEST_CASE("current loading", MODULE_NAME)
 {
-    // Run iperf server
-    // 5V is loaded up to 2.5A
-    // 3.3V is loaded up to 500mA
-    // Measure ibus current
-    TEST_ASSERT_TRUE(board.getCharger().setupADC(true, BQ2562x::ADCRate::Continuous));
+    TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
 
     start_ap();
 
@@ -330,9 +326,12 @@ TEST_CASE("current loading", MODULE_NAME)
             start_iperf_server();
         }
 
+        float vbus = 0.0f;
         float ibus = 0.0f;
+        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyVoltage(vbus));
         TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(ibus));
-        printf("ibus: %.2f\n", ibus);
+
+        printf("vbus: %.2f ibus: %.2f\n", vbus, ibus);
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }

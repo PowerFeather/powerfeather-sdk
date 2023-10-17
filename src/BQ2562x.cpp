@@ -120,7 +120,7 @@ namespace PowerFeather
             }
             else
             {
-                partial = data * 4.0f;
+                partial = data * 2.0f;
             }
 
             value = partial / 1000.0f;
