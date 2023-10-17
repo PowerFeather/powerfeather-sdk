@@ -60,7 +60,8 @@ namespace PowerFeather
 
     bool BQ2562x::enableTS(bool enable)
     {
-        return writeReg(Registers::NTC_Control_0_TS_IGNORE, !enable);
+        return writeReg(Registers::NTC_Control_0_TS_IGNORE, !enable) &&
+               writeReg(Registers::ADC_Function_Disable_0_TS_ADC_DIS, !enable);
     }
 
     bool BQ2562x::getPartInformation(uint8_t& value)
@@ -314,6 +315,7 @@ namespace PowerFeather
         uint8_t chargerMask0 = 0;
         uint8_t chargerMask1 = 0;
         uint8_t faultMask0 = 0;
+        uint8_t adcFunctionDisable0 = 0;
 
         readReg(BQ2562x::Registers::Charger_Status_0, chargerStatus0);
         readReg(BQ2562x::Registers::Charger_Status_1, chargerStatus1);
@@ -324,9 +326,10 @@ namespace PowerFeather
         readReg(BQ2562x::Registers::Charger_Mask_0, chargerMask0);
         readReg(BQ2562x::Registers::Charger_Mask_1, chargerMask1);
         readReg(BQ2562x::Registers::FAULT_Mask_0, faultMask0);
+        readReg(BQ2562x::Registers::ADC_Function_Disable_0, adcFunctionDisable0);
 
-        printf("chargerStatus0: 0x%01x, chargerStatus1: 0x%01x, faultStatus0: 0x%01x, chargerFlag0: 0x%01x, chargerFlag1: 0x%01x, faultFlag0: 0x%01x, chargerMask0: 0x%01x, chargerMask1: 0x%01x, faultMask0: 0x%01x\n",
+        printf("chargerStatus0: 0x%01x, chargerStatus1: 0x%01x, faultStatus0: 0x%01x, chargerFlag0: 0x%01x, chargerFlag1: 0x%01x, faultFlag0: 0x%01x, chargerMask0: 0x%01x, chargerMask1: 0x%01x, faultMask0: 0x%01x\n, adcFunctionDisable0: 0x%01x\n",
                 chargerStatus0, chargerStatus1, faultStatus0, chargerFlag0,
-                chargerFlag1, faultFlag0, chargerMask0, chargerMask1, faultMask0);
+                chargerFlag1, faultFlag0, chargerMask0, chargerMask1, faultMask0, adcFunctionDisable0);
     }
 }
