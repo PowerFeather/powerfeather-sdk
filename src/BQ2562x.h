@@ -151,10 +151,12 @@ namespace PowerFeather
         bool getBatteryVoltage(float& voltage);
         bool getChargeStat(ChargeStat& stat);
 
+        bool getVBUS(float& value);
+        bool getIBAT(float& value);
+
         void displayInfo();
 
-        float getVBUS();
-        float getIBAT();
+
         float getIBUS();
         bool checkADC();
         void setVINDPM(uint32_t mV);

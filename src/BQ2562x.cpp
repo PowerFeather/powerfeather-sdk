@@ -164,30 +164,38 @@ namespace PowerFeather
         return writeReg(Registers::Charger_Control_0_EN_CHG, state);
     }
 
-    float BQ2562x::getVBUS()
+    bool BQ2562x::getVBUS(float& value)
     {
-        uint16_t value = 0;
-        readReg(SHORT(0x2c), 2, 14, value);
-        return (value * 3.97f) / 1000.0f;
+        uint16_t data = 0;
+        if (readReg(SHORT(0x2c), 2, 14, data))
+        {
+            value = (data * 3.97f) / 1000.0f;
+            return true;
+        }
+
+        return false;
     }
 
-    float BQ2562x::getIBAT()
+    bool BQ2562x::getIBAT(float& value)
     {
-        uint16_t value = 0;
-        readReg(SHORT(0x2a), 2, 15, value);
-
-        float partial = 0.0f;
-
-        if (value >= 0x38AD && value <= 0x3FFF)
+        uint16_t data = 0;
+        if (readReg(SHORT(0x2a), 2, 15, data))
         {
-            partial = (0x3FFF - value + 1) * -4.0f;
-        }
-        else
-        {
-            partial = value * 4.0f;
-        }
+            float partial = 0.0f;
 
-        return partial / 1000.0f;
+            if (value >= 0x38AD && value <= 0x3FFF)
+            {
+                partial = (0x3FFF - value + 1) * -4.0f;
+            }
+            else
+            {
+                partial = value * 4.0f;
+            }
+
+            value = partial / 1000.0f;
+            return value;
+        }
+        return false;
     }
 
     float BQ2562x::getIBUS()

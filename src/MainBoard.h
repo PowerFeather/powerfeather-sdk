@@ -190,6 +190,8 @@ namespace PowerFeather
          */
         Result enableCharging(bool enable);
 
+        Result enableChargingTemperatureMonitor(bool enable);
+
         /**
          * Set maximum charging current.
          *
@@ -200,32 +202,32 @@ namespace PowerFeather
          */
         Result setChargingMaxCurrent(float current);
 
-        Result enableChargingTemperatureMonitor(bool enable);
 
         /**
          * Get current battery voltage measurement.
          */
-        float getBatteryVoltage();
+        Result getBatteryVoltage(float& voltage);
 
         /**
          * Get an estimate of battery state-of-charge from 0 to 1, i.e. getting .68 means
          * that charge is 68% of capacity.
          */
-        float getBatteryCharge();
+        Result getBatteryCharge(float& percent);
 
         /**
          * Get an estimate of battery state-of-health from 0 to 1, i.e. getting 0.68 means
          * the battery only has max capacity 68% of the original design capacity.
          */
-        float getBatteryHealth();
+        Result getBatteryHealth(float& percent);
 
         /** Returns remaining battery runtime when discharging;
          * returns time-to-full charge when charging.
          */
-        int getBatteryTimeLeft();
-
+        Result getBatteryTimeLeft(int& minutes);
 
         Result getBatteryTemperature(float& temperature);
+
+        Result getBatteryCurrent(float& current);
 
         BQ2562x& getCharger() { return _charger; }
         LC709204F& getFuelGauge() { return _fuelGauge; }

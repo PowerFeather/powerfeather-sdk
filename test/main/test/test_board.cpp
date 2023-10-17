@@ -148,7 +148,6 @@ TEST_CASE("digital pin connections", MODULE_NAME)
 
 TEST_CASE("temperature sense", MODULE_NAME)
 {
-    float temp = 0.0f;
     TEST_ASSERT_EQUAL(Result::Ok, board.enableChargingTemperatureMonitor(true));
     TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
 
@@ -197,44 +196,24 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     // Measure VBAT, IBAT
     // Disable charging initially, until certain SOC
     // Enable charging, then disable again once another SOC is reached
-    TEST_ASSERT_TRUE(board.getCharger().setupADC(true, BQ2562x::ADCRate::Continuous));
-    // board.getCharger().enableCharging(true);
-    // board.getCharger().setChargeCurrent(50);
+    TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
+    board.getCharger().enableCharging(true);
+    board.getCharger().setChargeCurrent(50);
 
     while (true)
     {
         float vbat = 0.0f;
-        board.getCharger().getVBAT(vbat);
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
 
-        float ibat = board.getCharger().getIBAT();
+        float ibat = 0.0f;
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(ibat));
 
         BQ2562x::ChargeStat stat;
-        board.getCharger().getChargeStat(stat);
+        TEST_ASSERT_TRUE(board.getCharger().getChargeStat(stat));
 
-        char *stat_str = NULL;
+        const char* statStr[] = {"trickle", "taper", "topoff", "terminated"};
 
-        switch (stat)
-        {
-        case BQ2562x::ChargeStat::Trickle:
-            stat_str = "trickle";
-            break;
-
-        case BQ2562x::ChargeStat::Taper:
-            stat_str = "taper";
-            break;
-
-        case BQ2562x::ChargeStat::TopOff:
-            stat_str = "topoff";
-            break;
-
-        case BQ2562x::ChargeStat::Terminated:
-        default:
-            stat_str = "terminated";
-            break;
-        }
-
-        printf("time: %ld\tstat: %s\tvbat: %.2f\tibat: %.2f\n", time(NULL), stat_str, vbat, ibat);
-
+        printf("time: %ld\tstat: %s\tvbat: %.2f\tibat: %.2f\n", time(NULL), statStr[static_cast<int>(stat)], vbat, ibat);
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -277,10 +256,10 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
 {
     if (event_id == WIFI_EVENT_AP_STACONNECTED) {
         wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-        printf("station "MACSTR" join, AID=%d\n", MAC2STR(event->mac), event->aid);
+        printf("station " MACSTR " join, AID=%d\n", MAC2STR(event->mac), event->aid);
     } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-        printf("station "MACSTR" leave, AID=%d\n", MAC2STR(event->mac), event->aid);
+        printf("station " MACSTR " leave, AID=%d\n", MAC2STR(event->mac), event->aid);
     }
 }
 

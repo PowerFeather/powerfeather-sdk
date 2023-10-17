@@ -214,48 +214,38 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    float MainBoard::getBatteryVoltage()
+    Result MainBoard::getBatteryCurrent(float& current)
     {
-        if (_sqtOn)
-        {
-            return _fuelGauge.getCellVoltage();
-        }
-
-        return 0.0f;
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.getIBAT(current), Result::Failure);
+        return Result::Ok;
     }
 
-    float MainBoard::getBatteryCharge()
+    Result MainBoard::getBatteryVoltage(float& voltage)
     {
-        if (_sqtOn)
-        {
-            return _fuelGauge.getRSOC() / 100.0f;
-        }
-
-        return 0.0f;
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.getVBAT(voltage), Result::Failure);
+        return Result::Ok;
     }
 
-    float MainBoard::getBatteryHealth()
+    Result MainBoard::getBatteryCharge(float& percent)
     {
-        if (_sqtOn)
-        {
-            return _fuelGauge.getSOH() / 100.0f;
-        }
-
-        return 0.0f;
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        percent = _fuelGauge.getRSOC() / 100.0f;
+        return Result::Ok;
     }
 
-    int32_t MainBoard::getBatteryTimeLeft()
+    Result MainBoard::getBatteryHealth(float& percent)
     {
-        if (_sqtOn)
-        {
-            if (_charger.isCharging())
-            {
-                return _fuelGauge.getTimeToFull();
-            }
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        percent = _fuelGauge.getSOH() / 100.0f;
+        return Result::Ok;
+    }
 
-            return _fuelGauge.getTimeToEmpty() * -1;
-        }
-
-        return 0;
+    Result MainBoard::getBatteryTimeLeft(int& minutes)
+    {
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        minutes = 0;
+        return Result::Ok;
     }
 }
