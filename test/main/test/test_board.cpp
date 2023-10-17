@@ -20,6 +20,36 @@ static constexpr char MODULE_NAME[] = "[MainBoard]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
 
+static void displayChargerInfo()
+{
+    uint8_t chargerStatus0 = 0;
+    uint8_t chargerStatus1 = 0;
+    uint8_t faultStatus0 = 0;
+    uint8_t chargerFlag0 = 0;
+    uint8_t chargerFlag1 = 0;
+    uint8_t faultFlag0 = 0;
+    uint8_t chargerMask0 = 0;
+    uint8_t chargerMask1 = 0;
+    uint8_t faultMask0 = 0;
+
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Status_0, chargerStatus0));
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Status_1, chargerStatus1));
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::FAULT_Status_0, faultStatus0));
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Flag_0, chargerFlag0));
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Flag_1, chargerFlag1));
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::FAULT_Flag_0, faultFlag0));
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Mask_0, chargerMask0));
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Mask_1, chargerMask1));
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::FAULT_Mask_0, faultMask0));
+
+    // ESP_LOGI("MainBoard", "chargerStatus0: 0x%01x, chargerStatus1: 0x%01x, faultStatus0: 0x%01x,
+    //                       chargerFlag0: 0x%01x, chargerFlag1: 0x%01x, faultFlag0: 0x%01x,
+    //                       chargerMask0: 0x%01x, chargerMask1: 0x%01x, faultMask0: 0x%01x",
+    //                       chargerStatus0, chargerStatus1, faultStatus0, chargerFlag0,
+    //                       chargerFlag1, faultFlag0, chargerMask0, chargerMask1, faultMask0);
+}
+
+
 TEST_CASE("rtc outputs work normally", MODULE_NAME)
 {
     bool enable = true;
@@ -156,28 +186,25 @@ static void charger_int_handler(void *arg)
 
 TEST_CASE("temperature sense", MODULE_NAME)
 {
-    // Tie potentiometer to temperature sense
-    // Check interrupt, may be combined with another test
     float temp = 0.0f;
     TEST_ASSERT_EQUAL(Result::Ok, board.enableChargingTemperatureMonitor(true));
-    TEST_ASSERT_TRUE(board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous));
+    TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
+
+    uint8_t adcSetup = 0;
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::ADC_Control, adcSetup));
+    TEST_ASSERT_EQUAL(0xb0, adcSetup);
+
+    displayChargerInfo();
 
     while (true)
     {
         float temp = 0.0f;
+        uint8_t stat = 0;
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryTemperature(temp));
-        printf("temperature: %f\n", temp);
+        printf("temperature: %f  stat: 0x%01x\n", temp, stat);
+
         vTaskDelay(pdMS_TO_TICKS(100));
     }
-}
-
-TEST_CASE("charger status and flags", MODULE_NAME)
-{
-    printf("\nflag0: 0x%02x ", board.getCharger().getFlags(0));
-    printf("flag1: 0x%02x ", board.getCharger().getFlags(1));
-    printf("stat0: 0x%02x ", board.getCharger().getStat(0));
-    printf("stat1: 0x%02x ", board.getCharger().getStat(1));
-    printf("fault: 0x%02x\n\n", board.getCharger().getFault());
 }
 
 static void button_anyedge_handler(void *arg)
@@ -218,7 +245,7 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     // Measure VBAT, IBAT
     // Disable charging initially, until certain SOC
     // Enable charging, then disable again once another SOC is reached
-    TEST_ASSERT_TRUE(board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous));
+    TEST_ASSERT_TRUE(board.getCharger().setupADC(true, BQ2562x::ADCRate::Continuous));
     // board.getCharger().enableCharging(true);
     // board.getCharger().setChargeCurrent(50);
 
@@ -360,7 +387,7 @@ TEST_CASE("current loading", MODULE_NAME)
     // 5V is loaded up to 2.5A
     // 3.3V is loaded up to 500mA
     // Measure ibus current
-    TEST_ASSERT_TRUE(board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous));
+    TEST_ASSERT_TRUE(board.getCharger().setupADC(true, BQ2562x::ADCRate::Continuous));
 
     start_ap();
 

@@ -37,8 +37,16 @@ namespace PowerFeather
 
             static constexpr Register NTC_Control_0_TS_IGNORE =              { 0x1a, 1, 7, 7 };
 
+            static constexpr Register Charger_Status_0 =                     { 0x1d, 1, 0, 7 };
             static constexpr Register Charger_Status_1 =                     { 0x1e, 1, 0, 7 };
             static constexpr Register Charger_Status_1_VBUS_STAT =           { 0x1e, 1, 0, 2 };
+            static constexpr Register FAULT_Status_0 =                       { 0x1f, 1, 0, 7 };
+            static constexpr Register Charger_Flag_0 =                       { 0x20, 1, 0, 7 };
+            static constexpr Register Charger_Flag_1 =                       { 0x21, 1, 0, 7 };
+            static constexpr Register FAULT_Flag_0 =                         { 0x22, 1, 0, 7 };
+            static constexpr Register Charger_Mask_0 =                       { 0x23, 1, 0, 7 };
+            static constexpr Register Charger_Mask_1 =                       { 0x24, 1, 0, 7 };
+            static constexpr Register FAULT_Mask_0 =                         { 0x24, 1, 0, 7 };
 
             static constexpr Register ADC_Control =                          { 0x26, 1, 0, 7 };
 
@@ -48,13 +56,6 @@ namespace PowerFeather
             static constexpr Register Part_Information =                     { 0x38, 1, 0, 7 };
             static constexpr Register Part_Information_PN =                  { 0x38, 1, 3, 5 };
             static constexpr Register Part_Information_DEV_REV =             { 0x38, 1, 0, 2 };
-        };
-
-        enum class OTGMode
-        {
-            None,
-            Boost,
-            Bypass
         };
 
         enum class VBUSStat
@@ -83,21 +84,18 @@ namespace PowerFeather
             Bits_11,
             Bits_10,
             Bits_9,
-            LastValue
         };
 
         enum class ADCAverage
         {
             Single,
             Running,
-            LastValue
         };
 
         enum class ADCAverageInit
         {
             Existing,
             New,
-            LastValue
         };
 
         enum class BATFETControl
@@ -135,8 +133,6 @@ namespace PowerFeather
         bool readReg(T address, T& value);
 
         bool getBatteryTemperature(float& value);
-        bool setOTGMode(OTGMode mode);
-        bool setOTGVoltage(float voltage);
         bool setChargeCurrent(uint16_t current);
         bool enableCharging(bool state);
         bool enableSTAT(bool enable);
@@ -146,22 +142,18 @@ namespace PowerFeather
         bool setBATFETDelay(BATFETDelay delay);
         bool enableWVBUS(bool enable);
         bool getVBAT(float& value);
-        bool enableADC(bool enable, ADCRate rate = ADCRate::Oneshot, ADCSampling sampling = ADCSampling::LastValue,
-                        ADCAverage average = ADCAverage::LastValue, ADCAverageInit averageInit = ADCAverageInit::LastValue);
+        bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
+                        ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
+        bool getPartInformation(uint8_t& value);
 
         float getBatteryVoltage();
         float getVBUS();
         float getIBAT();
         float getIBUS();
         bool checkADC();
-        bool getPartInformation(uint8_t& value);
         void setVINDPM(uint32_t mV);
         bool setIINDPM(uint32_t mA);
         bool isCharging() { return false; }
-
-        uint8_t getStat(int num);
-        uint8_t getFlags(int num);
-        uint8_t getFault();
 
         VBUSStat getVBUSStat();
         ChargeStat getChargeStat();

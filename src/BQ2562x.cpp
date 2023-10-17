@@ -22,7 +22,6 @@ namespace PowerFeather
     //  charger fault
     //      - bat overvoltage or overcurrent
     //      - sys overvoltage or short
-    //      - otg overvoltage,
     //      - tshut thermal shutdown
     //
     // take OCV for gauge, then enable charging
@@ -155,31 +154,6 @@ namespace PowerFeather
         return writeReg(Registers::NTC_Control_0_TS_IGNORE, !enable);
     }
 
-    uint8_t BQ2562x::getStat(int num)
-    {
-        uint16_t data = 0;
-        readReg(Registers::Charger_Control_2, data);
-        printf("data: 0x%02x\n", data);
-
-        readReg(Registers::ADC_Control, data);
-        printf("data: 0x%02x\n", data);
-        return 0;
-    }
-
-    uint8_t BQ2562x::getFault()
-    {
-        uint8_t data = 0;
-        readReg(BYTE(0x1f), data);
-        return data;
-    }
-
-    uint8_t BQ2562x::getFlags(int num)
-    {
-        uint8_t data = 0;
-        readReg(BYTE(0x20 + num), data);
-        return data;
-    }
-
     bool BQ2562x::getPartInformation(uint8_t& value)
     {
         return readReg(Registers::Part_Information, value);
@@ -188,18 +162,6 @@ namespace PowerFeather
     bool BQ2562x::enableCharging(bool state)
     {
         return writeReg(Registers::Charger_Control_0_EN_CHG, state);
-    }
-
-    bool BQ2562x::setOTGMode(BQ2562x::OTGMode mode)
-    {
-        // return _charger.writeReg(0x18, 6, enable);
-        return false;
-    }
-
-    bool BQ2562x::setOTGVoltage(float voltage)
-    {
-        // return _charger.writeReg(0x18, 6, enable);
-        return false;
     }
 
     float BQ2562x::getVBUS()
@@ -274,77 +236,38 @@ namespace PowerFeather
         // printf("vindpm: %d\n", value * 40);
     }
 
-    bool BQ2562x::enableADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)
+    bool BQ2562x::setupADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)
     {
         uint8_t value = enable << 7;
 
         if (enable)
         {
-            switch (rate)
-            {
-            case ADCRate::Continuous:
-                value &= ~(0b1 << 6);
-                break;
-
-            case ADCRate::Oneshot:
-            default:
-                value |= 0b1 << 6;
-                break;
-            }
+            value |= (rate == ADCRate::Oneshot) << 6;
 
             switch (sampling)
             {
             case ADCSampling::Bits_12:
-                value &= ~(0b1 << 5);
-                value &= ~(0b1 << 4);
+                value |= 0b00 << 4;
                 break;
 
             case ADCSampling::Bits_11:
-                value &= ~(0b1 << 5);
-                value |= 0b1 << 4;
+                value |= 0b01 << 4;
                 break;
 
             case ADCSampling::Bits_10:
-                value |= 0b1 << 5;
-                value &= ~(0b1 << 4);
+                value |= 0b10 << 4;
                 break;
 
             case ADCSampling::Bits_9:
-                value |= 0b1 << 5;
-                value |= 0b1 << 4;
+                value |= 0b11 << 4;
                 break;
 
             default:
                 break;
             }
 
-            switch (average)
-            {
-            case ADCAverage::Single:
-                value &= ~(0b1 << 3);
-                break;
-
-            case ADCAverage::Running:
-                value |= 0b1 << 3;
-                break;
-
-            default:
-                break;
-            }
-
-            switch (averageInit)
-            {
-            case ADCAverageInit::Existing:
-                value &= ~(0b1 << 2);
-                break;
-
-            case ADCAverageInit::New:
-                value |= 0b1 << 2;
-                break;
-
-            default:
-                break;
-            }
+            value |= (average == ADCAverage::Running) << 3;
+            value |= (averageInit == ADCAverageInit::New) << 2;
         }
 
         return writeReg(Registers::ADC_Control, value);
