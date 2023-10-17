@@ -67,10 +67,6 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq), Result::Failure);
 
-        RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::REG, GPIO_MODE_INPUT_OUTPUT_OD), Result::Failure);
-        gpio_set_level(Pin::FFI::REG, 1);
-        RET_IF_FALSE(mAh == 0 || checkBatteryConnected(), Result::InvalidState);
-
         if (_isFirst())
         {
             RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
@@ -112,9 +108,9 @@ namespace PowerFeather
             RET_IF_ERR(enable3V3(true));
         }
 
+        RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::PG, GPIO_MODE_INPUT), Result::Failure);
 
         inited = initedMagic;
-
         return Result::Ok;
     }
 
@@ -156,19 +152,9 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    bool MainBoard::checkBatteryConnected()
-    {
-        // Try to discharge the gauge regulator capacitor first if reading high.
-        gpio_set_level(Pin::FFI::REG, 0);
-        vTaskDelay(pdMS_TO_TICKS(20));
-        gpio_set_level(Pin::FFI::REG, 1);
-
-        return gpio_get_level(Pin::FFI::REG);
-    }
-
     bool MainBoard::checkSupplyConnected()
     {
-        return _charger.getVBUSStat() == BQ2562x::VBUSStat::Adapter;
+        return gpio_get_level(Pin::FFI::PG) == 0;
     }
 
     void MainBoard::setVBATMinVoltage(float voltage)
