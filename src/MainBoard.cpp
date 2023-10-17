@@ -67,6 +67,10 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq), Result::Failure);
 
+        RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::REG, GPIO_MODE_INPUT_OUTPUT_OD), Result::Failure);
+        gpio_set_level(Pin::FFI::REG, 1);
+        RET_IF_FALSE(mAh == 0 || checkBatteryConnected(), Result::InvalidState);
+
         if (_isFirst())
         {
             RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
@@ -80,7 +84,7 @@ namespace PowerFeather
             // keep some registers from resetting to their POR values.
             RET_IF_FALSE(_sqtOn && _charger.enableWD(false), Result::Failure);
 
-            if (mAh > 0 && checkBatteryConnected())
+            if (mAh > 0)
             {
                 RET_IF_FALSE(_fuelGauge.setAPA(mAh), Result::Failure);
                 RET_IF_FALSE(_fuelGauge.setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);
@@ -106,9 +110,6 @@ namespace PowerFeather
             RET_IF_ERR(enable3V3(true));
         }
 
-        // Initialize digital pins always.
-        RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::REG, GPIO_MODE_INPUT_OUTPUT_OD), Result::Failure);
-        gpio_set_level(Pin::FFI::REG, 1);
 
         inited = initedMagic;
 
