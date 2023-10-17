@@ -16,6 +16,9 @@ namespace PowerFeather
     #define RET_IF_NOK(f, r)     { if ((f) != ESP_OK) { return (r); } }
     #define RET_IF_FALSE(f, r)   { if ((f) == false) { return (r); } }
 
+    static RTC_NOINIT_ATTR uint32_t inited;
+    static const uint32_t initedMagic = 0xdeadbeef;
+
     /*static*/ MainBoard& MainBoard::get()
     {
         static MainBoard board;
@@ -57,15 +60,7 @@ namespace PowerFeather
 
     bool MainBoard::_isFirst()
     {
-        soc_reset_reason_t reason = esp_rom_get_reset_reason(0);
-        return reason == RESET_REASON_CHIP_POWER_ON ||
-               reason == RESET_REASON_CHIP_BROWN_OUT ||
-               reason == RESET_REASON_CHIP_SUPER_WDT ||
-               reason == RESET_REASON_SYS_BROWN_OUT ||
-               reason == RESET_REASON_SYS_RTC_WDT ||
-               reason == RESET_REASON_SYS_SUPER_WDT ||
-               reason == RESET_REASON_SYS_CLK_GLITCH ||
-               reason == RESET_REASON_CORE_USB_UART;
+        return inited != initedMagic;
     }
 
     Result MainBoard::_initChargerAndFuelGauge(uint16_t mAh)
@@ -114,6 +109,8 @@ namespace PowerFeather
         // Initialize digital pins always.
         RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::REG, GPIO_MODE_INPUT_OUTPUT_OD), Result::Failure);
         gpio_set_level(Pin::FFI::REG, 1);
+
+        inited = initedMagic;
 
         return Result::Ok;
     }

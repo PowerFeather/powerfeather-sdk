@@ -37,6 +37,5 @@ extern "C" void app_main(void)
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     gpio_config(&io_conf);
 
-    esp_deep_sleep(5000000000);
     test_main();
 }
