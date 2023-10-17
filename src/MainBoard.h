@@ -148,7 +148,7 @@ namespace PowerFeather
          * @return
          */
 
-        bool checkSupplyConnected();
+        Result checkSupplyConnected(bool& connected);
         /**
          * Set VBAT minimum output voltage.
          *
@@ -157,7 +157,7 @@ namespace PowerFeather
          *
          * @param voltage Minimum voltage to set VBAT output to, valid input range [2.2, 4.3]
          */
-        void setVBATMinVoltage(float voltage);
+        Result setVBATMinVoltage(float voltage);
 
         // Get the power input currently supplying power to the board.
 

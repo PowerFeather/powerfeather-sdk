@@ -341,7 +341,8 @@ TEST_CASE("supply connected", MODULE_NAME)
 {
     while (true)
     {
-        bool connected = board.checkSupplyConnected();
+        bool connected;
+        TEST_ASSERT_EQUAL(Result::Ok, board.checkSupplyConnected(connected));
         gpio_set_level(MainBoard::Pin::FF::LED, connected);
         printf("supply connected: %d\n", connected);
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -350,9 +351,11 @@ TEST_CASE("supply connected", MODULE_NAME)
 
 void wait_for_battery()
 {
-    while (board.checkSupplyConnected())
+    bool connected = true;
+    while (connected)
     {
         vTaskDelay(pdMS_TO_TICKS(100));
+        board.checkSupplyConnected(connected);
     }
     gpio_set_level(MainBoard::Pin::FF::LED, 1);
     vTaskDelay(pdMS_TO_TICKS(1000));

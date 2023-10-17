@@ -166,17 +166,17 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    bool MainBoard::checkSupplyConnected()
+    Result MainBoard::checkSupplyConnected(bool& connected)
     {
-        return gpio_get_level(Pin::FFI::PG) == 0;
+        connected = gpio_get_level(Pin::FFI::PG) == 0;
+        return Result::Ok;
     }
 
-    void MainBoard::setVBATMinVoltage(float voltage)
+    Result MainBoard::setVBATMinVoltage(float voltage)
     {
-        if (_sqtOn)
-        {
-            _charger.setVINDPM(voltage * 1000);
-        }
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.setVINDPM(voltage * 1000), Result::Failure);
+        return Result::Ok;
     }
 
     Result MainBoard::enterShipMode()
