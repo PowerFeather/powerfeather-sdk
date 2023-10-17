@@ -330,7 +330,8 @@ TEST_CASE("current loading", MODULE_NAME)
             start_iperf_server();
         }
 
-        float ibus = board.getCharger().getIBUS();
+        float ibus = 0.0f;
+        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(ibus));
         printf("ibus: %.2f\n", ibus);
 
         vTaskDelay(pdMS_TO_TICKS(1000));

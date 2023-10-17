@@ -121,7 +121,11 @@ namespace PowerFeather
 
         /*
          */
-        void setSupplyMinVoltage(float voltage);
+        Result setSupplyMinVoltage(float voltage);
+
+        Result getSupplyVoltage(float& voltage);
+
+        Result getSupplyCurrent(float& current);
 
         /**
          * Set the maximum current draw from the power supply (USB/external DC adapter).

@@ -138,17 +138,31 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    void MainBoard::setSupplyMinVoltage(float voltage)
+    Result MainBoard::setSupplyMinVoltage(float voltage)
     {
-        if (_sqtOn)
-        {
-            _charger.setVINDPM(voltage * 1000);
-        }
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.setVINDPM(voltage * 1000), Result::Failure);
+        return Result::Ok;
     }
 
     Result MainBoard::setSupplyMaxCurrent(uint32_t mA)
     {
-        RET_IF_FALSE(_sqtOn && _charger.setIINDPM(mA), Result::Failure);
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.setIINDPM(mA), Result::Failure);
+        return Result::Ok;
+    }
+
+    Result MainBoard::getSupplyCurrent(float& current)
+    {
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.getIBUS(current), Result::Failure);
+        return Result::Ok;
+    }
+
+    Result MainBoard::getSupplyVoltage(float& voltage)
+    {
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.getVBUS(voltage), Result::Failure);
         return Result::Ok;
     }
 

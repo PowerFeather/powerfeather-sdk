@@ -2,32 +2,6 @@
 
 namespace PowerFeather
 {
-    // Initialize the board
-    // batteryCapacity - advertised capacity of the battery
-    // chargeRate - charge rate of the battery expressed as fraction of the capacity,
-    //              ex. 2000mAh, 0.5 charge rate = 1000mA charge current
-    //
-    // event handler - when significant events occur
-    //      - change in external power source
-    //      - enable pin pulled down low
-    //      - charging started/stopped
-    //      - temperature too high or too low (hardware set)
-    //      - battery state of charge low
-    //      - input current exceeded
-    //      - charge current exceeded
-    //
-    //  charger status
-    //      - charging changed
-    //      - vbus changed
-    //  charger fault
-    //      - bat overvoltage or overcurrent
-    //      - sys overvoltage or short
-    //      - tshut thermal shutdown
-    //
-    // take OCV for gauge, then enable charging
-    // enable 3V3 by default
-    // enable 5V by default
-
     template <typename T>
     bool BQ2562x::writeReg(Register reg, T value)
     {
@@ -69,71 +43,6 @@ namespace PowerFeather
         return false;
     }
 
-    template <typename T>
-    bool BQ2562x::writeReg(T address, uint8_t start, uint8_t end, T value)
-    {
-        // T data = 0;
-
-        // if (readReg(address, data))
-        // {
-        // 	uint8_t bits = end - start + 1;
-        // 	T mask = ((0b1 << bits) - 1) << start;
-        // 	value <<= start;
-        // 	data = (data & ~mask) | (mask & value);
-
-        // 	return _i2c.write(_i2cAddress,  reinterpret_cast<uint8_t*>(&data), sizeof(data));
-        // }
-
-        return false;
-    }
-
-    template <typename T>
-    bool BQ2562x::writeReg(T address, uint8_t bit, bool value)
-    {
-        return writeReg(address, bit, bit, static_cast<T>(value));
-    }
-
-    template <typename T>
-    bool BQ2562x::writeReg(T address, T value)
-    {
-        return writeReg(address, 0, ((sizeof(value) * CHAR_BIT) - 1), value);
-    }
-
-    template <typename T>
-    bool BQ2562x::readReg(T address, uint8_t start, uint8_t end, T& value)
-    {
-        value = 0;
-        // static_assert(sizeof(value) == sizeof(uint8_t) || sizeof(value) == sizeof(uint16_t));
-        // assert(end < (sizeof(value) * CHAR_BIT));
-        // assert(start <= end);
-        // assert((end - start) < (sizeof(T) * CHAR_BIT));
-
-        // if (!_i2c.read(_i2cAddress, nt8_t*>(&address), 1, reinterpret_cast<uint8_t*>(&value), sizeof(value)))
-        // {
-        //     return false;
-        // }
-
-        // int left = (((sizeof(value) * CHAR_BIT) - 1) - end);
-        // value <<= left;
-        // value >>= left + start;
-        return true;
-    }
-
-    template <typename T>
-    bool BQ2562x::readReg(T address, uint8_t bit, bool &value)
-    {
-        T data = 0;
-        bool res = readReg(address, bit, bit, data);
-        value = data;
-        return res;
-    }
-
-    template <typename T>
-    bool BQ2562x::readReg(T address, T& value)
-    {
-        return readReg(static_cast<T>(address), 0, (sizeof(value) * CHAR_BIT) - 1, value);
-    }
-
     bool BQ2562x::setChargeCurrent(uint16_t current)
     {
         current /= 40;
@@ -167,7 +76,7 @@ namespace PowerFeather
     bool BQ2562x::getVBUS(float& value)
     {
         uint16_t data = 0;
-        if (readReg(SHORT(0x2c), 2, 14, data))
+        if (readReg(Registers::VBUS_ADC, data))
         {
             value = (data * 3.97f) / 1000.0f;
             return true;
@@ -179,42 +88,45 @@ namespace PowerFeather
     bool BQ2562x::getIBAT(float& value)
     {
         uint16_t data = 0;
-        if (readReg(SHORT(0x2a), 2, 15, data))
+        if (readReg(Registers::IBAT_ADC, data))
         {
             float partial = 0.0f;
 
-            if (value >= 0x38AD && value <= 0x3FFF)
+            if (data >= 0x38AD && data <= 0x3FFF)
             {
-                partial = (0x3FFF - value + 1) * -4.0f;
+                partial = (0x3FFF - data + 1) * -4.0f;
             }
             else
             {
-                partial = value * 4.0f;
+                partial = data * 4.0f;
             }
 
             value = partial / 1000.0f;
-            return value;
+            return true;
         }
         return false;
     }
 
-    float BQ2562x::getIBUS()
+    bool BQ2562x::getIBUS(float& value)
     {
-        uint16_t value = 0;
-        readReg(SHORT(0x28), 1, 15, value);
-
-        float partial = 0.0f;
-
-        if (value >= 0x7830 && value <= 0x7FFF)
+        uint16_t data = 0;
+        if (readReg(Registers::IBUS_ADC, data))
         {
-            partial = (0x7FFF - value + 1) * -2.0f;
-        }
-        else
-        {
-            partial = value * 4.0f;
-        }
+            float partial = 0.0f;
 
-        return partial / 1000.0f;
+            if (data >= 0x7830 && data <= 0x7FFF)
+            {
+                partial = (0x7FFF - data + 1) * -2.0f;
+            }
+            else
+            {
+                partial = data * 4.0f;
+            }
+
+            value = partial / 1000.0f;
+            return true;
+        }
+        return false;
     }
 
     bool BQ2562x::getVBAT(float& value)
@@ -228,20 +140,14 @@ namespace PowerFeather
         return false;
     }
 
-    void BQ2562x::setVINDPM(uint32_t mV)
+    bool BQ2562x::setVINDPM(uint32_t mV)
     {
-        writeReg(Registers::Input_Current_Limit_VINDPM, static_cast<uint16_t>((mV) / 40));
-        // uint16_t value = 0;
-        // readReg(Registers::Input_Current_Limit_VINDPM, value);
-        // printf("vindpm: %d\n", value * 40);
+        return writeReg(Registers::Input_Current_Limit_VINDPM, static_cast<uint16_t>((mV) / 40));
     }
 
     bool BQ2562x::setIINDPM(uint32_t mA)
     {
         return writeReg(Registers::Input_Current_Limit_IINDPM, static_cast<uint16_t>((mA) / 40));
-        // uint16_t value = 0;
-        // readReg(Registers::Input_Current_Limit_IINDPM, value);
-        // printf("vindpm: %d\n", value * 40);
     }
 
     bool BQ2562x::setupADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)

@@ -51,6 +51,9 @@ namespace PowerFeather
 
             static constexpr Register ADC_Control =                          { 0x26, 1, 0, 7 };
 
+            static constexpr Register IBUS_ADC =                             { 0x28, 2, 1, 15 };
+            static constexpr Register IBAT_ADC =                             { 0x2a, 2, 2, 15 };
+            static constexpr Register VBUS_ADC =                             { 0x2c, 2, 2, 14 };
             static constexpr Register VBAT_ADC =                             { 0x30, 2, 1, 12 };
             static constexpr Register TS_ADC =                               { 0x34, 2, 0, 11 };
 
@@ -120,19 +123,6 @@ namespace PowerFeather
         template <typename T>
         bool readReg(Register reg, T& value);
 
-        template <typename T>
-        bool writeReg(T address, uint8_t start, uint8_t end, T value);
-        template <typename T>
-        bool writeReg(T address, uint8_t bit, bool value);
-        template <typename T>
-        bool writeReg(T address, T value);
-        template <typename T>
-        bool readReg(T address, uint8_t start, uint8_t end, T& value);
-        template <typename T>
-        bool readReg(T address, uint8_t bit, bool& value);
-        template <typename T>
-        bool readReg(T address, T& value);
-
         bool getBatteryTemperature(float& value);
         bool setChargeCurrent(uint16_t current);
         bool enableCharging(bool state);
@@ -150,18 +140,14 @@ namespace PowerFeather
         bool getPartInformation(uint8_t& value);
         bool getBatteryVoltage(float& voltage);
         bool getChargeStat(ChargeStat& stat);
+        bool getIBUS(float &value);
 
         bool getVBUS(float& value);
         bool getIBAT(float& value);
+        bool setVINDPM(uint32_t mV);
+        bool setIINDPM(uint32_t mA);
 
         void displayInfo();
-
-
-        float getIBUS();
-        bool checkADC();
-        void setVINDPM(uint32_t mV);
-        bool setIINDPM(uint32_t mA);
-        bool isCharging() { return false; }
 
     private:
         static constexpr uint8_t _i2cAddress = 0x6a;
