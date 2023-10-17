@@ -406,7 +406,7 @@ namespace PowerFeather
 		return res;
     }
 
-    void BQ2562x::setBATFETControl(BATFETControl control)
+    bool BQ2562x::setBATFETControl(BATFETControl control)
     {
 		uint8_t value = 0x0;
 		switch (control)
@@ -425,10 +425,10 @@ namespace PowerFeather
 			break;
 		}
 
-		writeReg(Registers::Charger_Control_2_BATFET_CTRL, value);
+		return writeReg(Registers::Charger_Control_2_BATFET_CTRL, value);
 	}
 
-	void BQ2562x::setBATFETDelay(BATFETDelay delay)
+	bool BQ2562x::setBATFETDelay(BATFETDelay delay)
 	{
 		bool value = false;
 		switch (delay)
@@ -441,7 +441,12 @@ namespace PowerFeather
 			break;
 		}
 
-		writeReg(Registers::Charger_Control_2_BATFET_DLY, value);
+		return writeReg(Registers::Charger_Control_2_BATFET_DLY, value);
+	}
+
+	bool BQ2562x::enableWVBUS(bool enable)
+	{
+		return writeReg(Registers::Charger_Control_2_WVBUS, enable);
 	}
 
 	float BQ2562x::getBatteryTemperature()

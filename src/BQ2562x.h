@@ -33,6 +33,7 @@ namespace PowerFeather
             static constexpr Register Charger_Control_2 =                    { 0x18, 1, 0, 7 };
             static constexpr Register Charger_Control_2_BATFET_CTRL =        { 0x18, 1, 0, 1 };
             static constexpr Register Charger_Control_2_BATFET_DLY =         { 0x18, 1, 2, 2 };
+            static constexpr Register Charger_Control_2_WVBUS =              { 0x18, 1, 3, 3 };
 
             static constexpr Register NTC_Control_0_TS_IGNORE =              { 0x1a, 1, 7, 7 };
 
@@ -138,6 +139,10 @@ namespace PowerFeather
         bool enableSTAT(bool enable);
         bool enableTS(bool enable);
         bool enableWD(bool enable);
+        bool setBATFETControl(BATFETControl control);
+        bool setBATFETDelay(BATFETDelay delay);
+        bool enableWVBUS(bool enable);
+
         float getBatteryVoltage();
         float getVBUS();
         float getIBAT();
@@ -149,8 +154,6 @@ namespace PowerFeather
         bool getPartInformation(uint8_t& value);
         void setVINDPM(uint32_t mV);
         bool setIINDPM(uint32_t mA);
-        void setBATFETControl(BATFETControl control);
-        void setBATFETDelay(BATFETDelay delay);
         bool isCharging() { return false; }
 
         uint8_t getStat(int num);
