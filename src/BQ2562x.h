@@ -42,6 +42,7 @@ namespace PowerFeather
 
             static constexpr Register ADC_Control =                          { 0x26, 1, 0, 7 };
 
+            static constexpr Register VBAT_ADC =                             { 0x30, 2, 1, 12 };
             static constexpr Register TS_ADC =                               { 0x34, 2, 0, 11 };
 
             static constexpr Register Part_Information =                     { 0x38, 1, 0, 7 };
@@ -59,7 +60,7 @@ namespace PowerFeather
         enum class VBUSStat
         {
             None,
-            Adapter 
+            Adapter
         };
 
         enum class ChargeStat
@@ -132,7 +133,7 @@ namespace PowerFeather
         bool readReg(T address, uint8_t bit, bool& value);
         template <typename T>
         bool readReg(T address, T& value);
-        
+
         bool getBatteryTemperature(float& value);
         bool setOTGMode(OTGMode mode);
         bool setOTGVoltage(float voltage);
@@ -144,14 +145,14 @@ namespace PowerFeather
         bool setBATFETControl(BATFETControl control);
         bool setBATFETDelay(BATFETDelay delay);
         bool enableWVBUS(bool enable);
+        bool getVBAT(float& value);
+        bool enableADC(bool enable, ADCRate rate = ADCRate::Oneshot, ADCSampling sampling = ADCSampling::LastValue,
+                        ADCAverage average = ADCAverage::LastValue, ADCAverageInit averageInit = ADCAverageInit::LastValue);
 
         float getBatteryVoltage();
         float getVBUS();
         float getIBAT();
-        float getVBAT();
         float getIBUS();
-        void enableADC(bool enable, ADCRate rate = ADCRate::Oneshot, ADCSampling sampling = ADCSampling::LastValue, 
-                        ADCAverage average = ADCAverage::LastValue, ADCAverageInit averageInit = ADCAverageInit::LastValue);
         bool checkADC();
         bool getPartInformation(uint8_t& value);
         void setVINDPM(uint32_t mV);

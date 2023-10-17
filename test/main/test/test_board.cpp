@@ -218,12 +218,14 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     // Disable charging initially, until certain SOC
     // Enable charging, then disable again once another SOC is reached
     board.getCharger().enableADC(true, BQ2562x::ADCRate::Continuous);
-    board.getCharger().enableCharging(true);
-    board.getCharger().setChargeCurrent(50);
+    // board.getCharger().enableCharging(true);
+    // board.getCharger().setChargeCurrent(50);
 
     while (true)
     {
-        float vbat = board.getCharger().getVBAT();
+        float vbat = 0.0f;
+        board.getCharger().getVBAT(vbat);
+
         float ibat = board.getCharger().getIBAT();
 
         BQ2562x::ChargeStat stat = board.getCharger().getChargeStat();
