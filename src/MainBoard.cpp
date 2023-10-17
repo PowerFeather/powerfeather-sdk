@@ -115,8 +115,6 @@ namespace PowerFeather
         RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::REG, GPIO_MODE_INPUT_OUTPUT_OD), Result::Failure);
         gpio_set_level(Pin::FFI::REG, 1);
 
-
-        _inited = MainBoard::_initMagic;
         return Result::Ok;
     }
 
@@ -267,6 +265,4 @@ namespace PowerFeather
 
         return 0;
     }
-
-    /*static*/ RTC_NOINIT_ATTR uint32_t MainBoard::_inited;
 }

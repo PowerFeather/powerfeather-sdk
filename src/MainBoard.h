@@ -240,15 +240,12 @@ namespace PowerFeather
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 400000;
         static constexpr uint32_t _i2cTimeout = 1000;
-        static constexpr uint32_t _initMagic = 0xDEADBEEF;
         static constexpr uint32_t _defaultChargingMaxCurrent = 100;
         static constexpr uint32_t _defaultVSMaxCurrent = 500;
 
         MasterI2C _i2c {};
         BQ2562x _charger {_i2c};
         LC709204F _fuelGauge {_i2c};
-
-        static RTC_NOINIT_ATTR uint32_t _inited;
 
         bool _sqtOn;
 
