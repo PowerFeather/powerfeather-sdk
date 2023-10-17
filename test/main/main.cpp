@@ -9,7 +9,7 @@ using namespace PowerFeather;
 
 extern "C" void app_main(void)
 {
-    TEST_ASSERT_EQUAL(Board.init(500), Result::Ok);
+    TEST_ASSERT_EQUAL(Result::Ok, Board.init(500));
 
     // Tie potentiometer to temperature sense
     // Check interrupt, may be combined with another test

@@ -165,7 +165,7 @@ namespace PowerFeather
          *
          * Only able to enter shutdown in battery-only.
          */
-        void enterShipMode();
+        Result enterShipMode();
 
         /**
          * Enter shutdown mode.
@@ -175,14 +175,14 @@ namespace PowerFeather
          *
          * Only able to enter shutdown in battery-only.
          */
-        void enterShutdownMode();
+        Result enterShutdownMode();
 
         /**
          * Power cycle board.
          *
          * Only able to enter shutdown in battery-only.
          */
-        void doPowerCycle();
+        Result doPowerCycle();
 
         /**
          * Power cycle board.

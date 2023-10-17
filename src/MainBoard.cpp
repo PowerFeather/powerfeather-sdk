@@ -69,7 +69,7 @@ namespace PowerFeather
 
         if (_isFirst())
         {
-            RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_SQT, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
+            RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
             RET_IF_ERR(enableSQT(true));
 
             RET_IF_ERR(enableCharging(false));
@@ -165,28 +165,25 @@ namespace PowerFeather
         }
     }
 
-    void MainBoard::enterShipMode()
+    Result MainBoard::enterShipMode()
     {
-        if (_sqtOn)
-        {
-            _charger.setBATFETControl(BQ2562x::BATFETControl::ShipMode);
-        }
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.setBATFETControl(BQ2562x::BATFETControl::ShipMode), Result::Failure);
+        return Result::Ok;
     }
 
-    void MainBoard::enterShutdownMode()
+    Result MainBoard::enterShutdownMode()
     {
-        if (_sqtOn)
-        {
-            _charger.setBATFETControl(BQ2562x::BATFETControl::ShutdownMode);
-        }
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.setBATFETControl(BQ2562x::BATFETControl::ShutdownMode), Result::Failure);
+        return Result::Ok;
     }
 
-    void MainBoard::doPowerCycle()
+    Result MainBoard::doPowerCycle()
     {
-        if (_sqtOn)
-        {
-            _charger.setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset);
-        }
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset), Result::Failure);
+        return Result::Ok;
     }
 
     Result MainBoard::enableTSPin(bool enable)
