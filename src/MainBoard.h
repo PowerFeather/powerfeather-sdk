@@ -121,11 +121,11 @@ namespace PowerFeather
 
         /*
          */
-        Result setSupplyMinVoltage(float voltage);
+        Result setSupplyMinVoltage(uint16_t mV);
 
-        Result getSupplyVoltage(float& voltage);
+        Result getSupplyVoltage(uint16_t& mV);
 
-        Result getSupplyCurrent(float& current);
+        Result getSupplyCurrent(int16_t& mA);
 
         /**
          * Set the maximum current draw from the power supply (USB/external DC adapter).
@@ -136,7 +136,7 @@ namespace PowerFeather
          *
          * @param current The maximum current draw.
          */
-        Result setSupplyMaxCurrent(uint32_t mA);
+        Result setSupplyMaxCurrent(uint16_t mA);
 
 
         /**
@@ -157,7 +157,7 @@ namespace PowerFeather
          *
          * @param voltage Minimum voltage to set VBAT output to, valid input range [2.2, 4.3]
          */
-        Result setVBATMinVoltage(float voltage);
+        Result setVBATMinVoltage(uint16_t mV);
 
         // Get the power input currently supplying power to the board.
 
@@ -204,34 +204,34 @@ namespace PowerFeather
          * current to 520 mA (520 * 1 = 520). Check datasheet for your battery for maximum charging current.
          *
          */
-        Result setChargingMaxCurrent(float current);
+        Result setChargingMaxCurrent(uint16_t mA);
 
 
         /**
          * Get current battery voltage measurement.
          */
-        Result getBatteryVoltage(float& voltage);
+        Result getBatteryVoltage(uint16_t& mV);
 
         /**
          * Get an estimate of battery state-of-charge from 0 to 1, i.e. getting .68 means
          * that charge is 68% of capacity.
          */
-        Result getBatteryCharge(float& percent);
+        Result getBatteryCharge(uint8_t& percent);
 
         /**
          * Get an estimate of battery state-of-health from 0 to 1, i.e. getting 0.68 means
          * the battery only has max capacity 68% of the original design capacity.
          */
-        Result getBatteryHealth(float& percent);
+        Result getBatteryHealth(uint8_t& percent);
 
         /** Returns remaining battery runtime when discharging;
          * returns time-to-full charge when charging.
          */
         Result getBatteryTimeLeft(int& minutes);
 
-        Result getBatteryTemperature(float& temperature);
+        Result getBatteryTemperature(float& celsius);
 
-        Result getBatteryCurrent(float& current);
+        Result getBatteryCurrent(int16_t& mA);
 
         BQ2562x& getCharger() { return _charger; }
         LC709204F& getFuelGauge() { return _fuelGauge; }

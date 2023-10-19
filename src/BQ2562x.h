@@ -134,7 +134,7 @@ namespace PowerFeather
         bool setBATFETControl(BATFETControl control);
         bool setBATFETDelay(BATFETDelay delay);
         bool enableWVBUS(bool enable);
-        bool getVBAT(float& value);
+        bool getVBAT(uint16_t& value);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
                         ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
 
@@ -142,10 +142,10 @@ namespace PowerFeather
         bool getPartInformation(uint8_t& value);
         bool getBatteryVoltage(float& voltage);
         bool getChargeStat(ChargeStat& stat);
-        bool getIBUS(float &value);
+        bool getIBUS(int16_t &value);
 
-        bool getVBUS(float& value);
-        bool getIBAT(float& value);
+        bool getVBUS(uint16_t& value);
+        bool getIBAT(int16_t& value);
         bool setVINDPM(uint32_t mV);
         bool setIINDPM(uint32_t mA);
 

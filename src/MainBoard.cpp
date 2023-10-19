@@ -138,31 +138,31 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::setSupplyMinVoltage(float voltage)
+    Result MainBoard::setSupplyMinVoltage(uint16_t mV)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.setVINDPM(voltage * 1000), Result::Failure);
+        RET_IF_FALSE(_charger.setVINDPM(mV), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::setSupplyMaxCurrent(uint32_t mA)
+    Result MainBoard::setSupplyMaxCurrent(uint16_t mA)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.setIINDPM(mA), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::getSupplyCurrent(float& current)
+    Result MainBoard::getSupplyCurrent(int16_t& mA)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.getIBUS(current), Result::Failure);
+        RET_IF_FALSE(_charger.getIBUS(mA), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::getSupplyVoltage(float& voltage)
+    Result MainBoard::getSupplyVoltage(uint16_t& mV)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.getVBUS(voltage), Result::Failure);
+        RET_IF_FALSE(_charger.getVBUS(mV), Result::Failure);
         return Result::Ok;
     }
 
@@ -172,10 +172,10 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::setVBATMinVoltage(float voltage)
+    Result MainBoard::setVBATMinVoltage(uint16_t mV)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.setVINDPM(voltage * 1000), Result::Failure);
+        RET_IF_FALSE(_charger.setVINDPM(mV), Result::Failure);
         return Result::Ok;
     }
 
@@ -214,45 +214,45 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::setChargingMaxCurrent(float current)
+    Result MainBoard::setChargingMaxCurrent(uint16_t mA)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.setChargeCurrent(current), Result::Failure);
+        RET_IF_FALSE(_charger.setChargeCurrent(mA), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryTemperature(float& temperature)
+    Result MainBoard::getBatteryTemperature(float& celsius)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.getBatteryTemperature(temperature), Result::Failure);
+        RET_IF_FALSE(_charger.getBatteryTemperature(celsius), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryCurrent(float& current)
+    Result MainBoard::getBatteryCurrent(int16_t& mA)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.getIBAT(current), Result::Failure);
+        RET_IF_FALSE(_charger.getIBAT(mA), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryVoltage(float& voltage)
+    Result MainBoard::getBatteryVoltage(uint16_t& mV)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.getVBAT(voltage), Result::Failure);
+        RET_IF_FALSE(_charger.getVBAT(mV), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryCharge(float& percent)
+    Result MainBoard::getBatteryCharge(uint8_t& percent)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        percent = _fuelGauge.getRSOC() / 100.0f;
+        RET_IF_FALSE(_fuelGauge.getRSOC(percent), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryHealth(float& percent)
+    Result MainBoard::getBatteryHealth(uint8_t& percent)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        percent = _fuelGauge.getSOH() / 100.0f;
+        percent = _fuelGauge.getSOH(percent) / 100.0f;
         return Result::Ok;
     }
 

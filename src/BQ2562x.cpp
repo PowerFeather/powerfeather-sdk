@@ -74,68 +74,64 @@ namespace PowerFeather
         return writeReg(Registers::Charger_Control_0_EN_CHG, state);
     }
 
-    bool BQ2562x::getVBUS(float& value)
+    bool BQ2562x::getVBUS(uint16_t& value)
     {
         uint16_t data = 0;
         if (readReg(Registers::VBUS_ADC, data))
         {
-            value = (data * 3.97f) / 1000.0f;
+            value = data * 3.97f;
             return true;
         }
 
         return false;
     }
 
-    bool BQ2562x::getIBAT(float& value)
+    bool BQ2562x::getIBAT(int16_t& value)
     {
         uint16_t data = 0;
         if (readReg(Registers::IBAT_ADC, data))
         {
-            float partial = 0.0f;
-
             if (data >= 0x38AD && data <= 0x3FFF)
             {
-                partial = (0x3FFF - data + 1) * -4.0f;
+                data = (0x3FFF - data + 1) * 4;
             }
             else
             {
-                partial = data * 4.0f;
+                data *= 4;
             }
 
-            value = partial / 1000.0f;
+            value = data;
             return true;
         }
         return false;
     }
 
-    bool BQ2562x::getIBUS(float& value)
+    bool BQ2562x::getIBUS(int16_t& value)
     {
         uint16_t data = 0;
         if (readReg(Registers::IBUS_ADC, data))
         {
-            float partial = 0.0f;
-
             if (data >= 0x7830 && data <= 0x7FFF)
             {
-                partial = (0x7FFF - data + 1) * -2.0f;
+                data = (0x7FFF - data + 1) * -2;
             }
             else
             {
-                partial = data * 2.0f;
+                data *= 2;
             }
 
-            value = partial / 1000.0f;
+            value = data;
             return true;
         }
         return false;
     }
 
-    bool BQ2562x::getVBAT(float& value)
+    bool BQ2562x::getVBAT(uint16_t& value)
     {
         uint16_t res = 0;
         if (readReg(Registers::VBAT_ADC, res))
         {
-            value = (res * 1.99f) / 1000.0f;
+            value = (res * 1.99f);
             return true;
         }
         return false;

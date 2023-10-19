@@ -198,10 +198,10 @@ TEST_CASE("discharging and charging", MODULE_NAME)
 
     while (true)
     {
-        float vbat = 0.0f;
+        uint16_t vbat = 0.0f;
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
 
-        float ibat = 0.0f;
+        int16_t ibat = 0.0f;
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(ibat));
 
         BQ2562x::ChargeStat stat;
@@ -209,7 +209,7 @@ TEST_CASE("discharging and charging", MODULE_NAME)
 
         const char* statStr[] = {"trickle", "taper", "topoff", "terminated"};
 
-        printf("time: %ld\tstat: %s\tvbat: %.2f\tibat: %.2f\n", time(NULL), statStr[static_cast<int>(stat)], vbat, ibat);
+        printf("time: %ld\tstat: %s\tvbat: %d mV\tibat: %d mV\n", time(NULL), statStr[static_cast<int>(stat)], vbat, ibat);
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -322,12 +322,12 @@ TEST_CASE("current loading", MODULE_NAME)
             start_iperf_server();
         }
 
-        float vbus = 0.0f;
-        float ibus = 0.0f;
+        uint16_t vbus = 0.0f;
+        int16_t ibus = 0.0f;
         TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyVoltage(vbus));
         TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(ibus));
 
-        printf("vbus: %.2f ibus: %.2f\n", vbus, ibus);
+        printf("vbus: %d mV ibus: %d mA\n", vbus, ibus);
 
         vTaskDelay(pdMS_TO_TICKS(1000));
     }

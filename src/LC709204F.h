@@ -32,13 +32,13 @@ namespace PowerFeather
 
         LC709204F(MasterI2C& i2c):_i2c(i2c) {}
 
-        uint16_t getCellVoltage();
-        uint16_t getRSOC();
-        uint16_t getSOH();
-        uint16_t getTimeToEmpty();
-        uint16_t getTimeToFull();
+        bool getCellVoltage(uint16_t& mV);
+        bool getRSOC(uint8_t& rsoc);
+        bool getSOH(uint8_t& rsoh);
+        bool getTimeToEmpty(uint16_t& minutes);
+        bool getTimeToFull(uint16_t& minutes);
 
-        bool setAPA(uint16_t capacity);
+        bool setAPA(uint16_t mAh);
         bool setChangeOfParameter(ChangeOfParameter param);
         bool enableTSENSE(bool tsense1, bool tsense2);
         bool enableOperation(bool enable);

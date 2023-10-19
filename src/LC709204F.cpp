@@ -55,44 +55,46 @@ namespace PowerFeather
         return crc;
     }
 
-    uint16_t LC709204F::getCellVoltage(void)
+    bool LC709204F::getCellVoltage(uint16_t& mV)
     {
-        uint16_t val = 0;
-        readReg(Registers::Cell_Voltage, val);
-        return val;
+        return readReg(Registers::Cell_Voltage, mV);
     }
 
-    uint16_t LC709204F::getRSOC(void)
+    bool LC709204F::getRSOC(uint8_t& rsoc)
     {
         uint16_t val = 0;
-        readReg(Registers::RSOC, val);
-        return val;
+        if (readReg(Registers::RSOC, val))
+        {
+            rsoc = val;
+            return true;
+        }
+        return false;
     }
 
-    uint16_t LC709204F::getSOH(void)
+    bool LC709204F::getSOH(uint8_t& soh)
     {
         uint16_t val = 0;
-        readReg(Registers::State_Of_Health, val);
-        return val;
+        if (readReg(Registers::State_Of_Health, val))
+        {
+            soh = val;
+            return true;
+        }
+        return false;
     }
 
-    uint16_t LC709204F::getTimeToEmpty(void)
+    bool LC709204F::getTimeToEmpty(uint16_t& minutes)
     {
-        uint16_t val = 0;
-        readReg(Registers::TimeToEmpty, val);
-        return val;
+        return readReg(Registers::TimeToEmpty, minutes);
     }
 
-    uint16_t LC709204F::getTimeToFull(void)
+    bool LC709204F::getTimeToFull(uint16_t& minutes)
     {
-        uint16_t val = 0;
-        readReg(Registers::TimeToFull, val);
-        return val;
+        return readReg(Registers::TimeToFull, minutes);
     }
 
-    bool LC709204F::setAPA(uint16_t capacity)
+    bool LC709204F::setAPA(uint16_t mAh)
     {
-        if (capacity == 500)
+        if (mAh == 500)
         {
             return writeReg(Registers::APA, 0x2121);
         }
