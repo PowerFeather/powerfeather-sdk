@@ -66,10 +66,10 @@ namespace PowerFeather
     Result MainBoard::_initChargerAndFuelGauge(uint16_t mAh)
     {
         RET_IF_FALSE(_i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq), Result::Failure);
+        RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
 
         if (_isFirst())
         {
-            RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
             RET_IF_ERR(enableSQT(true));
 
             RET_IF_ERR(enableCharging(false));
@@ -99,12 +99,12 @@ namespace PowerFeather
     Result MainBoard::init(uint16_t mAh)
     {
         RET_IF_ERR(_initChargerAndFuelGauge(mAh));
+        RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
+        RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
 
         if (_isFirst())
         {
-            RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
             RET_IF_ERR(setEN(true));
-            RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
             RET_IF_ERR(enable3V3(true));
         }
 

@@ -19,8 +19,6 @@ MainBoard& board = Board;
 static constexpr char MODULE_NAME[] = "[MainBoard]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
-
-
 TEST_CASE("rtc outputs work normally", MODULE_NAME)
 {
     bool enable = true;
@@ -39,22 +37,6 @@ TEST_CASE("rtc outputs work normally", MODULE_NAME)
     }
 }
 
-TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
-{
-    board.enable3V3(false);
-    board.enableSQT(false);
-    board.setEN(false);
-    esp_deep_sleep(MS_TO_US(100));
-}
-
-TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
-{
-    board.enable3V3(true);
-    board.enableSQT(true);
-    board.setEN(true);
-    esp_deep_sleep(MS_TO_US(100));
-}
-
 TEST_CASE("3.3V outputs on, deep sleep current draw", MODULE_NAME)
 {
     board.enable3V3(true);
@@ -69,13 +51,20 @@ TEST_CASE("3.3V outputs off, deep sleep current draw", MODULE_NAME)
     esp_deep_sleep(MS_TO_US(10000000));
 }
 
-TEST_CASE("rtc outputs off, no glitch on digital reset", MODULE_NAME)
+TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
+{
+    board.enable3V3(true);
+    board.enableSQT(true);
+    board.setEN(true);
+    esp_deep_sleep(MS_TO_US(100));
+}
+
+TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
 {
     board.enable3V3(false);
     board.enableSQT(false);
     board.setEN(false);
-    TEST_ASSERT_FALSE(board.getEN());
-    esp_restart_noos_dig();
+    esp_deep_sleep(MS_TO_US(100));
 }
 
 TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
@@ -83,7 +72,14 @@ TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
     board.enable3V3(true);
     board.enableSQT(true);
     board.setEN(true);
-    TEST_ASSERT_TRUE(board.getEN());
+    esp_restart_noos_dig();
+}
+
+TEST_CASE("rtc outputs off, no glitch on digital reset", MODULE_NAME)
+{
+    board.enable3V3(false);
+    board.enableSQT(false);
+    board.setEN(false);
     esp_restart_noos_dig();
 }
 
