@@ -120,11 +120,6 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    bool MainBoard::getEN()
-    {
-        return rtc_gpio_get_level(Pin::FFI::EN);
-    }
-
     Result MainBoard::enable3V3(bool enable)
     {
         RET_IF_FALSE(_setRTCPin(Pin::FFI::EN_3V3, enable), Result::Failure);

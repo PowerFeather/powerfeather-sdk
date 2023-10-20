@@ -99,13 +99,6 @@ namespace PowerFeather
         Result setEN(bool value);
 
         /**
-         * Get EN pin state.
-         *
-         * @return EN pin is high if true, low if false
-         */
-        bool getEN();
-
-        /**
          * Enable or disable the header 3.3 V power output.
          *
          * @param enable Enable if true, disable if false.
