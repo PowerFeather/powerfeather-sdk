@@ -125,7 +125,7 @@ namespace PowerFeather
         template <typename T>
         bool readReg(Register reg, T& value);
 
-        bool getBatteryTemperature(float& value);
+        bool getTS_ADC(float& value);
         bool setChargeCurrent(uint16_t current);
         bool enableCharging(bool state);
         bool enableSTAT(bool enable);
