@@ -70,7 +70,7 @@ namespace PowerFeather
 
         if (_isFirst())
         {
-            RET_IF_ERR(enableSQT(true));
+            RET_IF_ERR(enableVSQT(true));
 
             RET_IF_ERR(enableCharging(false));
             RET_IF_ERR(enableChargingTemperatureMonitor(false));
@@ -126,7 +126,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::enableSQT(bool enable)
+    Result MainBoard::enableVSQT(bool enable)
     {
         RET_IF_FALSE(_setRTCPin(Pin::FFI::EN_SQT, enable), Result::Failure)
         _sqtOn = enable;

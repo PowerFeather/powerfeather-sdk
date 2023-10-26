@@ -110,7 +110,7 @@ namespace PowerFeather
          *
          * @param enable Enable if true, disable if false.
          */
-        Result enableSQT(bool enable);
+        Result enableVSQT(bool enable);
 
         /*
          */

@@ -49,7 +49,7 @@ TEST_CASE("rtc outputs work normally", MODULE_NAME)
         printf("enable: %d\n", enable);
 
         TEST_ASSERT_EQUAL(Result::Ok, board.enable3V3(enable));
-        TEST_ASSERT_EQUAL(Result::Ok, board.enableSQT(enable));
+        TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(enable));
         TEST_ASSERT_EQUAL(Result::Ok, board.setEN(enable));
 
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -62,21 +62,21 @@ TEST_CASE("rtc outputs work normally", MODULE_NAME)
 TEST_CASE("3.3V outputs on, deep sleep current draw", MODULE_NAME)
 {
     board.enable3V3(true);
-    board.enableSQT(true);
+    board.enableVSQT(true);
     esp_deep_sleep(MS_TO_US(10000000));
 }
 
 TEST_CASE("3.3V outputs off, deep sleep current draw", MODULE_NAME)
 {
     board.enable3V3(false);
-    board.enableSQT(false);
+    board.enableVSQT(false);
     esp_deep_sleep(MS_TO_US(10000000));
 }
 
 TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
 {
     board.enable3V3(true);
-    board.enableSQT(true);
+    board.enableVSQT(true);
     board.setEN(true);
     esp_deep_sleep(MS_TO_US(100));
 }
@@ -84,7 +84,7 @@ TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
 TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
 {
     board.enable3V3(false);
-    board.enableSQT(false);
+    board.enableVSQT(false);
     board.setEN(false);
     esp_deep_sleep(MS_TO_US(100));
 }
@@ -92,7 +92,7 @@ TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
 TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
 {
     board.enable3V3(true);
-    board.enableSQT(true);
+    board.enableVSQT(true);
     board.setEN(true);
     esp_restart_noos_dig();
 }
@@ -100,7 +100,7 @@ TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
 TEST_CASE("rtc outputs off, no glitch on digital reset", MODULE_NAME)
 {
     board.enable3V3(false);
-    board.enableSQT(false);
+    board.enableVSQT(false);
     board.setEN(false);
     esp_restart_noos_dig();
 }
