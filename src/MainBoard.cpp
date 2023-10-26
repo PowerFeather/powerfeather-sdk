@@ -222,7 +222,7 @@ namespace PowerFeather
         float x = 0;
         RET_IF_FALSE(_charger.getTS_ADC(x), Result::Failure);
         // Map percent to temperature given 103AT thermistor with fitted curve (see ts_calc.fods).
-        celsius = (-1719.60851 * powf(x, 4)) + (2940.83602 * powf(x, 3)) - (1723.27072 * powf(x, 2)) + 248.52686 * x + 84.25823;
+        celsius = (-1866.96172 * powf(x, 4)) + (3169.31754 * powf(x, 3)) - (1849.96775 * powf(x, 2)) + (276.6656 * x) + 81.98758;
         return Result::Ok;
     }
 
