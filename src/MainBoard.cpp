@@ -102,7 +102,7 @@ namespace PowerFeather
     Result MainBoard::init(uint16_t mAh)
     {
         RET_IF_ERR(_initChargerAndFuelGauge(mAh));
-        RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
+        RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN0, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
         RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
 
         if (_isFirst())
@@ -125,7 +125,7 @@ namespace PowerFeather
 
     Result MainBoard::setEN(bool value)
     {
-        RET_IF_FALSE(_setRTCPin(Pin::FFI::EN, value), Result::Failure);
+        RET_IF_FALSE(_setRTCPin(Pin::FFI::EN0, value), Result::Failure);
         return Result::Ok;
     }
 
