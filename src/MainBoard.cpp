@@ -114,6 +114,12 @@ namespace PowerFeather
         return Result::Ok;
     }
 
+    Result MainBoard::enableFuelGauge(bool enable)
+    {
+        RET_IF_FALSE(_fuelGauge.enableOperation(true), Result::Failure);
+        return Result::Ok;
+    }
+
     Result MainBoard::setEN(bool value)
     {
         RET_IF_FALSE(_setRTCPin(Pin::FFI::EN, value), Result::Failure);
@@ -161,7 +167,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::checkSupplyConnected(bool& connected)
+    Result MainBoard::getSupplyStatus(bool& connected)
     {
         connected = gpio_get_level(Pin::FFI::PG) == 0;
         return Result::Ok;
@@ -195,7 +201,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::enableChargingTemperatureMonitor(bool enable)
+    Result MainBoard::enableTempSense(bool enable)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.enableTS(enable), Result::Failure);

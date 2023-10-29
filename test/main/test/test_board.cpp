@@ -69,7 +69,7 @@ TEST_CASE("3.3V outputs on, deep sleep current draw", MODULE_NAME)
 TEST_CASE("3.3V outputs off, deep sleep current draw", MODULE_NAME)
 {
     board.enable3V3(false);
-    board.enableVSQT(false);
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(false));
     esp_deep_sleep(MS_TO_US(10000000));
 }
 
@@ -166,7 +166,7 @@ TEST_CASE("digital pin connections", MODULE_NAME)
 
 TEST_CASE("temperature sense", MODULE_NAME)
 {
-    TEST_ASSERT_EQUAL(Result::Ok, board.enableChargingTemperatureMonitor(true));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableTempSense(true));
     TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
 
     uint8_t adcSetup = 0;
@@ -360,7 +360,7 @@ TEST_CASE("supply connected", MODULE_NAME)
     while (true)
     {
         bool connected;
-        TEST_ASSERT_EQUAL(Result::Ok, board.checkSupplyConnected(connected));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(connected));
         gpio_set_level(MainBoard::Pin::FF::LED, connected);
         printf("supply connected: %d\n", connected);
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -373,7 +373,7 @@ void wait_for_battery()
     while (connected)
     {
         vTaskDelay(pdMS_TO_TICKS(100));
-        board.checkSupplyConnected(connected);
+        board.getSupplyStatus(connected);
     }
     gpio_set_level(MainBoard::Pin::FF::LED, 1);
     vTaskDelay(pdMS_TO_TICKS(1000));

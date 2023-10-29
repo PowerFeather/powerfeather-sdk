@@ -82,66 +82,81 @@ namespace PowerFeather
         /**
          * Initialize and set defaults.
          *
-         * Max input current - 1000 mA.
-         * Max charging current - 250 mA.
-         * Charging - disabled.
-         * 3V3 and SQT enabled.
+         * Max input current: 500 mA
+         * Charging: disabled
+         * 3V3: enabled
+         * VSQT: enabled
+         * Max charging current = 0.5C
          *
-         * @param current The maximum current draw.
+         * @param[in] capacity Battery capacity in mAh.
          */
-        Result init(uint16_t mAh = 0);
+        Result init(uint16_t capacity = 0);
 
         /**
          * Set EN pin state.
          *
-         * @param value EN pin is set high if true, set low if false
+         * @param[in] high EN pin is set high if true, set low if false.
          */
-        Result setEN(bool value);
+        Result setEN(bool high);
 
         /**
          * Enable or disable the header 3.3 V power output.
          *
-         * @param enable Enable if true, disable if false.
+         * @param[in] enable Enable if true, disable if false.
          */
         Result enable3V3(bool enable);
 
         /**
          * Enable or disable the STEMMA QT 3.3 V power output.
          *
-         * @param enable Enable if true, disable if false.
+         * @param[in] enable Enable if true, disable if false.
          */
         Result enableVSQT(bool enable);
 
-        /*
+        /**
+         * Measure the supply voltage.
+         * 
+         * @param[out] voltage Measured voltage in mV.
          */
-        Result setSupplyMinVoltage(uint16_t mV);
-
-        Result getSupplyVoltage(uint16_t& mV);
-
-        Result getSupplyCurrent(int16_t& mA);
+        Result getSupplyVoltage(uint16_t& voltage);
 
         /**
-         * Set the maximum current draw from the power supply (USB/external DC adapter).
+         * Measure the supply current.
+         * 
+         * @param[out] current Measured current in mA.
+         */
+        Result getSupplyCurrent(int16_t& current);
+
+        /**
+         * Check that the power supply, is a 'good' source as determined by the charger.
+         *
+         * @param[out] good If true, supply is good; if not battery is powering the board.
+         * @return
+         */
+        Result getSupplyStatus(bool& good);
+
+        /**
+         * Sets the minimum supply voltage that should be maintained.
+         * 
+         * This is usually the MPP (maximum power point) voltage of the power supply. The
+         * voltage is maintained by automatically reducing current draw. This results to
+         * the maximum power extracted from the supply.
+         * 
+         * @param[in] voltage The maintained voltage in mV.
+         */
+        Result setSupplyMinVoltage(uint16_t voltage);
+
+        /**
+         * Set the maximum current draw from the power supply.
          *
          * This includes current draw from on-board components, the load on the VS pin,
          * and the charger current. The sum of all these current draws must not exceed this
          * current. Default is 1000 mA.
          *
-         * @param current The maximum current draw.
+         * @param[in] current The maximum current draw in mA.
          */
-        Result setSupplyMaxCurrent(uint16_t mA);
+        Result setSupplyMaxCurrent(uint16_t current);
 
-
-        /**
-         * Check that the power supply (USB/external DC adapter), is good
-         * (as determined by the battery charger).
-         *
-         * If false, the system is being powered by the battery.
-         *
-         * @return
-         */
-
-        Result checkSupplyConnected(bool& connected);
         /**
          * Set VBAT minimum output voltage.
          *
@@ -152,42 +167,57 @@ namespace PowerFeather
          */
         Result setVBATMinVoltage(uint16_t mV);
 
-        // Get the power input currently supplying power to the board.
-
         /**
          * Enter ship mode.
          *
          * Ship mode is a low power state that consumes about 1.5 uA. It is only possible to
-         * exit this mode by pulling down QON or by plugging in USB or DC.
-         *
-         * Only able to enter shutdown in battery-only.
+         * exit this mode by pulling down QON or by plugging in supply. Only able to enter
+         * ship mode if battery is powering the board.
          */
         Result enterShipMode();
 
         /**
          * Enter shutdown mode.
          *
-         * Ship mode is a low power state that consumes about 1.5 uA. It is only possible
-         * to exit this mode by plugging in USB or DC.
-         *
-         * Only able to enter shutdown in battery-only.
+         * Ship mode is a low power state that consumes about 1.4 uA. It is only possible
+         * to exit this mode by plugging in supply. Only able to enter shutdown if battery
+         * is powering board.
          */
         Result enterShutdownMode();
 
         /**
          * Power cycle board.
          *
-         * Only able to enter shutdown in battery-only.
+         * This power cycles all components on-board, and all loads connected to power outputs.
          */
         Result doPowerCycle();
 
-
         /**
-         * Enable or disable battery charging.
+         * Enable battery charging.
+         * 
+         * @param[in] enable Charging is enabled if true; otherwise disabled.
          */
         Result enableCharging(bool enable);
 
-        Result enableChargingTemperatureMonitor(bool enable);
+        /**
+         * Enable temperature monitor.
+         * 
+         * If enabled, the value of the 103AT thermistor connected on TS will be monitored.
+         * Charging current will be reduced as temperature approaches 0 °C and 60 °C, and will
+         * be disabled past them.
+         * 
+         * @param[in] enable Battery temperature sensing is enabled if true; otherwise disabled.
+         */
+        Result enableTempSense(bool enable);
+
+        /**
+         * Enable the fuel gauge.
+         * 
+         * Fuel gauge enabled consumes around 2 μA. Disabling the fuel gauge saves around 0.7 μA.
+         * 
+         * @param[in] enable Fuel gauge is enabled if true; otherwise disabled.
+         */
+        Result enableFuelGauge(bool enable);
 
         /**
          * Set maximum charging current.
@@ -196,35 +226,53 @@ namespace PowerFeather
          * current of 1C is usually a good value, i.e. if battery has capacity of 520 mAh, set charging
          * current to 520 mA (520 * 1 = 520). Check datasheet for your battery for maximum charging current.
          *
+         * @param[in] current Maximum charging current in mA.
          */
-        Result setChargingMaxCurrent(uint16_t mA);
-
+        Result setChargingMaxCurrent(uint16_t current);
 
         /**
-         * Get current battery voltage measurement.
+         * Measure battery voltage.
+         * 
+         * @param[out] voltage Battery voltage current in mV.
          */
-        Result getBatteryVoltage(uint16_t& mV);
+        Result getBatteryVoltage(uint16_t& voltage);
 
         /**
-         * Get an estimate of battery state-of-charge from 0 to 1, i.e. getting .68 means
-         * that charge is 68% of capacity.
+         * Get an estimate of battery state-of-charge from 0 (empty) to 100 (full).
+         * 
+         * @param[out] percent Battery charge percentage from 0 to 100.
          */
         Result getBatteryCharge(uint8_t& percent);
 
         /**
-         * Get an estimate of battery state-of-health from 0 to 1, i.e. getting 0.68 means
-         * the battery only has max capacity 68% of the original design capacity.
+         * Get an estimate of battery state-of-health from 0 (dead) to 100 (healthy).
+         * 
+         * @param[out] percent Battery health percentage from 0 to 100.
          */
         Result getBatteryHealth(uint8_t& percent);
 
-        /** Returns remaining battery runtime when discharging;
-         * returns time-to-full charge when charging.
+        /**
+         * Get the time left before fully empty/fully charged.
+         * 
+         * @param[out] minutes Charge/discharge time left in minutes.
          */
         Result getBatteryTimeLeft(int& minutes);
 
+        /**
+         * Measure the battery temperature.
+         * 
+         * Temperature sensing must be enabled via enableTempSense to get a reading.
+         * 
+         * @param[out] celsius Battery current in °C.
+         */
         Result getBatteryTemperature(float& celsius);
 
-        Result getBatteryCurrent(int16_t& mA);
+        /**
+         * Measure the charge/discharge current to/from the battery.
+         * 
+         * @param[out] current Battery current in mA.
+         */
+        Result getBatteryCurrent(int16_t& current);
 
         BQ2562x& getCharger() { return _charger; }
         LC709204F& getFuelGauge() { return _fuelGauge; }
@@ -237,8 +285,8 @@ namespace PowerFeather
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 400000;
         static constexpr uint32_t _i2cTimeout = 1000;
+        static constexpr uint32_t _defaultVSMaxCurrent = 3000;
         static constexpr uint32_t _defaultChargingMaxCurrent = 100;
-        static constexpr uint32_t _defaultVSMaxCurrent = 500;
 
         MasterI2C _i2c {};
         BQ2562x _charger {_i2c};
