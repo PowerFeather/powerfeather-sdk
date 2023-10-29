@@ -63,17 +63,22 @@ namespace PowerFeather
         return inited != initedMagic;
     }
 
-    Result MainBoard::_initChargerAndFuelGauge(uint16_t mAh)
+    Result MainBoard::_initChargerAndFuelGauge(uint16_t capacity)
     {
-        RET_IF_FALSE(_i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq), Result::Failure);
         RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
+        _sqtOn = rtc_gpio_get_level(Pin::FFI::EN_SQT);
+
+        if (_sqtOn || _isFirst())
+        {
+            RET_IF_FALSE(_i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq), Result::Failure);
+        }
 
         if (_isFirst())
         {
             RET_IF_ERR(enableVSQT(true));
 
             RET_IF_ERR(enableCharging(false));
-            RET_IF_ERR(enableChargingTemperatureMonitor(false));
+            RET_IF_ERR(enableTempSense(false));
             RET_IF_ERR(setSupplyMaxCurrent(MainBoard::_defaultVSMaxCurrent));
             RET_IF_ERR(setChargingMaxCurrent(MainBoard::_defaultChargingMaxCurrent));
             RET_IF_FALSE(_charger.setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
@@ -82,16 +87,14 @@ namespace PowerFeather
             // keep some registers from resetting to their POR values.
             RET_IF_FALSE(_sqtOn && _charger.enableWD(false), Result::Failure);
 
-            if (mAh > 0)
+            if (capacity > 0)
             {
-                RET_IF_FALSE(_fuelGauge.setAPA(mAh), Result::Failure);
+                RET_IF_FALSE(_fuelGauge.setAPA(capacity), Result::Failure);
                 RET_IF_FALSE(_fuelGauge.setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);
                 RET_IF_FALSE(_fuelGauge.enableTSENSE(false, false), Result::Failure);
-                RET_IF_FALSE(_fuelGauge.enableOperation(true), Result::Failure);
+                RET_IF_ERR(enableFuelGauge(true));
             }
         }
-
-        _sqtOn = rtc_gpio_get_level(Pin::FFI::EN_SQT);
 
         return Result::Ok;
     }
