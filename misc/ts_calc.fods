@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <office:document xmlns:presentation="urn:oasis:names:tc:opendocument:xmlns:presentation:1.0" xmlns:css3t="http://www.w3.org/TR/css3-text/" xmlns:grddl="http://www.w3.org/2003/g/data-view#" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:formx="urn:openoffice:names:experimental:ooxml-odf-interop:xmlns:form:1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:chart="urn:oasis:names:tc:opendocument:xmlns:chart:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:oooc="http://openoffice.org/2004/calc" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:ooow="http://openoffice.org/2004/writer" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rpt="http://openoffice.org/2005/report" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:config="urn:oasis:names:tc:opendocument:xmlns:config:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:ooo="http://openoffice.org/2004/office" xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:dr3d="urn:oasis:names:tc:opendocument:xmlns:dr3d:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0" xmlns:of="urn:oasis:names:tc:opendocument:xmlns:of:1.2" xmlns:calcext="urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0" xmlns:tableooo="http://openoffice.org/2009/table" xmlns:drawooo="http://openoffice.org/2010/draw" xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0" xmlns:dom="http://www.w3.org/2001/xml-events" xmlns:field="urn:openoffice:names:experimental:ooo-ms-interop:xmlns:field:1.0" xmlns:math="http://www.w3.org/1998/Math/MathML" xmlns:form="urn:oasis:names:tc:opendocument:xmlns:form:1.0" xmlns:script="urn:oasis:names:tc:opendocument:xmlns:script:1.0" xmlns:xforms="http://www.w3.org/2002/xforms" office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.spreadsheet">
- <office:meta><meta:creation-date>2023-10-26T19:43:57.791748373</meta:creation-date><dc:date>2023-10-26T22:10:04.220013117</dc:date><meta:editing-duration>PT1H56M</meta:editing-duration><meta:editing-cycles>15</meta:editing-cycles><meta:generator>LibreOffice/7.3.7.2$Linux_X86_64 LibreOffice_project/30$Build-2</meta:generator><meta:document-statistic meta:table-count="1" meta:cell-count="190" meta:object-count="0"/></office:meta>
+ <office:meta><meta:creation-date>2023-10-26T19:43:57.791748373</meta:creation-date><dc:date>2023-10-30T14:39:52.217697597</dc:date><meta:editing-duration>PT1H58M41S</meta:editing-duration><meta:editing-cycles>16</meta:editing-cycles><meta:generator>LibreOffice/7.3.7.2$Linux_X86_64 LibreOffice_project/30$Build-2</meta:generator><meta:document-statistic meta:table-count="1" meta:cell-count="190" meta:object-count="0"/></office:meta>
  <office:settings>
   <config:config-item-set config:name="ooo:view-settings">
    <config:config-item config:name="VisibleAreaTop" config:type="int">452</config:config-item>
@@ -13,15 +13,15 @@
      <config:config-item config:name="ViewId" config:type="string">view1</config:config-item>
      <config:config-item-map-named config:name="Tables">
       <config:config-item-map-entry config:name="Sheet1">
-       <config:config-item config:name="CursorPositionX" config:type="int">5</config:config-item>
-       <config:config-item config:name="CursorPositionY" config:type="int">21</config:config-item>
+       <config:config-item config:name="CursorPositionX" config:type="int">3</config:config-item>
+       <config:config-item config:name="CursorPositionY" config:type="int">3</config:config-item>
        <config:config-item config:name="ActiveSplitRange" config:type="short">2</config:config-item>
        <config:config-item config:name="PositionLeft" config:type="int">0</config:config-item>
        <config:config-item config:name="PositionRight" config:type="int">0</config:config-item>
        <config:config-item config:name="PositionTop" config:type="int">0</config:config-item>
        <config:config-item config:name="PositionBottom" config:type="int">0</config:config-item>
        <config:config-item config:name="ZoomType" config:type="short">0</config:config-item>
-       <config:config-item config:name="ZoomValue" config:type="int">100</config:config-item>
+       <config:config-item config:name="ZoomValue" config:type="int">290</config:config-item>
        <config:config-item config:name="PageViewZoomValue" config:type="int">60</config:config-item>
        <config:config-item config:name="ShowGrid" config:type="boolean">true</config:config-item>
        <config:config-item config:name="AnchoredTextOverflowLegacy" config:type="boolean">false</config:config-item>
@@ -30,7 +30,7 @@
      <config:config-item config:name="ActiveTable" config:type="string">Sheet1</config:config-item>
      <config:config-item config:name="HorizontalScrollbarWidth" config:type="int">1791</config:config-item>
      <config:config-item config:name="ZoomType" config:type="short">0</config:config-item>
-     <config:config-item config:name="ZoomValue" config:type="int">100</config:config-item>
+     <config:config-item config:name="ZoomValue" config:type="int">290</config:config-item>
      <config:config-item config:name="PageViewZoomValue" config:type="int">60</config:config-item>
      <config:config-item config:name="ShowPageBreakPreview" config:type="boolean">false</config:config-item>
      <config:config-item config:name="ShowZeroValues" config:type="boolean">true</config:config-item>
@@ -75,7 +75,7 @@
    <config:config-item config:name="LoadReadonly" config:type="boolean">false</config:config-item>
    <config:config-item config:name="PrinterName" config:type="string">Generic Printer</config:config-item>
    <config:config-item config:name="PrinterPaperFromSetup" config:type="boolean">false</config:config-item>
-   <config:config-item config:name="PrinterSetup" config:type="base64Binary">lAH+/0dlbmVyaWMgUHJpbnRlcgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU0dFTlBSVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWAAMAtQAAAAAAAAAEAAhSAAAEdAAASm9iRGF0YSAxCnByaW50ZXI9R2VuZXJpYyBQcmludGVyCm9yaWVudGF0aW9uPVBvcnRyYWl0CmNvcGllcz0xCmNvbGxhdGU9ZmFsc2UKbWFyZ2luYWRqdXN0bWVudD0wLDAsMCwwCmNvbG9yZGVwdGg9MjQKcHNsZXZlbD0wCnBkZmRldmljZT0xCmNvbG9yZGV2aWNlPTAKUFBEQ29udGV4dERhdGEKUGFnZVNpemU6QTQAABIAQ09NUEFUX0RVUExFWF9NT0RFDwBEdXBsZXhNb2RlOjpPZmY=</config:config-item>
+   <config:config-item config:name="PrinterSetup" config:type="base64Binary">oAH+/0dlbmVyaWMgUHJpbnRlcgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU0dFTlBSVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWAAMAwQAAAAAAAAAEAAhSAAAEdAAASm9iRGF0YSAxCnByaW50ZXI9R2VuZXJpYyBQcmludGVyCm9yaWVudGF0aW9uPVBvcnRyYWl0CmNvcGllcz0xCmNvbGxhdGU9ZmFsc2UKbWFyZ2luYWRqdXN0bWVudD0wLDAsMCwwCmNvbG9yZGVwdGg9MjQKcHNsZXZlbD0wCnBkZmRldmljZT0xCmNvbG9yZGV2aWNlPTAKUFBEQ29udGV4dERhdGEKRHVwbGV4Ok5vbmUAUGFnZVNpemU6QTQAABIAQ09NUEFUX0RVUExFWF9NT0RFDwBEdXBsZXhNb2RlOjpPZmY=</config:config-item>
    <config:config-item config:name="RasterIsVisible" config:type="boolean">false</config:config-item>
    <config:config-item config:name="RasterResolutionX" config:type="int">1270</config:config-item>
    <config:config-item config:name="RasterResolutionY" config:type="int">1270</config:config-item>
@@ -241,8 +241,8 @@
      <table:table-cell office:value-type="float" office:value="31100" calcext:value-type="float">
       <text:p>31100</text:p>
      </table:table-cell>
-     <table:table-cell office:value-type="float" office:value="28700" calcext:value-type="float">
-      <text:p>28700</text:p>
+     <table:table-cell office:value-type="float" office:value="26000" calcext:value-type="float">
+      <text:p>26000</text:p>
      </table:table-cell>
      <table:table-cell table:number-columns-repeated="3"/>
     </table:table-row>
@@ -256,17 +256,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B4] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B4]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.834352134786365" calcext:value-type="float">
       <text:p>0.834352134786365</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B4] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B4]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.83004355851094" calcext:value-type="float">
-      <text:p>0.83004355851094</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B4] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B4]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.817521413856663" calcext:value-type="float">
+      <text:p>0.817521413856663</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D4]-[.C4])/[.C4]" office:value-type="float" office:value="-0.0051639782482582" calcext:value-type="float">
-      <text:p>-0.0051639782482582</text:p>
+     <table:table-cell table:formula="of:=([.D4]-[.C4])/[.C4]" office:value-type="float" office:value="-0.0201722033515401" calcext:value-type="float">
+      <text:p>-0.0201722033515401</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A4] * (1 + [.E4])" office:value-type="float" office:value="-39.7934408700697" calcext:value-type="float">
-      <text:p>-39.7934408700697</text:p>
+     <table:table-cell table:formula="of:=[.A4] * (1 + [.E4])" office:value-type="float" office:value="-39.1931118659384" calcext:value-type="float">
+      <text:p>-39.1931118659384</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A4] * (1 - [.E4])" office:value-type="float" office:value="-40.2065591299303" calcext:value-type="float">
-      <text:p>-40.2065591299303</text:p>
+     <table:table-cell table:formula="of:=[.A4] * (1 - [.E4])" office:value-type="float" office:value="-40.8068881340616" calcext:value-type="float">
+      <text:p>-40.8068881340616</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -279,17 +279,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B5] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B5]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.828364512843642" calcext:value-type="float">
       <text:p>0.828364512843642</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B5] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B5]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.824339489131843" calcext:value-type="float">
-      <text:p>0.824339489131843</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B5] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B5]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.811987577235913" calcext:value-type="float">
+      <text:p>0.811987577235913</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D5]-[.C5])/[.C5]" office:value-type="float" office:value="-0.00485900065658453" calcext:value-type="float">
-      <text:p>-0.00485900065658453</text:p>
+     <table:table-cell table:formula="of:=([.D5]-[.C5])/[.C5]" office:value-type="float" office:value="-0.019770204244396" calcext:value-type="float">
+      <text:p>-0.019770204244396</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A5] * (1 + [.E5])" office:value-type="float" office:value="-34.8299349770195" calcext:value-type="float">
-      <text:p>-34.8299349770195</text:p>
+     <table:table-cell table:formula="of:=[.A5] * (1 + [.E5])" office:value-type="float" office:value="-34.3080428514461" calcext:value-type="float">
+      <text:p>-34.3080428514461</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A5] * (1 - [.E5])" office:value-type="float" office:value="-35.1700650229805" calcext:value-type="float">
-      <text:p>-35.1700650229805</text:p>
+     <table:table-cell table:formula="of:=[.A5] * (1 - [.E5])" office:value-type="float" office:value="-35.6919571485539" calcext:value-type="float">
+      <text:p>-35.6919571485539</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -302,17 +302,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B6] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B6]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.820993086109365" calcext:value-type="float">
       <text:p>0.820993086109365</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B6] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B6]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.817312342163237" calcext:value-type="float">
-      <text:p>0.817312342163237</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B6] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B6]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.80516857121393" calcext:value-type="float">
+      <text:p>0.80516857121393</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D6]-[.C6])/[.C6]" office:value-type="float" office:value="-0.00448328251285428" calcext:value-type="float">
-      <text:p>-0.00448328251285428</text:p>
+     <table:table-cell table:formula="of:=([.D6]-[.C6])/[.C6]" office:value-type="float" office:value="-0.0192748455050051" calcext:value-type="float">
+      <text:p>-0.0192748455050051</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A6] * (1 + [.E6])" office:value-type="float" office:value="-29.8655015246144" calcext:value-type="float">
-      <text:p>-29.8655015246144</text:p>
+     <table:table-cell table:formula="of:=[.A6] * (1 + [.E6])" office:value-type="float" office:value="-29.4217546348498" calcext:value-type="float">
+      <text:p>-29.4217546348498</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A6] * (1 - [.E6])" office:value-type="float" office:value="-30.1344984753856" calcext:value-type="float">
-      <text:p>-30.1344984753856</text:p>
+     <table:table-cell table:formula="of:=[.A6] * (1 - [.E6])" office:value-type="float" office:value="-30.5782453651502" calcext:value-type="float">
+      <text:p>-30.5782453651502</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -325,17 +325,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B7] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B7]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.811860102534612" calcext:value-type="float">
       <text:p>0.811860102534612</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B7] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B7]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.808598547969426" calcext:value-type="float">
-      <text:p>0.808598547969426</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B7] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B7]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.79671045564146" calcext:value-type="float">
+      <text:p>0.79671045564146</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D7]-[.C7])/[.C7]" office:value-type="float" office:value="-0.00401738495955536" calcext:value-type="float">
-      <text:p>-0.00401738495955536</text:p>
+     <table:table-cell table:formula="of:=([.D7]-[.C7])/[.C7]" office:value-type="float" office:value="-0.0186604155640296" calcext:value-type="float">
+      <text:p>-0.0186604155640296</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A7] * (1 + [.E7])" office:value-type="float" office:value="-24.8995653760111" calcext:value-type="float">
-      <text:p>-24.8995653760111</text:p>
+     <table:table-cell table:formula="of:=[.A7] * (1 + [.E7])" office:value-type="float" office:value="-24.5334896108993" calcext:value-type="float">
+      <text:p>-24.5334896108993</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A7] * (1 - [.E7])" office:value-type="float" office:value="-25.1004346239889" calcext:value-type="float">
-      <text:p>-25.1004346239889</text:p>
+     <table:table-cell table:formula="of:=[.A7] * (1 - [.E7])" office:value-type="float" office:value="-25.4665103891007" calcext:value-type="float">
+      <text:p>-25.4665103891007</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -348,17 +348,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B8] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B8]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.800881801510683" calcext:value-type="float">
       <text:p>0.800881801510683</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B8] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B8]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.798113332972233" calcext:value-type="float">
-      <text:p>0.798113332972233</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B8] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B8]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.786529342523391" calcext:value-type="float">
+      <text:p>0.786529342523391</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D8]-[.C8])/[.C8]" office:value-type="float" office:value="-0.00345677543581025" calcext:value-type="float">
-      <text:p>-0.00345677543581025</text:p>
+     <table:table-cell table:formula="of:=([.D8]-[.C8])/[.C8]" office:value-type="float" office:value="-0.0179208204759037" calcext:value-type="float">
+      <text:p>-0.0179208204759037</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A8] * (1 + [.E8])" office:value-type="float" office:value="-19.9308644912838" calcext:value-type="float">
-      <text:p>-19.9308644912838</text:p>
+     <table:table-cell table:formula="of:=[.A8] * (1 + [.E8])" office:value-type="float" office:value="-19.6415835904819" calcext:value-type="float">
+      <text:p>-19.6415835904819</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A8] * (1 - [.E8])" office:value-type="float" office:value="-20.0691355087162" calcext:value-type="float">
-      <text:p>-20.0691355087162</text:p>
+     <table:table-cell table:formula="of:=[.A8] * (1 - [.E8])" office:value-type="float" office:value="-20.3584164095181" calcext:value-type="float">
+      <text:p>-20.3584164095181</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -371,17 +371,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B9] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B9]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.787618411781385" calcext:value-type="float">
       <text:p>0.787618411781385</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B9] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B9]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.785429907748813" calcext:value-type="float">
-      <text:p>0.785429907748813</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B9] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B9]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.774208583498128" calcext:value-type="float">
+      <text:p>0.774208583498128</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D9]-[.C9])/[.C9]" office:value-type="float" office:value="-0.00277863493264819" calcext:value-type="float">
-      <text:p>-0.00277863493264819</text:p>
+     <table:table-cell table:formula="of:=([.D9]-[.C9])/[.C9]" office:value-type="float" office:value="-0.0170257933063403" calcext:value-type="float">
+      <text:p>-0.0170257933063403</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A9] * (1 + [.E9])" office:value-type="float" office:value="-14.9583204760103" calcext:value-type="float">
-      <text:p>-14.9583204760103</text:p>
+     <table:table-cell table:formula="of:=[.A9] * (1 + [.E9])" office:value-type="float" office:value="-14.7446131004049" calcext:value-type="float">
+      <text:p>-14.7446131004049</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A9] * (1 - [.E9])" office:value-type="float" office:value="-15.0416795239897" calcext:value-type="float">
-      <text:p>-15.0416795239897</text:p>
+     <table:table-cell table:formula="of:=[.A9] * (1 - [.E9])" office:value-type="float" office:value="-15.2553868995951" calcext:value-type="float">
+      <text:p>-15.2553868995951</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -394,17 +394,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B10] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B10]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.7720743912861" calcext:value-type="float">
       <text:p>0.7720743912861</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B10] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B10]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.770543589302693" calcext:value-type="float">
-      <text:p>0.770543589302693</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B10] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B10]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.759740666305678" calcext:value-type="float">
+      <text:p>0.759740666305678</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D10]-[.C10])/[.C10]" office:value-type="float" office:value="-0.00198271306584514" calcext:value-type="float">
-      <text:p>-0.00198271306584514</text:p>
+     <table:table-cell table:formula="of:=([.D10]-[.C10])/[.C10]" office:value-type="float" office:value="-0.0159747883359743" calcext:value-type="float">
+      <text:p>-0.0159747883359743</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A10] * (1 + [.E10])" office:value-type="float" office:value="-9.98017286934155" calcext:value-type="float">
-      <text:p>-9.98017286934155</text:p>
+     <table:table-cell table:formula="of:=[.A10] * (1 + [.E10])" office:value-type="float" office:value="-9.84025211664026" calcext:value-type="float">
+      <text:p>-9.84025211664026</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A10] * (1 - [.E10])" office:value-type="float" office:value="-10.0198271306585" calcext:value-type="float">
-      <text:p>-10.0198271306585</text:p>
+     <table:table-cell table:formula="of:=[.A10] * (1 - [.E10])" office:value-type="float" office:value="-10.1597478833597" calcext:value-type="float">
+      <text:p>-10.1597478833597</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -417,17 +417,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B11] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B11]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.753715711436313" calcext:value-type="float">
       <text:p>0.753715711436313</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B11] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B11]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.752931070508207" calcext:value-type="float">
-      <text:p>0.752931070508207</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B11] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B11]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.742613047544423" calcext:value-type="float">
+      <text:p>0.742613047544423</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D11]-[.C11])/[.C11]" office:value-type="float" office:value="-0.00104103034632325" calcext:value-type="float">
-      <text:p>-0.00104103034632325</text:p>
+     <table:table-cell table:formula="of:=([.D11]-[.C11])/[.C11]" office:value-type="float" office:value="-0.0147305724471795" calcext:value-type="float">
+      <text:p>-0.0147305724471795</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A11] * (1 + [.E11])" office:value-type="float" office:value="-4.99479484826838" calcext:value-type="float">
-      <text:p>-4.99479484826838</text:p>
+     <table:table-cell table:formula="of:=[.A11] * (1 + [.E11])" office:value-type="float" office:value="-4.9263471377641" calcext:value-type="float">
+      <text:p>-4.9263471377641</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A11] * (1 - [.E11])" office:value-type="float" office:value="-5.00520515173162" calcext:value-type="float">
-      <text:p>-5.00520515173162</text:p>
+     <table:table-cell table:formula="of:=[.A11] * (1 - [.E11])" office:value-type="float" office:value="-5.0736528622359" calcext:value-type="float">
+      <text:p>-5.0736528622359</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -440,11 +440,11 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B12] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B12]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.732762030778479" calcext:value-type="float">
       <text:p>0.732762030778479</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B12] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B12]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.732788361283898" calcext:value-type="float">
-      <text:p>0.732788361283898</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B12] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B12]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.72301143313816" calcext:value-type="float">
+      <text:p>0.72301143313816</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D12]-[.C12])/[.C12]" office:value-type="float" office:value="0.0000359332284057213" calcext:value-type="float">
-      <text:p>3.59332284057213E-05</text:p>
+     <table:table-cell table:formula="of:=([.D12]-[.C12])/[.C12]" office:value-type="float" office:value="-0.0133066360301993" calcext:value-type="float">
+      <text:p>-0.0133066360301993</text:p>
      </table:table-cell>
      <table:table-cell table:formula="of:=[.A12] * (1 + [.E12])" office:value-type="float" office:value="0" calcext:value-type="float">
       <text:p>0</text:p>
@@ -463,17 +463,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B13] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B13]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.708827329577756" calcext:value-type="float">
       <text:p>0.708827329577756</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B13] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B13]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.709726801695714" calcext:value-type="float">
-      <text:p>0.709726801695714</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B13] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B13]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.70055171655333" calcext:value-type="float">
+      <text:p>0.70055171655333</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D13]-[.C13])/[.C13]" office:value-type="float" office:value="0.00126895801054064" calcext:value-type="float">
-      <text:p>0.00126895801054064</text:p>
+     <table:table-cell table:formula="of:=([.D13]-[.C13])/[.C13]" office:value-type="float" office:value="-0.0116750761138908" calcext:value-type="float">
+      <text:p>-0.0116750761138908</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A13] * (1 + [.E13])" office:value-type="float" office:value="5.0063447900527" calcext:value-type="float">
-      <text:p>5.0063447900527</text:p>
+     <table:table-cell table:formula="of:=[.A13] * (1 + [.E13])" office:value-type="float" office:value="4.94162461943055" calcext:value-type="float">
+      <text:p>4.94162461943055</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A13] * (1 - [.E13])" office:value-type="float" office:value="4.9936552099473" calcext:value-type="float">
-      <text:p>4.9936552099473</text:p>
+     <table:table-cell table:formula="of:=[.A13] * (1 - [.E13])" office:value-type="float" office:value="5.05837538056945" calcext:value-type="float">
+      <text:p>5.05837538056945</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -486,17 +486,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B14] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B14]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.682352481266202" calcext:value-type="float">
       <text:p>0.682352481266202</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B14] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B14]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.684151427228975" calcext:value-type="float">
-      <text:p>0.684151427228975</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B14] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B14]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.67562171203028" calcext:value-type="float">
+      <text:p>0.67562171203028</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D14]-[.C14])/[.C14]" office:value-type="float" office:value="0.00263638810169634" calcext:value-type="float">
-      <text:p>0.00263638810169634</text:p>
+     <table:table-cell table:formula="of:=([.D14]-[.C14])/[.C14]" office:value-type="float" office:value="-0.00986406501143281" calcext:value-type="float">
+      <text:p>-0.00986406501143281</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A14] * (1 + [.E14])" office:value-type="float" office:value="10.026363881017" calcext:value-type="float">
-      <text:p>10.026363881017</text:p>
+     <table:table-cell table:formula="of:=[.A14] * (1 + [.E14])" office:value-type="float" office:value="9.90135934988567" calcext:value-type="float">
+      <text:p>9.90135934988567</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A14] * (1 - [.E14])" office:value-type="float" office:value="9.97363611898304" calcext:value-type="float">
-      <text:p>9.97363611898304</text:p>
+     <table:table-cell table:formula="of:=[.A14] * (1 - [.E14])" office:value-type="float" office:value="10.0986406501143" calcext:value-type="float">
+      <text:p>10.0986406501143</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -509,17 +509,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B15] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B15]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.653079282849162" calcext:value-type="float">
       <text:p>0.653079282849162</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B15] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B15]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.655791330425639" calcext:value-type="float">
-      <text:p>0.655791330425639</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B15] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B15]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.647950069470481" calcext:value-type="float">
+      <text:p>0.647950069470481</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D15]-[.C15])/[.C15]" office:value-type="float" office:value="0.00415270802136791" calcext:value-type="float">
-      <text:p>0.00415270802136791</text:p>
+     <table:table-cell table:formula="of:=([.D15]-[.C15])/[.C15]" office:value-type="float" office:value="-0.00785389081139512" calcext:value-type="float">
+      <text:p>-0.00785389081139512</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A15] * (1 + [.E15])" office:value-type="float" office:value="15.0622906203205" calcext:value-type="float">
-      <text:p>15.0622906203205</text:p>
+     <table:table-cell table:formula="of:=[.A15] * (1 + [.E15])" office:value-type="float" office:value="14.8821916378291" calcext:value-type="float">
+      <text:p>14.8821916378291</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A15] * (1 - [.E15])" office:value-type="float" office:value="14.9377093796795" calcext:value-type="float">
-      <text:p>14.9377093796795</text:p>
+     <table:table-cell table:formula="of:=[.A15] * (1 - [.E15])" office:value-type="float" office:value="15.1178083621709" calcext:value-type="float">
+      <text:p>15.1178083621709</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -532,17 +532,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B16] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B16]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.621582526871944" calcext:value-type="float">
       <text:p>0.621582526871944</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B16] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B16]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.625181077165899" calcext:value-type="float">
-      <text:p>0.625181077165899</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B16] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B16]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.618050762978299" calcext:value-type="float">
+      <text:p>0.618050762978299</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D16]-[.C16])/[.C16]" office:value-type="float" office:value="0.00578933631237153" calcext:value-type="float">
-      <text:p>0.00578933631237153</text:p>
+     <table:table-cell table:formula="of:=([.D16]-[.C16])/[.C16]" office:value-type="float" office:value="-0.00568189056313694" calcext:value-type="float">
+      <text:p>-0.00568189056313694</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A16] * (1 + [.E16])" office:value-type="float" office:value="20.1157867262474" calcext:value-type="float">
-      <text:p>20.1157867262474</text:p>
+     <table:table-cell table:formula="of:=[.A16] * (1 + [.E16])" office:value-type="float" office:value="19.8863621887373" calcext:value-type="float">
+      <text:p>19.8863621887373</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A16] * (1 - [.E16])" office:value-type="float" office:value="19.8842132737526" calcext:value-type="float">
-      <text:p>19.8842132737526</text:p>
+     <table:table-cell table:formula="of:=[.A16] * (1 - [.E16])" office:value-type="float" office:value="20.1136378112627" calcext:value-type="float">
+      <text:p>20.1136378112627</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -555,17 +555,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B17] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B17]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.588090690770191" calcext:value-type="float">
       <text:p>0.588090690770191</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B17] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B17]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.59252224539092" calcext:value-type="float">
-      <text:p>0.59252224539092</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B17] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B17]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.586113615870153" calcext:value-type="float">
+      <text:p>0.586113615870153</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D17]-[.C17])/[.C17]" office:value-type="float" office:value="0.00753549527357003" calcext:value-type="float">
-      <text:p>0.00753549527357003</text:p>
+     <table:table-cell table:formula="of:=([.D17]-[.C17])/[.C17]" office:value-type="float" office:value="-0.00336185376008648" calcext:value-type="float">
+      <text:p>-0.00336185376008648</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A17] * (1 + [.E17])" office:value-type="float" office:value="25.1883873818392" calcext:value-type="float">
-      <text:p>25.1883873818392</text:p>
+     <table:table-cell table:formula="of:=[.A17] * (1 + [.E17])" office:value-type="float" office:value="24.9159536559978" calcext:value-type="float">
+      <text:p>24.9159536559978</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A17] * (1 - [.E17])" office:value-type="float" office:value="24.8116126181608" calcext:value-type="float">
-      <text:p>24.8116126181608</text:p>
+     <table:table-cell table:formula="of:=[.A17] * (1 - [.E17])" office:value-type="float" office:value="25.0840463440022" calcext:value-type="float">
+      <text:p>25.0840463440022</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -578,17 +578,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B18] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B18]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.55310540854626" calcext:value-type="float">
       <text:p>0.55310540854626</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B18] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B18]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.558285796119054" calcext:value-type="float">
-      <text:p>0.558285796119054</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B18] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B18]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.552592805079994" calcext:value-type="float">
+      <text:p>0.552592805079994</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D18]-[.C18])/[.C18]" office:value-type="float" office:value="0.00936600418789974" calcext:value-type="float">
-      <text:p>0.00936600418789974</text:p>
+     <table:table-cell table:formula="of:=([.D18]-[.C18])/[.C18]" office:value-type="float" office:value="-0.000926773555898752" calcext:value-type="float">
+      <text:p>-0.000926773555898752</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A18] * (1 + [.E18])" office:value-type="float" office:value="30.280980125637" calcext:value-type="float">
-      <text:p>30.280980125637</text:p>
+     <table:table-cell table:formula="of:=[.A18] * (1 + [.E18])" office:value-type="float" office:value="29.972196793323" calcext:value-type="float">
+      <text:p>29.972196793323</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A18] * (1 - [.E18])" office:value-type="float" office:value="29.719019874363" calcext:value-type="float">
-      <text:p>29.719019874363</text:p>
+     <table:table-cell table:formula="of:=[.A18] * (1 - [.E18])" office:value-type="float" office:value="30.027803206677" calcext:value-type="float">
+      <text:p>30.027803206677</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -601,17 +601,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B19] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B19]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.517034538599004" calcext:value-type="float">
       <text:p>0.517034538599004</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B19] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B19]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.522856497839566" calcext:value-type="float">
-      <text:p>0.522856497839566</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B19] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B19]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.5178599103417" calcext:value-type="float">
+      <text:p>0.5178599103417</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D19]-[.C19])/[.C19]" office:value-type="float" office:value="0.011260290765753" calcext:value-type="float">
-      <text:p>0.011260290765753</text:p>
+     <table:table-cell table:formula="of:=([.D19]-[.C19])/[.C19]" office:value-type="float" office:value="0.00159635707303503" calcext:value-type="float">
+      <text:p>0.00159635707303503</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A19] * (1 + [.E19])" office:value-type="float" office:value="35.3941101768014" calcext:value-type="float">
-      <text:p>35.3941101768014</text:p>
+     <table:table-cell table:formula="of:=[.A19] * (1 + [.E19])" office:value-type="float" office:value="35.0558724975562" calcext:value-type="float">
+      <text:p>35.0558724975562</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A19] * (1 - [.E19])" office:value-type="float" office:value="34.6058898231986" calcext:value-type="float">
-      <text:p>34.6058898231986</text:p>
+     <table:table-cell table:formula="of:=[.A19] * (1 - [.E19])" office:value-type="float" office:value="34.9441275024438" calcext:value-type="float">
+      <text:p>34.9441275024438</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -624,17 +624,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B20] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B20]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.480774557162444" calcext:value-type="float">
       <text:p>0.480774557162444</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B20] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B20]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.487107169758122" calcext:value-type="float">
-      <text:p>0.487107169758122</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B20] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B20]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.482767652891135" calcext:value-type="float">
+      <text:p>0.482767652891135</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D20]-[.C20])/[.C20]" office:value-type="float" office:value="0.0131716882712225" calcext:value-type="float">
-      <text:p>0.0131716882712225</text:p>
+     <table:table-cell table:formula="of:=([.D20]-[.C20])/[.C20]" office:value-type="float" office:value="0.00414559318707334" calcext:value-type="float">
+      <text:p>0.00414559318707334</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A20] * (1 + [.E20])" office:value-type="float" office:value="40.5268675308489" calcext:value-type="float">
-      <text:p>40.5268675308489</text:p>
+     <table:table-cell table:formula="of:=[.A20] * (1 + [.E20])" office:value-type="float" office:value="40.1658237274829" calcext:value-type="float">
+      <text:p>40.1658237274829</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A20] * (1 - [.E20])" office:value-type="float" office:value="39.4731324691511" calcext:value-type="float">
-      <text:p>39.4731324691511</text:p>
+     <table:table-cell table:formula="of:=[.A20] * (1 - [.E20])" office:value-type="float" office:value="39.8341762725171" calcext:value-type="float">
+      <text:p>39.8341762725171</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -647,17 +647,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B21] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B21]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.444517949279142" calcext:value-type="float">
       <text:p>0.444517949279142</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B21] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B21]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.451225790093411" calcext:value-type="float">
-      <text:p>0.451225790093411</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B21] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B21]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.447499597837047" calcext:value-type="float">
+      <text:p>0.447499597837047</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D21]-[.C21])/[.C21]" office:value-type="float" office:value="0.0150901461350372" calcext:value-type="float">
-      <text:p>0.0150901461350372</text:p>
+     <table:table-cell table:formula="of:=([.D21]-[.C21])/[.C21]" office:value-type="float" office:value="0.00670759991298517" calcext:value-type="float">
+      <text:p>0.00670759991298517</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A21] * (1 + [.E21])" office:value-type="float" office:value="45.6790565760767" calcext:value-type="float">
-      <text:p>45.6790565760767</text:p>
+     <table:table-cell table:formula="of:=[.A21] * (1 + [.E21])" office:value-type="float" office:value="45.3018419960843" calcext:value-type="float">
+      <text:p>45.3018419960843</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A21] * (1 - [.E21])" office:value-type="float" office:value="44.3209434239233" calcext:value-type="float">
-      <text:p>44.3209434239233</text:p>
+     <table:table-cell table:formula="of:=[.A21] * (1 - [.E21])" office:value-type="float" office:value="44.6981580039157" calcext:value-type="float">
+      <text:p>44.6981580039157</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -670,17 +670,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B22] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B22]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.409088896899328" calcext:value-type="float">
       <text:p>0.409088896899328</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B22] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B22]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.416031890946344" calcext:value-type="float">
-      <text:p>0.416031890946344</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B22] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B22]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.412862246923382" calcext:value-type="float">
+      <text:p>0.412862246923382</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D22]-[.C22])/[.C22]" office:value-type="float" office:value="0.0169718467053024" calcext:value-type="float">
-      <text:p>0.0169718467053024</text:p>
+     <table:table-cell table:formula="of:=([.D22]-[.C22])/[.C22]" office:value-type="float" office:value="0.00922378987221236" calcext:value-type="float">
+      <text:p>0.00922378987221236</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A22] * (1 + [.E22])" office:value-type="float" office:value="50.8485923352651" calcext:value-type="float">
-      <text:p>50.8485923352651</text:p>
+     <table:table-cell table:formula="of:=[.A22] * (1 + [.E22])" office:value-type="float" office:value="50.4611894936106" calcext:value-type="float">
+      <text:p>50.4611894936106</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A22] * (1 - [.E22])" office:value-type="float" office:value="49.1514076647349" calcext:value-type="float">
-      <text:p>49.1514076647349</text:p>
+     <table:table-cell table:formula="of:=[.A22] * (1 - [.E22])" office:value-type="float" office:value="49.5388105063894" calcext:value-type="float">
+      <text:p>49.5388105063894</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -693,17 +693,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B23] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B23]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.374631907567067" calcext:value-type="float">
       <text:p>0.374631907567067</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B23] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B23]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.38167821794839" calcext:value-type="float">
-      <text:p>0.38167821794839</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B23] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B23]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.379008746355685" calcext:value-type="float">
+      <text:p>0.379008746355685</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D23]-[.C23])/[.C23]" office:value-type="float" office:value="0.0188086231818393" calcext:value-type="float">
-      <text:p>0.0188086231818393</text:p>
+     <table:table-cell table:formula="of:=([.D23]-[.C23])/[.C23]" office:value-type="float" office:value="0.0116830379372697" calcext:value-type="float">
+      <text:p>0.0116830379372697</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A23] * (1 + [.E23])" office:value-type="float" office:value="56.0344742750012" calcext:value-type="float">
-      <text:p>56.0344742750012</text:p>
+     <table:table-cell table:formula="of:=[.A23] * (1 + [.E23])" office:value-type="float" office:value="55.6425670865498" calcext:value-type="float">
+      <text:p>55.6425670865498</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A23] * (1 - [.E23])" office:value-type="float" office:value="53.9655257249988" calcext:value-type="float">
-      <text:p>53.9655257249988</text:p>
+     <table:table-cell table:formula="of:=[.A23] * (1 - [.E23])" office:value-type="float" office:value="54.3574329134502" calcext:value-type="float">
+      <text:p>54.3574329134502</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -716,17 +716,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B24] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B24]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.341835360571849" calcext:value-type="float">
       <text:p>0.341835360571849</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B24] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B24]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.348864541993029" calcext:value-type="float">
-      <text:p>0.348864541993029</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B24] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B24]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.346632998119388" calcext:value-type="float">
+      <text:p>0.346632998119388</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D24]-[.C24])/[.C24]" office:value-type="float" office:value="0.0205630611456377" calcext:value-type="float">
-      <text:p>0.0205630611456377</text:p>
+     <table:table-cell table:formula="of:=([.D24]-[.C24])/[.C24]" office:value-type="float" office:value="0.0140349364077299" calcext:value-type="float">
+      <text:p>0.0140349364077299</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A24] * (1 + [.E24])" office:value-type="float" office:value="61.2337836687383" calcext:value-type="float">
-      <text:p>61.2337836687383</text:p>
+     <table:table-cell table:formula="of:=[.A24] * (1 + [.E24])" office:value-type="float" office:value="60.8420961844638" calcext:value-type="float">
+      <text:p>60.8420961844638</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A24] * (1 - [.E24])" office:value-type="float" office:value="58.7662163312617" calcext:value-type="float">
-      <text:p>58.7662163312617</text:p>
+     <table:table-cell table:formula="of:=[.A24] * (1 - [.E24])" office:value-type="float" office:value="59.1579038155362" calcext:value-type="float">
+      <text:p>59.1579038155362</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -739,17 +739,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B25] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B25]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.310720015812645" calcext:value-type="float">
       <text:p>0.310720015812645</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B25] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B25]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.317628303264906" calcext:value-type="float">
-      <text:p>0.317628303264906</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B25] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B25]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.315777420281313" calcext:value-type="float">
+      <text:p>0.315777420281313</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D25]-[.C25])/[.C25]" office:value-type="float" office:value="0.0222331587947224" calcext:value-type="float">
-      <text:p>0.0222331587947224</text:p>
+     <table:table-cell table:formula="of:=([.D25]-[.C25])/[.C25]" office:value-type="float" office:value="0.0162764038726014" calcext:value-type="float">
+      <text:p>0.0162764038726014</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A25] * (1 + [.E25])" office:value-type="float" office:value="66.445155321657" calcext:value-type="float">
-      <text:p>66.445155321657</text:p>
+     <table:table-cell table:formula="of:=[.A25] * (1 + [.E25])" office:value-type="float" office:value="66.0579662517191" calcext:value-type="float">
+      <text:p>66.0579662517191</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A25] * (1 - [.E25])" office:value-type="float" office:value="63.554844678343" calcext:value-type="float">
-      <text:p>63.554844678343</text:p>
+     <table:table-cell table:formula="of:=[.A25] * (1 - [.E25])" office:value-type="float" office:value="63.9420337482809" calcext:value-type="float">
+      <text:p>63.9420337482809</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -762,17 +762,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B26] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B26]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.281751008013688" calcext:value-type="float">
       <text:p>0.281751008013688</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B26] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B26]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.288454702440133" calcext:value-type="float">
-      <text:p>0.288454702440133</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B26] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B26]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.28692738846941" calcext:value-type="float">
+      <text:p>0.28692738846941</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D26]-[.C26])/[.C26]" office:value-type="float" office:value="0.0237929740649561" calcext:value-type="float">
-      <text:p>0.0237929740649561</text:p>
+     <table:table-cell table:formula="of:=([.D26]-[.C26])/[.C26]" office:value-type="float" office:value="0.0183721807854905" calcext:value-type="float">
+      <text:p>0.0183721807854905</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A26] * (1 + [.E26])" office:value-type="float" office:value="71.6655081845469" calcext:value-type="float">
-      <text:p>71.6655081845469</text:p>
+     <table:table-cell table:formula="of:=[.A26] * (1 + [.E26])" office:value-type="float" office:value="71.2860526549843" calcext:value-type="float">
+      <text:p>71.2860526549843</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A26] * (1 - [.E26])" office:value-type="float" office:value="68.3344918154531" calcext:value-type="float">
-      <text:p>68.3344918154531</text:p>
+     <table:table-cell table:formula="of:=[.A26] * (1 - [.E26])" office:value-type="float" office:value="68.7139473450157" calcext:value-type="float">
+      <text:p>68.7139473450157</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -785,17 +785,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B27] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B27]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.254770854231988" calcext:value-type="float">
       <text:p>0.254770854231988</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B27] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B27]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.261203815304738" calcext:value-type="float">
-      <text:p>0.261203815304738</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B27] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B27]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.259950820115113" calcext:value-type="float">
+      <text:p>0.259950820115113</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D27]-[.C27])/[.C27]" office:value-type="float" office:value="0.0252499882380271" calcext:value-type="float">
-      <text:p>0.0252499882380271</text:p>
+     <table:table-cell table:formula="of:=([.D27]-[.C27])/[.C27]" office:value-type="float" office:value="0.0203318621305415" calcext:value-type="float">
+      <text:p>0.0203318621305415</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A27] * (1 + [.E27])" office:value-type="float" office:value="76.893749117852" calcext:value-type="float">
-      <text:p>76.893749117852</text:p>
+     <table:table-cell table:formula="of:=[.A27] * (1 + [.E27])" office:value-type="float" office:value="76.5248896597906" calcext:value-type="float">
+      <text:p>76.5248896597906</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A27] * (1 - [.E27])" office:value-type="float" office:value="73.106250882148" calcext:value-type="float">
-      <text:p>73.106250882148</text:p>
+     <table:table-cell table:formula="of:=[.A27] * (1 - [.E27])" office:value-type="float" office:value="73.4751103402094" calcext:value-type="float">
+      <text:p>73.4751103402094</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -808,17 +808,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B28] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B28]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.229997357514148" calcext:value-type="float">
       <text:p>0.229997357514148</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B28] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B28]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.236113330610747" calcext:value-type="float">
-      <text:p>0.236113330610747</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B28] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B28]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.23508902028895" calcext:value-type="float">
+      <text:p>0.23508902028895</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D28]-[.C28])/[.C28]" office:value-type="float" office:value="0.0265914928880128" calcext:value-type="float">
-      <text:p>0.0265914928880128</text:p>
+     <table:table-cell table:formula="of:=([.D28]-[.C28])/[.C28]" office:value-type="float" office:value="0.0221379185823424" calcext:value-type="float">
+      <text:p>0.0221379185823424</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A28] * (1 + [.E28])" office:value-type="float" office:value="82.127319431041" calcext:value-type="float">
-      <text:p>82.127319431041</text:p>
+     <table:table-cell table:formula="of:=[.A28] * (1 + [.E28])" office:value-type="float" office:value="81.7710334865874" calcext:value-type="float">
+      <text:p>81.7710334865874</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A28] * (1 - [.E28])" office:value-type="float" office:value="77.872680568959" calcext:value-type="float">
-      <text:p>77.872680568959</text:p>
+     <table:table-cell table:formula="of:=[.A28] * (1 - [.E28])" office:value-type="float" office:value="78.2289665134126" calcext:value-type="float">
+      <text:p>78.2289665134126</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
@@ -831,17 +831,17 @@
      <table:table-cell table:formula="of:= ((1 / ((1 / [.C$3]) + (1/ ([.$B29] * 1000)))) / ((1 / ((1 / [.C$3]) + (1/ ([.$B29]*1000)))) + [.C$2]))" office:value-type="float" office:value="0.20733676274912" calcext:value-type="float">
       <text:p>0.20733676274912</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B29] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B29]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.213105215701245" calcext:value-type="float">
-      <text:p>0.213105215701245</text:p>
+     <table:table-cell table:formula="of:= ((1 / ((1 / [.D$3]) + (1/ ([.$B29] * 1000)))) / ((1 / ((1 / [.D$3]) + (1/ ([.$B29]*1000)))) + [.D$2]))" office:value-type="float" office:value="0.212270454367704" calcext:value-type="float">
+      <text:p>0.212270454367704</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=([.D29]-[.C29])/[.C29]" office:value-type="float" office:value="0.0278216601611819" calcext:value-type="float">
-      <text:p>0.0278216601611819</text:p>
+     <table:table-cell table:formula="of:=([.D29]-[.C29])/[.C29]" office:value-type="float" office:value="0.0237955466901651" calcext:value-type="float">
+      <text:p>0.0237955466901651</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A29] * (1 + [.E29])" office:value-type="float" office:value="87.3648411137004" calcext:value-type="float">
-      <text:p>87.3648411137004</text:p>
+     <table:table-cell table:formula="of:=[.A29] * (1 + [.E29])" office:value-type="float" office:value="87.022621468664" calcext:value-type="float">
+      <text:p>87.022621468664</text:p>
      </table:table-cell>
-     <table:table-cell table:formula="of:=[.A29] * (1 - [.E29])" office:value-type="float" office:value="82.6351588862995" calcext:value-type="float">
-      <text:p>82.6351588862995</text:p>
+     <table:table-cell table:formula="of:=[.A29] * (1 - [.E29])" office:value-type="float" office:value="82.977378531336" calcext:value-type="float">
+      <text:p>82.977378531336</text:p>
      </table:table-cell>
     </table:table-row>
     <table:table-row table:style-name="ro1">
