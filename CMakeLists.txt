@@ -11,7 +11,7 @@ idf_component_register(SRCS "${CMAKE_CURRENT_LIST_DIR}/src/MainBoard.cpp"
                             "${CMAKE_CURRENT_LIST_DIR}/src/3rdparty/arduino-esp32/libraries/Wire/src/Wire.cpp"
                        INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src" 
                             "${CMAKE_CURRENT_LIST_DIR}/src/3rdparty/arduino-esp32/cores/esp32"
-                            "${CMAKE_CURRENT_LIST_DIR}/src/3rdparty/arduino-esp32/variants/powerfeather_esp32s3"
+                            "${CMAKE_CURRENT_LIST_DIR}/src/3rdparty/arduino-esp32/variants/esp32s3_powerfeather"
                             "${CMAKE_CURRENT_LIST_DIR}/src/3rdparty/arduino-esp32/libraries/Wire/src"
                        PRIV_REQUIRES spi_flash nvs_flash
                             )
