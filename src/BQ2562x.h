@@ -29,6 +29,7 @@ namespace PowerFeather
 
             static constexpr Register Charger_Control_0_EN_CHG =             { 0x16, 1, 5, 5 };
             static constexpr Register Charger_Control_0_WATCHDOG =           { 0x16, 1, 0, 1 };
+            static constexpr Register Charger_Control_0_EN_HIZ =             { 0x16, 1, 4, 4 };
 
             static constexpr Register Charger_Control_2 =                    { 0x18, 1, 0, 7 };
             static constexpr Register Charger_Control_2_BATFET_CTRL =        { 0x18, 1, 0, 1 };
@@ -131,6 +132,7 @@ namespace PowerFeather
         bool enableSTAT(bool enable);
         bool enableTS(bool enable);
         bool enableWD(bool enable);
+        bool enableHIZ(bool enable);
         bool setBATFETControl(BATFETControl control);
         bool setBATFETDelay(BATFETDelay delay);
         bool enableWVBUS(bool enable);

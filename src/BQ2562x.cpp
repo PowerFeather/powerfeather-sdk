@@ -58,6 +58,11 @@ namespace PowerFeather
         return writeReg(Registers::Charger_Control_0_WATCHDOG, enable);
     }
 
+    bool BQ2562x::enableHIZ(bool enable)
+    {
+        return writeReg(Registers::Charger_Control_0_EN_HIZ, enable);
+    }
+
     bool BQ2562x::enableTS(bool enable)
     {
         return writeReg(Registers::NTC_Control_0_TS_IGNORE, !enable) &&
@@ -236,6 +241,7 @@ namespace PowerFeather
 
             case 0x00:
             default:
+
                 break;
             }
 

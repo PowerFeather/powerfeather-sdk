@@ -115,14 +115,14 @@ namespace PowerFeather
 
         /**
          * Measure the supply voltage.
-         * 
+         *
          * @param[out] voltage Measured voltage in mV.
          */
         Result getSupplyVoltage(uint16_t& voltage);
 
         /**
          * Measure the supply current.
-         * 
+         *
          * @param[out] current Measured current in mA.
          */
         Result getSupplyCurrent(int16_t& current);
@@ -136,12 +136,23 @@ namespace PowerFeather
         Result getSupplyStatus(bool& good);
 
         /**
+         * Enable or disable the supply.
+         *
+         * Disabling the supply means that the battery will power the board, even if a USB or DC
+         * adapter is connected.
+         *
+         * @param[in] enable If true, supply is enabled; otherwise disabled.
+         * @return
+         */
+        Result enableSupply(bool enable);
+
+        /**
          * Sets the minimum supply voltage that should be maintained.
-         * 
+         *
          * This is usually the MPP (maximum power point) voltage of the power supply. The
          * voltage is maintained by automatically reducing current draw. This results to
          * the maximum power extracted from the supply.
-         * 
+         *
          * @param[in] voltage The maintained voltage in mV.
          */
         Result setSupplyMinVoltage(uint16_t voltage);
@@ -194,27 +205,27 @@ namespace PowerFeather
 
         /**
          * Enable battery charging.
-         * 
+         *
          * @param[in] enable Charging is enabled if true; otherwise disabled.
          */
         Result enableCharging(bool enable);
 
         /**
          * Enable temperature monitor.
-         * 
+         *
          * If enabled, the value of the 103AT thermistor connected on TS will be monitored.
          * Charging current will be reduced as temperature approaches 0 °C and 60 °C, and will
          * be disabled past them.
-         * 
+         *
          * @param[in] enable Battery temperature sensing is enabled if true; otherwise disabled.
          */
         Result enableTempSense(bool enable);
 
         /**
          * Enable the fuel gauge.
-         * 
+         *
          * Fuel gauge enabled consumes around 2 μA. Disabling the fuel gauge saves around 0.7 μA.
-         * 
+         *
          * @param[in] enable Fuel gauge is enabled if true; otherwise disabled.
          */
         Result enableFuelGauge(bool enable);
@@ -232,44 +243,44 @@ namespace PowerFeather
 
         /**
          * Measure battery voltage.
-         * 
+         *
          * @param[out] voltage Battery voltage current in mV.
          */
         Result getBatteryVoltage(uint16_t& voltage);
 
         /**
          * Get an estimate of battery state-of-charge from 0 (empty) to 100 (full).
-         * 
+         *
          * @param[out] percent Battery charge percentage from 0 to 100.
          */
         Result getBatteryCharge(uint8_t& percent);
 
         /**
          * Get an estimate of battery state-of-health from 0 (dead) to 100 (healthy).
-         * 
+         *
          * @param[out] percent Battery health percentage from 0 to 100.
          */
         Result getBatteryHealth(uint8_t& percent);
 
         /**
          * Get the time left before fully empty/fully charged.
-         * 
+         *
          * @param[out] minutes Charge/discharge time left in minutes.
          */
         Result getBatteryTimeLeft(int& minutes);
 
         /**
          * Measure the battery temperature.
-         * 
+         *
          * Temperature sensing must be enabled via enableTempSense to get a reading.
-         * 
+         *
          * @param[out] celsius Battery current in °C.
          */
         Result getBatteryTemperature(float& celsius);
 
         /**
          * Measure the charge/discharge current to/from the battery.
-         * 
+         *
          * @param[out] current Battery current in mA.
          */
         Result getBatteryCurrent(int16_t& current);

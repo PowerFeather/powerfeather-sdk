@@ -123,6 +123,13 @@ namespace PowerFeather
         return Result::Ok;
     }
 
+    Result MainBoard::enableSupply(bool enable)
+    {
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_charger.enableHIZ(true), Result::Failure);
+        return Result::Ok;
+    }
+
     Result MainBoard::setEN(bool value)
     {
         RET_IF_FALSE(_setRTCPin(Pin::FFI::EN0, value), Result::Failure);
