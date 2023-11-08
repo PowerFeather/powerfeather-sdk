@@ -265,6 +265,9 @@ namespace PowerFeather
         /**
          * Get the time left before fully empty/fully charged.
          *
+         * Needs ten minutes for the fuel gauge to get an estimate. In the meantime, returns
+         * 65535 when charging or -65535 when discharging.
+         *
          * @param[out] minutes Charge/discharge time left in minutes.
          */
         Result getBatteryTimeLeft(int& minutes);

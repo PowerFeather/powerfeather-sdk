@@ -273,7 +273,23 @@ namespace PowerFeather
     Result MainBoard::getBatteryTimeLeft(int& minutes)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        minutes = 0;
+
+        int16_t ibat = 0;
+        RET_IF_ERR(getBatteryCurrent(ibat));
+
+        uint16_t mins = 0;
+
+        if (ibat < 0)
+        {
+            _fuelGauge.getTimeToEmpty(mins);
+            minutes = mins * -1;
+        }
+        else
+        {
+            _fuelGauge.getTimeToFull(mins);
+            minutes = mins;
+        }
+
         return Result::Ok;
     }
 }

@@ -96,17 +96,20 @@ namespace PowerFeather
         uint16_t data = 0;
         if (readReg(Registers::IBAT_ADC, data))
         {
-            if (data >= 0x38AD && data <= 0x3FFF)
+            if (data != 0x2000)
             {
-                data = (0x3FFF - data + 1) * 4;
-            }
-            else
-            {
-                data *= 4;
-            }
+                if (data >= 0x38AD && data <= 0x3FFF)
+                {
+                    data = ((0x3FFF - data + 1) * 4) * - 1;
+                }
+                else
+                {
+                    data *= 4;
+                }
 
-            value = data;
-            return true;
+                value = data;
+                return true;
+            }
         }
         return false;
     }
