@@ -9,7 +9,7 @@ namespace PowerFeather
         reply[1] = static_cast<uint8_t>(reg);     // register
         reply[2] = reply[0] | 0x1;                // read byte
 
-        if (!_i2c.read(_i2cAddress, reply[0], reply + 3, 3)) {
+        if (!_i2c.read(_i2cAddress, reply[1], reply + 3, 3)) {
             return false;
         }
 
