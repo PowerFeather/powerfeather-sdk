@@ -19,6 +19,7 @@ namespace PowerFeather
             Change_Of_The_Parameter = 0x12,
             Status_Bit = 0x16,
             IC_Power_Mode = 0x15,
+            Cycle_Count = 0x17,
         };
 
         enum class ChangeOfParameter
@@ -37,6 +38,7 @@ namespace PowerFeather
         bool getSOH(uint8_t& rsoh);
         bool getTimeToEmpty(uint16_t& minutes);
         bool getTimeToFull(uint16_t& minutes);
+        bool getBatteryCycles(uint16_t& cycles);
 
         bool setAPA(uint16_t mAh);
         bool setChangeOfParameter(ChangeOfParameter param);

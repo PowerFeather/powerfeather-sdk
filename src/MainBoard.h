@@ -282,6 +282,13 @@ namespace PowerFeather
         Result getBatteryTemperature(float& celsius);
 
         /**
+         * Get the number of charge/discharge cycles the battery has gone through.
+         *
+         * @param[out] cycles Number of battery cycles.
+         */
+        Result getBatteryCycles(uint16_t& cycles);
+
+        /**
          * Measure the charge/discharge current to/from the battery.
          *
          * Returns a negative value when the battery is discharging, positive when charging.

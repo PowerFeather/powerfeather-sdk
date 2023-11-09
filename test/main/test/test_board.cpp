@@ -216,20 +216,19 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     // Enable charging, then disable again once another SOC is reached
     TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
     board.getCharger().setChargeCurrent(50);
-    TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(true));
-    TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(true));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
 
     while (true)
     {
         uint8_t soc = 0;
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCharge(soc));
 
-        if (soc > 95)
+        if (soc > 70)
         {
             TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
             TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(false));
         }
-        else if (soc < 5)
+        else if (soc < 60)
         {
             TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(true));
             TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(true));
@@ -424,5 +423,16 @@ TEST_CASE("power cycle", MODULE_NAME)
 
 TEST_CASE("set VBAT min", MODULE_NAME)
 {
-    board.setVBATMinVoltage(3.7);
+    TEST_ASSERT_EQUAL(Result::Ok, board.setVBATMinVoltage(3.7));
+}
+
+TEST_CASE("battery health", MODULE_NAME)
+{
+    uint8_t percent;
+
+    while (true)
+    {
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryHealth(percent));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
 }
