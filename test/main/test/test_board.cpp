@@ -216,7 +216,8 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     // Enable charging, then disable again once another SOC is reached
     TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
     board.getCharger().setChargeCurrent(50);
-    TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(true));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(true));
 
     while (true)
     {
