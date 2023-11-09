@@ -126,7 +126,7 @@ namespace PowerFeather
     Result MainBoard::enableSupply(bool enable)
     {
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.enableHIZ(true), Result::Failure);
+        RET_IF_FALSE(_charger.enableHIZ(!enable), Result::Failure);
         return Result::Ok;
     }
 
