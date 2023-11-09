@@ -242,8 +242,9 @@ TEST_CASE("discharging and charging", MODULE_NAME)
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
 
         int timeLeft = 0;
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryTimeLeft(timeLeft));
+        Result timeLeftRes = board.getBatteryTimeLeft(timeLeft);
 
+        TEST_ASSERT_TRUE(timeLeftRes == Result::Ok || timeLeftRes == Result::NotReady);
 
         BQ2562x::ChargeStat stat;
         TEST_ASSERT_TRUE(board.getCharger().getChargeStat(stat));
@@ -255,8 +256,8 @@ TEST_CASE("discharging and charging", MODULE_NAME)
 
         const char* statStr[] = {"terminated", "trickle", "taper", "topoff"};
 
-        printf("time: %ld\tsoc: %d\tstat: %s\tvbat: %d mV\tibat: %d mA\ttimeLeft: %d\n",
-                time(NULL), soc, statStr[static_cast<int>(stat)], vbat, ibat, timeLeft);
+        printf("time: %ld\tsoc: %d\tstat: %s\tvbat: %d mV\tibat: %d mA\ttimeLeft: %s\n",
+                time(NULL), soc, statStr[static_cast<int>(stat)], vbat, ibat, timeLeftRes == Result::Ok ? String(timeLeft).c_str() : "<estimating>");
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

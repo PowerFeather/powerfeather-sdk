@@ -278,18 +278,23 @@ namespace PowerFeather
         RET_IF_ERR(getBatteryCurrent(ibat));
 
         uint16_t mins = 0;
+        bool discharging = ibat < 0;
 
-        if (ibat < 0)
+        if (discharging)
         {
             _fuelGauge.getTimeToEmpty(mins);
-            minutes = mins * -1;
         }
         else
         {
             _fuelGauge.getTimeToFull(mins);
-            minutes = mins;
         }
 
+        if (mins == 0xFFFF)
+        {
+            return Result::NotReady;
+        }
+
+        minutes = mins * (discharging ? -1 : 1);
         return Result::Ok;
     }
 }

@@ -8,6 +8,7 @@ namespace PowerFeather
         Failure = -1,
         InvalidState = -2,
         Timeout = -3,
-        InvalidArg = -4
+        InvalidArg = -4,
+        NotReady = -5
     };
 }
