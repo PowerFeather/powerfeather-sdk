@@ -215,23 +215,47 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     // Disable charging initially, until certain SOC
     // Enable charging, then disable again once another SOC is reached
     TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
-    board.getCharger().enableCharging(true);
     board.getCharger().setChargeCurrent(50);
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
 
     while (true)
     {
-        uint16_t vbat = 0.0f;
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
+        uint8_t soc = 0;
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCharge(soc));
+
+        if (soc > 95)
+        {
+            TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
+            TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(false));
+        }
+        else if (soc < 5)
+        {
+            TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(true));
+            TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(true));
+        } else { }
 
         int16_t ibat = 0.0f;
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(ibat));
 
+        uint16_t vbat = 0.0f;
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
+
+        int timeLeft = 0;
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryTimeLeft(timeLeft));
+
+
         BQ2562x::ChargeStat stat;
         TEST_ASSERT_TRUE(board.getCharger().getChargeStat(stat));
 
-        const char* statStr[] = {"trickle", "taper", "topoff", "terminated"};
+        if (stat != BQ2562x::ChargeStat::Terminated)
+        {
+            TEST_ASSERT_EQUAL(ibat < 0, timeLeft < 0);
+        }
 
-        printf("time: %ld\tstat: %s\tvbat: %d mV\tibat: %d mV\n", time(NULL), statStr[static_cast<int>(stat)], vbat, ibat);
+        const char* statStr[] = {"terminated", "trickle", "taper", "topoff"};
+
+        printf("time: %ld\tsoc: %d\tstat: %s\tvbat: %d mV\tibat: %d mA\ttimeLeft: %d\n",
+                time(NULL), soc, statStr[static_cast<int>(stat)], vbat, ibat, timeLeft);
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
