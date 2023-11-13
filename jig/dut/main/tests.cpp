@@ -1,41 +1,81 @@
-#include "tests.h"
+#include <cstdint>
 
+#include <Arduino.h>
 
-void test_gpio_pins()
+#include <MainBoard.h>
+
+using namespace PowerFeather;
+
+MainBoard& board = Board;
+
+static void test(bool assertion, const char* error)
 {
-    /**
-     * Test that pins are brought out properly. Pair up pins,
-     * one generates a frequency and the other measures.
-    */
 }
 
-void test_vusb_vdc()
+extern "C" {
+
+/**
+ * Test communication with charger and fuel gauge; as well as default
+ * configuration of SDK-managed pins.
+ */
+void test_board_init()
 {
-    /**
-     * Test the transition from VDC->VUSB and vice versa.
-     * Test that VDC and VUSB can be enabled at the same time.
-    */
+    board.init();
 }
 
-void test_vbat()
+void test_ref_analog()
 {
     /**
-     * Enable VBAT regulator output. Read the voltage using charger and fuel guage.
-     */
-}
-
-void test_qon()
-{
-    /**
-     * Hold QON for 10s, see if it resets.
+     * Read a reference analog voltage as reference.
+     * Make sures that analog read is working properly.
      * 
-     * 1 digital.
     */
 }
 
-void test_i2c()
+void test_internal_3V3()
 {
+    /**
+     * Test the supply voltage.
+    */
 
+   #define TEST_INT_3V3_PIN 0
+
+}
+
+/**
+ * Check that 3V3 can be enabled/disabled.
+*/
+void test_3V3()
+{
+   uint16_t val = 0;
+
+   board.enable3V3(false);
+   vTaskDelay(pdMS_TO_TICKS(100));
+   val = analogRead(A0);
+   printf("val: %d volt: %.02f\n", val, (val/4095.0f) * 3.3f);
+
+   board.enable3V3(true);
+   vTaskDelay(pdMS_TO_TICKS(100));
+   val = analogRead(A0);
+   printf("val: %d volt: %.02f\n", val, (val/4095.0f) * 3.3f);
+}
+
+void test_SQT()
+{
+    /**
+     * Test SQT enable, disable. Configure SDA and SCL pin
+     * as input with pull downs. Read voltage.
+    */
+
+}
+
+
+void test_ts()
+{
+    /**
+     * Test the voltage of the TS PIN is expected from the
+     * voltage divider.
+    */
 }
 
 void test_en()
@@ -44,10 +84,24 @@ void test_en()
      * Pull down from header pin, read value.
      * Pull down using EN0, read value.
      * 
-     * 1 digital
+     * 
+     * D13 <-> EN
     */
 
+   uint16_t val = 0;
+
+   board.setEN(false);
+   vTaskDelay(pdMS_TO_TICKS(100));
+   val = analogRead(EN);
+   printf("val: %d volt: %.02f\n", val, (val/4095.0f) * 3.3f);
+
+   board.setEN(true);
+   vTaskDelay(pdMS_TO_TICKS(100));
+   val = analogRead(EN);
+   printf("val: %d volt: %.02f\n", val, (val/4095.0f) * 3.3f);
 }
+
+
 
 void test_power_input_output()
 {
@@ -61,14 +115,30 @@ void test_power_input_output()
      * A. VDC
      * B. VUSB
      * 
-     * 3 analog-in, 2 digital
+     * VBAT_EN <-> D11
+     * VDC_EN <-> D7
+     * VUSB_EN <-> D12
     */
 }
 
-void test_ts_voltage()
+void test_gpio_pins()
 {
     /**
-     * Test the voltage of the TS PIN is expected from the
-     * voltage divider.
+     * Test that pins are brought out properly. Pair up remaining pins,
+     * one generates a frequency and the other measures.
+     * 
+     * 
+     * LED - BTN
+     * USBDP - USBDM
     */
+}
+
+void test_qon()
+{
+    /**
+     * Hold QON for 10s, see if it resets.
+     * 
+     * QON <->
+    */
+}
 }
