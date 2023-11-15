@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <tuple>
 
 #include <Arduino.h>
 
@@ -28,7 +29,7 @@ void test_ref_analog()
     /**
      * Read a reference analog voltage as reference.
      * Make sures that analog read is working properly.
-     * 
+     *
     */
 }
 
@@ -69,7 +70,6 @@ void test_SQT()
 
 }
 
-
 void test_ts()
 {
     /**
@@ -83,8 +83,8 @@ void test_en()
     /**
      * Pull down from header pin, read value.
      * Pull down using EN0, read value.
-     * 
-     * 
+     *
+     *
      * D13 <-> EN
     */
 
@@ -101,8 +101,6 @@ void test_en()
    printf("val: %d volt: %.02f\n", val, (val/4095.0f) * 3.3f);
 }
 
-
-
 void test_power_input_output()
 {
     /**
@@ -110,11 +108,11 @@ void test_power_input_output()
      * 1. 3V3
      * 2. VBAT
      * 3. VS
-     * 
+     *
      * With power inputs:
      * A. VDC
      * B. VUSB
-     * 
+     *
      * VBAT_EN <-> D11
      * VDC_EN <-> D7
      * VUSB_EN <-> D12
@@ -124,20 +122,65 @@ void test_power_input_output()
 void test_gpio_pins()
 {
     /**
-     * Test that pins are brought out properly. Pair up remaining pins,
-     * one generates a frequency and the other measures.
-     * 
-     * 
-     * LED - BTN
-     * USBDP - USBDM
-    */
+     * Test that pins are brought out properly. Pair up pins,
+     * one of the pin is an output and one is an input. The output pins
+     * are set one by one, and only the corresponding pin should read a high.
+     */
+
+    std::vector<std::tuple<typeof(D5), typeof(D6)>> pairs =
+    {
+        {D5, D6},
+        {D12, D13}
+    };
+
+    static constexpr int input = 0;
+    static constexpr int output = 1;
+
+    // Initialize the output and input pins
+    for (auto pair:pairs)
+    {
+        pinMode(std::get<input>(pair), OUTPUT);
+        pinMode(std::get<output>(pair), INPUT);
+    }
+
+    for (auto cur:pairs)
+    {
+        // Reset all pairs
+        for (auto pair:pairs)
+        {
+            digitalWrite(std::get<output>(pair), false);
+        }
+
+        // Set only the current pair
+        digitalWrite(std::get<output>(cur), true);
+
+        // Read all pairs, to verify only the current pair is set
+        for (auto pair:pairs)
+        {
+            bool val = digitalRead(std::get<input>(pair));
+            if (std::get<output>(pair) == std::get<output>(cur))
+            {
+                if (val != true)
+                {
+                    printf("pair failed!\n");
+                }
+            }
+            else
+            {
+                if (val == true)
+                {
+                    printf("pair failed!\n");
+                }
+            }
+        }
+    }
 }
 
 void test_qon()
 {
     /**
      * Hold QON for 10s, see if it resets.
-     * 
+     *
      * QON <->
     */
 }
