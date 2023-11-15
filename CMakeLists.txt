@@ -19,4 +19,4 @@ idf_component_register(SRCS "${CMAKE_CURRENT_LIST_DIR}/src/MainBoard.cpp"
                        PRIV_REQUIRES spi_flash nvs_flash
                             )
 
-target_compile_options(${COMPONENT_LIB} PRIVATE -std=gnu++17)
+target_compile_options(${COMPONENT_LIB} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-std=gnu++17>)
