@@ -12,9 +12,9 @@ namespace PowerFeather
 
     static_assert(CHAR_BIT == 8, "Unsupported architecture");
 
-    #define RET_IF_ERR(f)        { Result r = (f); if (r != Result::Ok) { abort(); return r; } }
-    #define RET_IF_NOK(f, r)     { if ((f) != ESP_OK) { abort(); return (r); } }
-    #define RET_IF_FALSE(f, r)   { if ((f) == false) { abort(); return (r); } }
+    #define RET_IF_ERR(f)        { Result r = (f); if (r != Result::Ok) { return r; } }
+    #define RET_IF_NOK(f, r)     { if ((f) != ESP_OK) { return (r); } }
+    #define RET_IF_FALSE(f, r)   { if ((f) == false) { return (r); } }
 
     static RTC_NOINIT_ATTR uint32_t first;
     static const uint32_t firstMagic = 0xdeadbeef;
