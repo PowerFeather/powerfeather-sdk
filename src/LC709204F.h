@@ -39,6 +39,7 @@ namespace PowerFeather
         bool getTimeToEmpty(uint16_t& minutes);
         bool getTimeToFull(uint16_t& minutes);
         bool getBatteryCycles(uint16_t& cycles);
+        bool getOperation(bool& enabled);
 
         bool setAPA(uint16_t mAh);
         bool setChangeOfParameter(ChangeOfParameter param);

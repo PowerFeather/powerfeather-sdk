@@ -87,7 +87,8 @@ namespace PowerFeather
             // keep some registers from resetting to their POR values.
             RET_IF_FALSE(_sqtOn && _charger.enableWD(false), Result::Failure);
 
-            if (capacity > 0)
+            bool enabled = false;
+            if (capacity > 0 && _fuelGauge.getOperation(enabled) && !enabled)
             {
                 RET_IF_FALSE(_fuelGauge.setAPA(capacity), Result::Failure);
                 RET_IF_FALSE(_fuelGauge.setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);

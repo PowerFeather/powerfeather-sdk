@@ -82,6 +82,14 @@ namespace PowerFeather
         return false;
     }
 
+    bool LC709204F::getOperation(bool& enabled)
+    {
+        uint16_t val = 0;
+        bool res = readReg(Registers::IC_Power_Mode, val);
+        enabled = val == 0x0001;
+        return res;
+    }
+
     bool LC709204F::getTimeToEmpty(uint16_t& minutes)
     {
         return readReg(Registers::TimeToEmpty, minutes);
