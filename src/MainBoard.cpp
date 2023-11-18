@@ -65,12 +65,12 @@ namespace PowerFeather
 
     Result MainBoard::_initChargerAndFuelGauge(uint16_t capacity)
     {
-        RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
-        _sqtOn = rtc_gpio_get_level(Pin::FFI::EN_SQT);
+        RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
+        _sqtOn = rtc_gpio_get_level(Pin::EN_SQT);
 
         if (_sqtOn || _isFirst())
         {
-            RET_IF_FALSE(_i2c.init(_i2cPort, Pin::FFI::SDA0, Pin::FFI::SCL0, _i2cFreq), Result::Failure);
+            RET_IF_FALSE(_i2c.init(_i2cPort, Pin::SDA0, Pin::SCL0, _i2cFreq), Result::Failure);
         }
 
         if (_isFirst())
@@ -103,8 +103,8 @@ namespace PowerFeather
     {
         _initDone = false;
         RET_IF_ERR(_initChargerAndFuelGauge(mAh));
-        RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN0, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
-        RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
+        RET_IF_FALSE(_initInternalRTCPin(Pin::EN0, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
+        RET_IF_FALSE(_initInternalRTCPin(Pin::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
 
         if (_isFirst())
         {
@@ -112,7 +112,7 @@ namespace PowerFeather
             RET_IF_ERR(enable3V3(true));
         }
 
-        RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::PG, GPIO_MODE_INPUT), Result::Failure);
+        RET_IF_FALSE(_initInternalDigitalPin(Pin::PG, GPIO_MODE_INPUT), Result::Failure);
 
         first = firstMagic;
         _initDone = true;
@@ -137,21 +137,21 @@ namespace PowerFeather
     Result MainBoard::setEN(bool value)
     {
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState );
-        RET_IF_FALSE(_setRTCPin(Pin::FFI::EN0, value), Result::Failure);
+        RET_IF_FALSE(_setRTCPin(Pin::EN0, value), Result::Failure);
         return Result::Ok;
     }
 
     Result MainBoard::enable3V3(bool enable)
     {
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState );
-        RET_IF_FALSE(_setRTCPin(Pin::FFI::EN_3V3, enable), Result::Failure);
+        RET_IF_FALSE(_setRTCPin(Pin::EN_3V3, enable), Result::Failure);
         return Result::Ok;
     }
 
     Result MainBoard::enableVSQT(bool enable)
     {
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState );
-        RET_IF_FALSE(_setRTCPin(Pin::FFI::EN_SQT, enable), Result::Failure)
+        RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, enable), Result::Failure)
         _sqtOn = enable;
         return Result::Ok;
     }
@@ -191,7 +191,7 @@ namespace PowerFeather
     Result MainBoard::getSupplyStatus(bool& connected)
     {
         RET_IF_FALSE(_initDone, Result::InvalidState );
-        connected = gpio_get_level(Pin::FFI::PG) == 0;
+        connected = gpio_get_level(Pin::PG) == 0;
         return Result::Ok;
     }
 
