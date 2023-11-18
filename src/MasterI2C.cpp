@@ -22,11 +22,14 @@ namespace PowerFeather
 
     bool MasterI2C::write(uint8_t address, uint8_t reg, const uint8_t *buf, size_t len)
     {
-        return i2c_master_write_read_device(_port, address, &reg, 1, const_cast<uint8_t*>(buf), len, pdMS_TO_TICKS(1000)) == ESP_OK;
+        uint8_t buf2[len + sizeof(reg)];
+        memcpy(buf2, &reg, sizeof(reg));
+        memcpy(&(buf2[sizeof(reg)]), buf, len);
+        return i2c_master_write_to_device(_port, address, const_cast<uint8_t*>(buf2), sizeof(buf2), pdMS_TO_TICKS(1000)) == ESP_OK;
     }
 
     bool MasterI2C::read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len)
     {
-        return i2c_master_write_read_device(_port, address, &reg, 1, buf, len, pdMS_TO_TICKS(1000)) == ESP_OK;
+        return i2c_master_write_read_device(_port, address, &reg, sizeof(reg), buf, len, pdMS_TO_TICKS(1000)) == ESP_OK;
     }
 }
