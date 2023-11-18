@@ -6,12 +6,12 @@ namespace PowerFeather
     {
         i2c_config_t conf;
         memset(&conf, 0, sizeof(conf));
-        conf.mode = I2C_MODE_MASTER,
-        conf.sda_io_num = sdaPin,
-        conf.scl_io_num = sclPin,
-        conf.sda_pullup_en = GPIO_PULLUP_DISABLE,
-        conf.scl_pullup_en = GPIO_PULLUP_DISABLE,
-        conf.master.clk_speed = freq,
+        conf.mode = I2C_MODE_MASTER;
+        conf.sda_io_num = sdaPin;
+        conf.scl_io_num = sclPin;
+        conf.sda_pullup_en = GPIO_PULLUP_DISABLE;
+        conf.scl_pullup_en = GPIO_PULLUP_DISABLE;
+        conf.master.clk_speed = freq;
 
         i2c_param_config(port, &conf);
 
