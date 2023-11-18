@@ -16,8 +16,8 @@ namespace PowerFeather
     #define RET_IF_NOK(f, r)     { if ((f) != ESP_OK) { abort(); return (r); } }
     #define RET_IF_FALSE(f, r)   { if ((f) == false) { abort(); return (r); } }
 
-    static RTC_NOINIT_ATTR uint32_t inited;
-    static const uint32_t initedMagic = 0xdeadbeef;
+    static RTC_NOINIT_ATTR uint32_t first;
+    static const uint32_t firstMagic = 0xdeadbeef;
 
     /*static*/ MainBoard& MainBoard::get()
     {
@@ -60,7 +60,7 @@ namespace PowerFeather
 
     bool MainBoard::_isFirst()
     {
-        return inited != initedMagic;
+        return first != firstMagic;
     }
 
     Result MainBoard::_initChargerAndFuelGauge(uint16_t capacity)
@@ -101,6 +101,7 @@ namespace PowerFeather
 
     Result MainBoard::init(uint16_t mAh)
     {
+        _initDone = false;
         RET_IF_ERR(_initChargerAndFuelGauge(mAh));
         RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN0, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
         RET_IF_FALSE(_initInternalRTCPin(Pin::FFI::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
@@ -113,7 +114,8 @@ namespace PowerFeather
 
         RET_IF_FALSE(_initInternalDigitalPin(Pin::FFI::PG, GPIO_MODE_INPUT), Result::Failure);
 
-        inited = initedMagic;
+        first = firstMagic;
+        _initDone = true;
         return Result::Ok;
     }
 
@@ -132,18 +134,21 @@ namespace PowerFeather
 
     Result MainBoard::setEN(bool value)
     {
+        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState );
         RET_IF_FALSE(_setRTCPin(Pin::FFI::EN0, value), Result::Failure);
         return Result::Ok;
     }
 
     Result MainBoard::enable3V3(bool enable)
     {
+        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState );
         RET_IF_FALSE(_setRTCPin(Pin::FFI::EN_3V3, enable), Result::Failure);
         return Result::Ok;
     }
 
     Result MainBoard::enableVSQT(bool enable)
     {
+        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState );
         RET_IF_FALSE(_setRTCPin(Pin::FFI::EN_SQT, enable), Result::Failure)
         _sqtOn = enable;
         return Result::Ok;
@@ -158,6 +163,7 @@ namespace PowerFeather
 
     Result MainBoard::setSupplyMaxCurrent(uint16_t mA)
     {
+        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.setIINDPM(mA), Result::Failure);
         return Result::Ok;
@@ -213,6 +219,7 @@ namespace PowerFeather
 
     Result MainBoard::enableTempSense(bool enable)
     {
+        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.enableTS(enable), Result::Failure);
         return Result::Ok;
@@ -220,6 +227,7 @@ namespace PowerFeather
 
     Result MainBoard::enableCharging(bool enable)
     {
+        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.enableCharging(enable), Result::Failure);
         return Result::Ok;
@@ -227,6 +235,7 @@ namespace PowerFeather
 
     Result MainBoard::setChargingMaxCurrent(uint16_t mA)
     {
+        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.setChargeCurrent(mA), Result::Failure);
         return Result::Ok;
