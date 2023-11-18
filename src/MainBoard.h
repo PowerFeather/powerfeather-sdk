@@ -6,6 +6,7 @@
 #include <MasterI2C.h>
 #endif
 
+#include <Mutex.h>
 #include <BQ2562x.h>
 #include <LC709204F.h>
 
@@ -315,6 +316,7 @@ namespace PowerFeather
 
         bool _sqtOn;
         bool _initDone;
+        Mutex _mutex;
 
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);

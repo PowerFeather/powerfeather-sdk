@@ -103,6 +103,9 @@ namespace PowerFeather
     Result MainBoard::init(uint16_t mAh)
     {
         _initDone = false;
+
+        _mutex.init();
+
         RET_IF_ERR(_initChargerAndFuelGauge(mAh));
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN0, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
@@ -267,6 +270,9 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
+
+        Mutex::Lock lock(_mutex);
+
         RET_IF_FALSE(_charger.getIBAT(mA), Result::Failure);
         return Result::Ok;
     }
