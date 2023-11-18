@@ -20,7 +20,7 @@ extern "C" void app_main(void)
     //set as output mode
     io_conf.mode = GPIO_MODE_OUTPUT;
     //bit mask of the pins that you want to set,e.g.GPIO18/19
-    io_conf.pin_bit_mask = ((uint64_t)0b1 << MainBoard::Pin::FF::LED);
+    io_conf.pin_bit_mask = ((uint64_t)0b1 << MainBoard::Pin::LED);
     //disable pull-down mode
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     //disable pull-up mode
@@ -30,7 +30,7 @@ extern "C" void app_main(void)
 
     //interrupt of rising edge
     //bit mask of the pins, use GPIO4/5 here
-    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::FF::BTN;
+    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::BTN;
     //set as input mode
     io_conf.mode = GPIO_MODE_INPUT;
     //enable pull-up mode

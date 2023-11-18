@@ -36,7 +36,7 @@ TEST_CASE("rtc outputs work normally", MODULE_NAME)
     //set as output mode
     io_conf.mode = GPIO_MODE_INPUT;
     //bit mask of the pins that you want to set,e.g.GPIO18/19
-    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::FF::EN;
+    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::EN;
     //disable pull-down mode
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     //disable pull-up mode
@@ -54,7 +54,7 @@ TEST_CASE("rtc outputs work normally", MODULE_NAME)
 
         vTaskDelay(pdMS_TO_TICKS(1000));
 
-        TEST_ASSERT_EQUAL(enable, gpio_get_level(MainBoard::Pin::FF::EN));
+        TEST_ASSERT_EQUAL(enable, gpio_get_level(MainBoard::Pin::EN));
         enable = !enable;
     }
 }
@@ -187,16 +187,16 @@ TEST_CASE("temperature sense", MODULE_NAME)
 
 static void button_anyedge_handler(void *arg)
 {
-    gpio_set_level(MainBoard::Pin::FF::LED, gpio_get_level(MainBoard::Pin::FF::BTN));
+    gpio_set_level(MainBoard::Pin::LED, gpio_get_level(MainBoard::Pin::BTN));
 }
 
 TEST_CASE("button and led", MODULE_NAME)
 {
-    gpio_set_level(MainBoard::Pin::FF::LED, true);
+    gpio_set_level(MainBoard::Pin::LED, true);
 
-    gpio_set_intr_type(MainBoard::Pin::FF::BTN, GPIO_INTR_ANYEDGE);
+    gpio_set_intr_type(MainBoard::Pin::BTN, GPIO_INTR_ANYEDGE);
     gpio_install_isr_service(0);
-    gpio_isr_handler_add(MainBoard::Pin::FF::BTN, button_anyedge_handler, NULL);
+    gpio_isr_handler_add(MainBoard::Pin::BTN, button_anyedge_handler, NULL);
 
     while (true)
     {
@@ -386,7 +386,7 @@ TEST_CASE("supply connected", MODULE_NAME)
     {
         bool connected;
         TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(connected));
-        gpio_set_level(MainBoard::Pin::FF::LED, connected);
+        gpio_set_level(MainBoard::Pin::LED, connected);
         printf("supply connected: %d\n", connected);
         vTaskDelay(pdMS_TO_TICKS(10));
     }
@@ -400,7 +400,7 @@ void wait_for_battery()
         vTaskDelay(pdMS_TO_TICKS(100));
         board.getSupplyStatus(connected);
     }
-    gpio_set_level(MainBoard::Pin::FF::LED, 1);
+    gpio_set_level(MainBoard::Pin::LED, 1);
     vTaskDelay(pdMS_TO_TICKS(1000));
 }
 
