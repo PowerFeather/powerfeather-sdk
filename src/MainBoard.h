@@ -1,6 +1,11 @@
 #include <driver/rtc_io.h>
 
+#ifdef ARDUINO
+#include <ArduinoMasterI2C.h>
+#else
 #include <MasterI2C.h>
+#endif
+
 #include <BQ2562x.h>
 #include <LC709204F.h>
 
@@ -299,7 +304,11 @@ namespace PowerFeather
         static constexpr uint32_t _defaultVSMaxCurrent = 3000;
         static constexpr uint32_t _defaultChargingMaxCurrent = 100;
 
+#ifdef ARDUINO
+        ArduinoMasterI2C _i2c {};
+#else
         MasterI2C _i2c {};
+#endif
         BQ2562x _charger {_i2c};
         LC709204F _fuelGauge {_i2c};
 
