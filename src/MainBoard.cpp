@@ -121,12 +121,14 @@ namespace PowerFeather
 
     Result MainBoard::enableFuelGauge(bool enable)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_fuelGauge.enableOperation(true), Result::Failure);
         return Result::Ok;
     }
 
     Result MainBoard::enableSupply(bool enable)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.enableHIZ(!enable), Result::Failure);
         return Result::Ok;
@@ -156,6 +158,7 @@ namespace PowerFeather
 
     Result MainBoard::setSupplyMinVoltage(uint16_t mV)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.setVINDPM(mV), Result::Failure);
         return Result::Ok;
@@ -171,6 +174,7 @@ namespace PowerFeather
 
     Result MainBoard::getSupplyCurrent(int16_t& mA)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.getIBUS(mA), Result::Failure);
         return Result::Ok;
@@ -178,6 +182,7 @@ namespace PowerFeather
 
     Result MainBoard::getSupplyVoltage(uint16_t& mV)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.getVBUS(mV), Result::Failure);
         return Result::Ok;
@@ -185,12 +190,14 @@ namespace PowerFeather
 
     Result MainBoard::getSupplyStatus(bool& connected)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         connected = gpio_get_level(Pin::FFI::PG) == 0;
         return Result::Ok;
     }
 
     Result MainBoard::setVBATMinVoltage(uint16_t mV)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.setVINDPM(mV), Result::Failure);
         return Result::Ok;
@@ -198,6 +205,7 @@ namespace PowerFeather
 
     Result MainBoard::enterShipMode()
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.setBATFETControl(BQ2562x::BATFETControl::ShipMode), Result::Failure);
         return Result::Ok;
@@ -205,6 +213,7 @@ namespace PowerFeather
 
     Result MainBoard::enterShutdownMode()
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.setBATFETControl(BQ2562x::BATFETControl::ShutdownMode), Result::Failure);
         return Result::Ok;
@@ -212,6 +221,7 @@ namespace PowerFeather
 
     Result MainBoard::doPowerCycle()
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset), Result::Failure);
         return Result::Ok;
@@ -235,7 +245,7 @@ namespace PowerFeather
 
     Result MainBoard::setChargingMaxCurrent(uint16_t mA)
     {
-        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState );
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.setChargeCurrent(mA), Result::Failure);
         return Result::Ok;
@@ -243,6 +253,7 @@ namespace PowerFeather
 
     Result MainBoard::getBatteryTemperature(float& celsius)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         float x = 0;
         RET_IF_FALSE(_charger.getTS_ADC(x), Result::Failure);
@@ -253,6 +264,7 @@ namespace PowerFeather
 
     Result MainBoard::getBatteryCurrent(int16_t& mA)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.getIBAT(mA), Result::Failure);
         return Result::Ok;
@@ -260,6 +272,7 @@ namespace PowerFeather
 
     Result MainBoard::getBatteryVoltage(uint16_t& mV)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_charger.getVBAT(mV), Result::Failure);
         return Result::Ok;
@@ -267,6 +280,7 @@ namespace PowerFeather
 
     Result MainBoard::getBatteryCharge(uint8_t& percent)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_fuelGauge.getRSOC(percent), Result::Failure);
         return Result::Ok;
@@ -274,6 +288,7 @@ namespace PowerFeather
 
     Result MainBoard::getBatteryHealth(uint8_t& percent)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         percent = _fuelGauge.getSOH(percent) / 100.0f;
         return Result::Ok;
@@ -281,6 +296,7 @@ namespace PowerFeather
 
     Result MainBoard::getBatteryTimeLeft(int& minutes)
     {
+        RET_IF_FALSE(_initDone, Result::InvalidState );
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
 
         int16_t ibat = 0;
