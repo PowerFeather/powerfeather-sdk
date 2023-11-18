@@ -309,6 +309,7 @@ namespace PowerFeather
 #else
         MasterI2C _i2c {};
 #endif
+
         BQ2562x _charger {_i2c};
         LC709204F _fuelGauge {_i2c};
 
