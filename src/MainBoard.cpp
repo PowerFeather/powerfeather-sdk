@@ -270,9 +270,6 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-
-        Mutex::Lock lock(_mutex);
-
         RET_IF_FALSE(_charger.getIBAT(mA), Result::Failure);
         return Result::Ok;
     }
