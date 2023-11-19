@@ -1,5 +1,7 @@
 #include "ArduinoMasterI2C.h"
 
+#ifdef ARDUINO
+
 namespace PowerFeather
 {
     bool ArduinoMasterI2C::init(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq)
@@ -53,3 +55,5 @@ namespace PowerFeather
         return false;
     }
 }
+
+#endif

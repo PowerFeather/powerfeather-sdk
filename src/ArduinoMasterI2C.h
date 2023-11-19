@@ -1,3 +1,4 @@
+#ifdef ARDUINO
 
 #include <Wire.h>
 
@@ -16,3 +17,5 @@ namespace PowerFeather
         TwoWire *_wire;
     };
 }
+
+#endif

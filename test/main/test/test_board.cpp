@@ -1,4 +1,5 @@
 #include <time.h>
+#include <string>
 
 #include <esp_private/system_internal.h>
 #include <esp_sleep.h>
@@ -256,7 +257,7 @@ TEST_CASE("discharging and charging", MODULE_NAME)
         const char* statStr[] = {"terminated", "trickle", "taper", "topoff"};
 
         printf("time: %ld\tsoc: %d\tstat: %s\tvbat: %d mV\tibat: %d mA\ttimeLeft: %s\n",
-                time(NULL), soc, statStr[static_cast<int>(stat)], vbat, ibat, timeLeftRes == Result::Ok ? String(timeLeft).c_str() : "<estimating>");
+                time(NULL), soc, statStr[static_cast<int>(stat)], vbat, ibat, timeLeftRes == Result::Ok ? std::to_string(timeLeft).c_str() : "<estimating>");
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

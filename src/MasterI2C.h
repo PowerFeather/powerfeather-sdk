@@ -3,8 +3,6 @@
 #include <cstring>
 #include <driver/i2c.h>
 
-#include <Wire.h>
-
 namespace PowerFeather
 {
     class MasterI2C

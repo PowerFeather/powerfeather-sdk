@@ -1,6 +1,7 @@
 #include <climits>
 #include <cstdint>
 #include <cstring>
+#include <math.h>
 
 #include <soc/reset_reasons.h>
 
