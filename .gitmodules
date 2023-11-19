@@ -1,3 +1,0 @@
-[submodule "3rdparty/arduino-esp32"]
-	path = src/3rdparty/arduino-esp32
-	url = https://github.com/powerfeather/arduino-esp32.git
