@@ -15,6 +15,7 @@ namespace PowerFeather
     #define RET_IF_ERR(f)        { Result r = (f); if (r != Result::Ok) { return r; } }
     #define RET_IF_NOK(f, r)     { if ((f) != ESP_OK) { return (r); } }
     #define RET_IF_FALSE(f, r)   { if ((f) == false) { return (r); } }
+    #define TRY_LOCK(m)          Mutex::Lock m##lock(m); RET_IF_FALSE(m##lock.isLocked(), Result::Timeout);
 
     static RTC_NOINIT_ATTR uint32_t first;
     static const uint32_t firstMagic = 0xdeadbeef;
@@ -302,6 +303,8 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
+
+        TRY_LOCK(_mutex);
 
         int16_t ibat = 0;
         RET_IF_ERR(getBatteryCurrent(ibat));

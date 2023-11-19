@@ -314,9 +314,9 @@ namespace PowerFeather
         BQ2562x _charger {_i2c};
         LC709204F _fuelGauge {_i2c};
 
-        bool _sqtOn;
-        bool _initDone;
-        Mutex _mutex;
+        bool _sqtOn { false };
+        bool _initDone { false };
+        Mutex _mutex { 1000 };
 
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
