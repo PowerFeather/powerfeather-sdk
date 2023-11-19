@@ -1,6 +1,9 @@
 #pragma once
 
+#include <tuple>
+
 #include <MasterI2C.h>
+
 namespace PowerFeather
 {
     class LC709204F
@@ -47,6 +50,20 @@ namespace PowerFeather
         bool enableOperation(bool enable);
 
     private:
+
+        static constexpr std::tuple<uint16_t, uint8_t> _apaTable[] = {
+            { 50, 0x13 },
+            { 100, 0x15 },
+            { 200, 0x18 },
+            { 500, 0x21 },
+            { 1000, 0x2D },
+            { 2000, 0x3A },
+            { 3000, 0x3F },
+            { 4000, 0x42 },
+            { 5000, 0x44 },
+            { 6000, 0x45 },
+        };
+
         static constexpr uint8_t _i2cAddress = 0x0b;
 
         MasterI2C& _i2c;

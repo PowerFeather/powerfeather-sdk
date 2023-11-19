@@ -102,9 +102,32 @@ namespace PowerFeather
 
     bool LC709204F::setAPA(uint16_t mAh)
     {
-        if (mAh == 500)
+        auto cur = _apaTable[0];
+        for (int i = 0; i < sizeof(_apaTable)/sizeof(cur); i++)
         {
-            return writeReg(Registers::APA, 0x2121);
+            cur = _apaTable[i];
+            uint16_t cap = std::get<0>(cur);
+            uint16_t apa = 0;
+
+            if (mAh == cap)
+            {
+                apa = (std::get<1>(cur) << 8) | std::get<1>(cur);
+            }
+            else
+            {
+                auto prev = _apaTable[i - 1];
+                uint16_t prev_cap = std::get<0>(prev);
+                if (mAh < cap && (i != 0 && cap > prev_cap))
+                {
+                    apa = std::get<1>(prev) + (std::get<1>(cur) - std::get<1>(prev)) + ((mAh - prev_cap) / (cap - prev_cap));
+                    apa = (apa << 8) | apa;
+                }
+            }
+
+            if (apa)
+            {
+                return writeReg(Registers::APA, apa);
+            }
         }
         return false;
     }
