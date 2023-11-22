@@ -46,6 +46,6 @@ namespace PowerFeather
         virtual bool write(uint8_t address, uint8_t reg, const uint8_t *buf, size_t len);
         virtual bool read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len);
     private:
-        uint8_t _port;
+        i2c_port_t _port;
     };
 }

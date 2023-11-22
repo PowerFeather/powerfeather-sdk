@@ -5,6 +5,5 @@ idf_component_register(SRCS "${CMAKE_CURRENT_LIST_DIR}/src/MainBoard/MainBoard.c
                             "${CMAKE_CURRENT_LIST_DIR}/src/Utils/ArduinoMasterI2C.cpp"
                             "${CMAKE_CURRENT_LIST_DIR}/src/Utils/Mutex.cpp"
                        INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src" 
-                       PRIV_REQUIRES spi_flash nvs_flash)
-
-target_compile_options(${COMPONENT_LIB} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-std=gnu++17>)
+                       PRIV_REQUIRES spi_flash nvs_flash
+                       REQUIRES driver esp_timer)

@@ -7,6 +7,8 @@
 #include <driver/gpio.h>
 #include <esp_wifi.h>
 #include <nvs_flash.h>
+#include <esp_timer.h>
+#include <esp_mac.h>
 
 #include <unity.h>
 #include <iperf.h>
@@ -255,7 +257,7 @@ TEST_CASE("discharging and charging", MODULE_NAME)
 
         const char* statStr[] = {"terminated", "trickle", "taper", "topoff"};
 
-        printf("time: %ld\tsoc: %d\tstat: %s\tvbat: %d mV\tibat: %d mA\ttimeLeft: %s\n",
+        printf("time: %lld\tsoc: %d\tstat: %s\tvbat: %d mV\tibat: %d mA\ttimeLeft: %s\n",
                 time(NULL), soc, statStr[static_cast<int>(stat)], vbat, ibat, timeLeftRes == Result::Ok ? std::to_string(timeLeft).c_str() : "<estimating>");
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
@@ -282,7 +284,7 @@ static void start_iperf_server()
     cfg.len_send_buf = 0;
     cfg.bw_lim = IPERF_DEFAULT_NO_BW_LIMIT;
 
-    printf("mode=%s-%s sip=%d.%d.%d.%d:%d, dip=%d.%d.%d.%d:%d, interval=%d, time=%d\n",
+    printf("mode=%s-%s sip=%lu.%lu.%lu.%lu:%d, dip=%lu.%lu.%lu.%lu:%d, interval=%lu, time=%lu\n",
              cfg.flag & IPERF_FLAG_TCP ? "tcp" : "udp",
              cfg.flag & IPERF_FLAG_SERVER ? "server" : "client",
              cfg.source_ip4 & 0xFF, (cfg.source_ip4 >> 8) & 0xFF, (cfg.source_ip4 >> 16) & 0xFF,

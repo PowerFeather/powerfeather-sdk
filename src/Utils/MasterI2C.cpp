@@ -47,11 +47,11 @@ namespace PowerFeather
         conf.scl_pullup_en = GPIO_PULLUP_DISABLE;
         conf.master.clk_speed = freq;
 
-        i2c_param_config(port, &conf);
+        _port = static_cast<i2c_port_t>(port);
 
-        _port = port;
+        i2c_param_config(_port, &conf);
 
-        return i2c_driver_install(port, conf.mode, 0, 0, 0) == ESP_OK;
+        return i2c_driver_install(_port, conf.mode, 0, 0, 0) == ESP_OK;
     }
 
     bool MasterI2C::write(uint8_t address, uint8_t reg, const uint8_t *buf, size_t len)
