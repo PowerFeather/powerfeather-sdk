@@ -35,16 +35,16 @@
 #include <driver/rtc_io.h>
 
 #ifdef ARDUINO
-#include <ArduinoMasterI2C.h>
+#include "Utils/ArduinoMasterI2C.h"
 #else
-#include <MasterI2C.h>
+#include "Utils/MasterI2C.h"
 #endif
 
-#include <Mutex.h>
-#include <BQ2562x.h>
-#include <LC709204F.h>
+#include "Utils/Result.h"
+#include "Utils/Mutex.h"
 
-#include <Result.h>
+#include "BQ2562x.h"
+#include "LC709204F.h"
 
 namespace PowerFeather
 {

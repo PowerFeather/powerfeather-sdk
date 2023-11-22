@@ -34,7 +34,7 @@
 
 #include <math.h>
 
-#include <LC709204F.h>
+#include "LC709204F.h"
 
 namespace PowerFeather
 {

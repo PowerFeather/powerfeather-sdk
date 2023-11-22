@@ -34,7 +34,7 @@
 
 #pragma once
 
-#include <MasterI2C.h>
+#include "Utils/MasterI2C.h"
 
 #define BYTE(x)		static_cast<uint8_t>(x)
 #define SHORT(x)	static_cast<uint16_t>(x)

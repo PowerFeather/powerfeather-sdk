@@ -32,7 +32,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <MasterI2C.h>
+#include "MasterI2C.h"
 
 namespace PowerFeather
 {

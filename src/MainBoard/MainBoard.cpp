@@ -39,7 +39,7 @@
 
 #include <soc/reset_reasons.h>
 
-#include <MainBoard.h>
+#include "MainBoard.h"
 
 namespace PowerFeather
 {

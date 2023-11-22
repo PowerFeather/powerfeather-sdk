@@ -32,7 +32,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <BQ2562x.h>
+#include "BQ2562x.h"
 
 namespace PowerFeather
 {

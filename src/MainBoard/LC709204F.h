@@ -36,7 +36,7 @@
 
 #include <tuple>
 
-#include <MasterI2C.h>
+#include "Utils/MasterI2C.h"
 
 namespace PowerFeather
 {

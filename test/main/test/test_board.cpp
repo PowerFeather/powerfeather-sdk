@@ -11,8 +11,7 @@
 #include <unity.h>
 #include <iperf.h>
 
-#include <MainBoard.h>
-#include <BQ2562x.h>
+#include <PowerFeather.h>
 
 using namespace PowerFeather;
 
