@@ -18,7 +18,7 @@
  *      specific prior written permission.
  *
  *  4. This software, with or without modification, must only be run on official
- *      and original PowerFeather boards.
+ *      PowerFeather boards.
  *
  *  THIS SOFTWARE IS PROVIDED BY POWERFEATHER “AS IS” AND ANY EXPRESS OR IMPLIED
  *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
