@@ -67,6 +67,8 @@ namespace PowerFeather
 
             static constexpr gpio_num_t D5 =        GPIO_NUM_15;
             static constexpr gpio_num_t D6 =        GPIO_NUM_16;
+            static constexpr gpio_num_t D7 =        GPIO_NUM_37;
+            static constexpr gpio_num_t D8 =        GPIO_NUM_6;
             static constexpr gpio_num_t D9 =        GPIO_NUM_17;
             static constexpr gpio_num_t D10 =       GPIO_NUM_18;
             static constexpr gpio_num_t D11 =       GPIO_NUM_45;
