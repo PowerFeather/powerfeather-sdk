@@ -178,13 +178,10 @@ TEST_CASE("test_power_cycle", MODULE_NAME)
 
 TEST_CASE("test_free_io", MODULE_NAME)
 {
-    wait_for_battery();
-    
     auto setup_pin = [](gpio_num_t pin)
     {
         // Output frequency same as pin number, i.e. GPIO1 output 1Hz,
         // GPIO2 output 2Hz and so on.
-
         gpio_config_t io_conf = {};
         memset(&io_conf, 0, sizeof(io_conf));
         io_conf.intr_type = GPIO_INTR_DISABLE;
@@ -207,7 +204,7 @@ TEST_CASE("test_free_io", MODULE_NAME)
 
         esp_timer_handle_t periodic_timer;
         esp_timer_create(&periodic_timer_args, &periodic_timer);
-        esp_timer_start_periodic(periodic_timer, (1000000 / (pin)) / 2);
+        esp_timer_start_periodic(periodic_timer, ((100000 / (pin))) / 2);
     };
 
     gpio_num_t free_io[] = {
@@ -216,7 +213,7 @@ TEST_CASE("test_free_io", MODULE_NAME)
         MainBoard::Pin::A2,
         MainBoard::Pin::A3,
         MainBoard::Pin::A4,
-        MainBoard::Pin::A4,
+        MainBoard::Pin::A5,
         MainBoard::Pin::D5,
         MainBoard::Pin::D6,
         MainBoard::Pin::D7,
@@ -247,6 +244,16 @@ TEST_CASE("test_free_io", MODULE_NAME)
     }
 }
 
+
+
+
+
+
+
+
+
+
+
 TEST_CASE("battery health", MODULE_NAME)
 {
     uint8_t percent;
@@ -257,10 +264,6 @@ TEST_CASE("battery health", MODULE_NAME)
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
-
-
-
-
 
 TEST_CASE("discharging and charging", MODULE_NAME)
 {
