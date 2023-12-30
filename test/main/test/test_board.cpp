@@ -23,6 +23,18 @@ static constexpr char MODULE_NAME[] = "[MainBoard]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
 
+static void wait_for_battery()
+{
+    bool connected = true;
+    while (connected)
+    {
+        vTaskDelay(pdMS_TO_TICKS(100));
+        board.getSupplyStatus(connected);
+    }
+    gpio_set_level(MainBoard::Pin::LED, 1);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+}
+
 TEST_CASE("test_EN", MODULE_NAME)
 {
     // Tie potentiometer to temperature sense
@@ -101,66 +113,8 @@ TEST_CASE("rtc outputs off, no glitch on digital reset", MODULE_NAME)
     esp_restart_noos_dig();
 }
 
-static void periodic_timer_callback(void* arg)
-{
-    gpio_num_t pin = static_cast<gpio_num_t>((int)arg);
-    gpio_set_level(pin, !gpio_get_level(pin));
-}
 
-void setup_pin(int pin)
-{
-    gpio_config_t io_conf = {};
-    memset(&io_conf, 0, sizeof(io_conf));
-    io_conf.intr_type = GPIO_INTR_DISABLE;
-    io_conf.mode = GPIO_MODE_INPUT_OUTPUT;
-    io_conf.pin_bit_mask = (static_cast<uint64_t>(0b1) << pin);
-    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
-    ESP_ERROR_CHECK(gpio_config(&io_conf));
-
-    esp_timer_create_args_t periodic_timer_args;
-    memset(&periodic_timer_args, 0, sizeof(periodic_timer_args));
-    periodic_timer_args.callback = &periodic_timer_callback;
-    periodic_timer_args.arg = reinterpret_cast<void*>(pin);
-
-    esp_timer_handle_t periodic_timer;
-    esp_timer_create(&periodic_timer_args, &periodic_timer);
-    esp_timer_start_periodic(periodic_timer, (1000000 / (pin)) / 2);
-}
-
-TEST_CASE("digital pin connections", MODULE_NAME)
-{
-    // Output frequency same as pin number, i.e. GPIO1 output 1Hz,
-    // GPIO2 output 2Hz and so on.
-    gpio_num_t exclude[] = { GPIO_NUM_0, GPIO_NUM_3, GPIO_NUM_45, GPIO_NUM_46};
-    int min = 36;
-    int max = 40;
-
-    for (int i = min; i < max + 1; i++)
-    {
-        bool excluded = false;
-        for (int e : exclude)
-        {
-            if (i == e)
-            {
-                excluded = true;
-                break;
-            }
-        }
-
-        if (!excluded)
-        {
-            setup_pin(i);
-        }
-    }
-
-    while (true)
-    {
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-
-TEST_CASE("temperature sense", MODULE_NAME)
+TEST_CASE("test_TS", MODULE_NAME)
 {
     TEST_ASSERT_EQUAL(Result::Ok, board.enableTempSense(true));
     TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
@@ -181,18 +135,11 @@ TEST_CASE("temperature sense", MODULE_NAME)
     }
 }
 
-static void button_anyedge_handler(void *arg)
-{
-    gpio_set_level(MainBoard::Pin::LED, gpio_get_level(MainBoard::Pin::BTN));
-}
-
 TEST_CASE("test_BTN_and_LED", MODULE_NAME)
 {
-    gpio_set_level(MainBoard::Pin::LED, true);
-
     gpio_set_intr_type(MainBoard::Pin::BTN, GPIO_INTR_ANYEDGE);
     gpio_install_isr_service(0);
-    gpio_isr_handler_add(MainBoard::Pin::BTN, button_anyedge_handler, NULL);
+    gpio_isr_handler_add(MainBoard::Pin::BTN, [](void* arg) {gpio_set_level(MainBoard::Pin::LED, gpio_get_level(MainBoard::Pin::BTN));}, NULL);
 
     while (true)
     {
@@ -200,10 +147,120 @@ TEST_CASE("test_BTN_and_LED", MODULE_NAME)
     }
 }
 
-TEST_CASE("fuel guage interrupt", MODULE_NAME)
+TEST_CASE("test_power_inputs", MODULE_NAME)
 {
-    // Write a high temperature to register
+    while (true)
+    {
+        bool connected;
+        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(connected));
+        gpio_set_level(MainBoard::Pin::LED, connected);
+        printf("supply connected: %d\n", connected);
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
 }
+
+TEST_CASE("test_ship_mode", MODULE_NAME)
+{
+    wait_for_battery();
+    board.enterShipMode();
+}
+
+TEST_CASE("test_shutdown_mode", MODULE_NAME)
+{
+    wait_for_battery();
+    board.enterShutdownMode();
+}
+
+TEST_CASE("test_power_cycle", MODULE_NAME)
+{
+    TEST_ASSERT_EQUAL(Result::Ok, board.doPowerCycle());
+}
+
+TEST_CASE("test_free_io", MODULE_NAME)
+{
+    wait_for_battery();
+    
+    auto setup_pin = [](gpio_num_t pin)
+    {
+        // Output frequency same as pin number, i.e. GPIO1 output 1Hz,
+        // GPIO2 output 2Hz and so on.
+
+        gpio_config_t io_conf = {};
+        memset(&io_conf, 0, sizeof(io_conf));
+        io_conf.intr_type = GPIO_INTR_DISABLE;
+        io_conf.mode = GPIO_MODE_INPUT_OUTPUT;
+        io_conf.pin_bit_mask = (static_cast<uint64_t>(0b1) << pin);
+        io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+        io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
+        ESP_ERROR_CHECK(gpio_config(&io_conf));
+
+        esp_timer_create_args_t periodic_timer_args;
+        memset(&periodic_timer_args, 0, sizeof(periodic_timer_args));
+
+        periodic_timer_args.callback = [](void* arg)
+        {
+            gpio_num_t pin = static_cast<gpio_num_t>((int)arg);
+            gpio_set_level(pin, !gpio_get_level(pin));
+        };
+
+        periodic_timer_args.arg = reinterpret_cast<void*>(pin);
+
+        esp_timer_handle_t periodic_timer;
+        esp_timer_create(&periodic_timer_args, &periodic_timer);
+        esp_timer_start_periodic(periodic_timer, (1000000 / (pin)) / 2);
+    };
+
+    gpio_num_t free_io[] = {
+        MainBoard::Pin::A0,
+        MainBoard::Pin::A1,
+        MainBoard::Pin::A2,
+        MainBoard::Pin::A3,
+        MainBoard::Pin::A4,
+        MainBoard::Pin::A4,
+        MainBoard::Pin::D5,
+        MainBoard::Pin::D6,
+        MainBoard::Pin::D7,
+        MainBoard::Pin::D8,
+        MainBoard::Pin::D9,
+        MainBoard::Pin::D10,
+        MainBoard::Pin::D11,
+        MainBoard::Pin::D12,
+        MainBoard::Pin::D13,
+        MainBoard::Pin::RX,
+        MainBoard::Pin::TX,
+        MainBoard::Pin::TX0,
+        MainBoard::Pin::SCK,
+        MainBoard::Pin::MOSI,
+        MainBoard::Pin::MISO,
+        MainBoard::Pin::SDA,
+        MainBoard::Pin::SCL
+    };
+
+    for (gpio_num_t io: free_io)
+    {
+        setup_pin(io);
+    }
+
+    while (true)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+TEST_CASE("battery health", MODULE_NAME)
+{
+    uint8_t percent;
+
+    while (true)
+    {
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryHealth(percent));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+
+
+
 
 TEST_CASE("discharging and charging", MODULE_NAME)
 {
@@ -255,6 +312,17 @@ TEST_CASE("discharging and charging", MODULE_NAME)
                 time(NULL), soc, statStr[static_cast<int>(stat)], vbat, ibat, timeLeftRes == Result::Ok ? std::to_string(timeLeft).c_str() : "<estimating>");
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
+}
+
+
+TEST_CASE("fuel guage interrupt", MODULE_NAME)
+{
+    // Write a high temperature to register
+}
+
+TEST_CASE("set VBAT min", MODULE_NAME)
+{
+    TEST_ASSERT_EQUAL(Result::Ok, board.setVBATMinVoltage(3.7));
 }
 
 static esp_netif_t *wifi_netif = NULL;
@@ -372,63 +440,6 @@ TEST_CASE("current loading", MODULE_NAME)
 
         printf("vbus: %d mV ibus: %d mA\n", vbus, ibus);
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-
-TEST_CASE("supply connected", MODULE_NAME)
-{
-    while (true)
-    {
-        bool connected;
-        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(connected));
-        gpio_set_level(MainBoard::Pin::LED, connected);
-        printf("supply connected: %d\n", connected);
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
-}
-
-void wait_for_battery()
-{
-    bool connected = true;
-    while (connected)
-    {
-        vTaskDelay(pdMS_TO_TICKS(100));
-        board.getSupplyStatus(connected);
-    }
-    gpio_set_level(MainBoard::Pin::LED, 1);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-}
-
-TEST_CASE("ship mode", MODULE_NAME)
-{
-    wait_for_battery();
-    board.enterShipMode();
-}
-
-TEST_CASE("shutdown mode", MODULE_NAME)
-{
-    wait_for_battery();
-    board.enterShutdownMode();
-}
-
-TEST_CASE("power cycle", MODULE_NAME)
-{
-    TEST_ASSERT_EQUAL(Result::Ok, board.doPowerCycle());
-}
-
-TEST_CASE("set VBAT min", MODULE_NAME)
-{
-    TEST_ASSERT_EQUAL(Result::Ok, board.setVBATMinVoltage(3.7));
-}
-
-TEST_CASE("battery health", MODULE_NAME)
-{
-    uint8_t percent;
-
-    while (true)
-    {
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryHealth(percent));
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

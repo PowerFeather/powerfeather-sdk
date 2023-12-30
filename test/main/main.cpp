@@ -36,5 +36,7 @@ extern "C" void app_main(void)
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     gpio_config(&io_conf);
 
+    gpio_set_level(MainBoard::Pin::LED, true);
+
     test_main();
 }
