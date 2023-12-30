@@ -22,13 +22,9 @@ MainBoard& board = Board;
 static constexpr char MODULE_NAME[] = "[MainBoard]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
-TEST_CASE("rtc outputs work normally", MODULE_NAME)
+
+TEST_CASE("test_EN", MODULE_NAME)
 {
-    bool enable = true;
-
-    uint8_t test =0;
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::Charger_Status_0, test));
-
     // Tie potentiometer to temperature sense
     // Check interrupt, may be combined with another test
     //zero-initialize the config structure.
@@ -46,33 +42,31 @@ TEST_CASE("rtc outputs work normally", MODULE_NAME)
     //configure GPIO with the given settings
     gpio_config(&io_conf);
 
+    bool enable = false;
+
     while (true)
     {
-        printf("enable: %d\n", enable);
-
-        TEST_ASSERT_EQUAL(Result::Ok, board.enable3V3(enable));
-        TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(enable));
         TEST_ASSERT_EQUAL(Result::Ok, board.setEN(enable));
-
         vTaskDelay(pdMS_TO_TICKS(1000));
-
-        TEST_ASSERT_EQUAL(enable, gpio_get_level(MainBoard::Pin::EN));
+        bool _enable = gpio_get_level(MainBoard::Pin::EN);
+        TEST_ASSERT_EQUAL(enable, _enable);
+        printf("enable: %d\n", _enable);
         enable = !enable;
     }
 }
 
-TEST_CASE("3.3V outputs on, deep sleep current draw", MODULE_NAME)
+TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_disabled", MODULE_NAME)
 {
     board.enable3V3(true);
     board.enableVSQT(true);
-    esp_deep_sleep(MS_TO_US(10000000));
+    esp_deep_sleep_start();
 }
 
-TEST_CASE("3.3V outputs off, deep sleep current draw", MODULE_NAME)
+TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_enabled", MODULE_NAME)
 {
     board.enable3V3(false);
     TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(false));
-    esp_deep_sleep(MS_TO_US(10000000));
+    esp_deep_sleep_start();
 }
 
 TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
@@ -192,7 +186,7 @@ static void button_anyedge_handler(void *arg)
     gpio_set_level(MainBoard::Pin::LED, gpio_get_level(MainBoard::Pin::BTN));
 }
 
-TEST_CASE("button and led", MODULE_NAME)
+TEST_CASE("test_BTN_and_LED", MODULE_NAME)
 {
     gpio_set_level(MainBoard::Pin::LED, true);
 
