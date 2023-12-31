@@ -161,7 +161,7 @@ namespace PowerFeather
 
     Result MainBoard::enableFuelGauge(bool enable)
     {
-        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
         RET_IF_FALSE(_fuelGauge.enableOperation(true), Result::Failure);
         return Result::Ok;
     }
