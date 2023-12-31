@@ -81,7 +81,7 @@ TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_enabled", MODULE_NAME)
     esp_deep_sleep_start();
 }
 
-TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
+TEST_CASE("test_3V3_VSQT_EN_on_glitch_deep_sleep", MODULE_NAME)
 {
     board.enable3V3(true);
     board.enableVSQT(true);
@@ -89,7 +89,8 @@ TEST_CASE("rtc outputs on, no glitch on deep sleep and wake", MODULE_NAME)
     esp_deep_sleep(MS_TO_US(100));
 }
 
-TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
+
+TEST_CASE("test_3V3_VSQT_EN_off_glitch_deep_sleep", MODULE_NAME)
 {
     board.enable3V3(false);
     board.enableVSQT(false);
@@ -97,7 +98,7 @@ TEST_CASE("rtc outputs off, no glitch on deep sleep and wake", MODULE_NAME)
     esp_deep_sleep(MS_TO_US(100));
 }
 
-TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
+TEST_CASE("test_3V3_VSQT_EN_on_glitch_deep_sleep", MODULE_NAME)
 {
     board.enable3V3(true);
     board.enableVSQT(true);
@@ -105,14 +106,13 @@ TEST_CASE("rtc outputs on, no glitch on digital reset", MODULE_NAME)
     esp_restart_noos_dig();
 }
 
-TEST_CASE("rtc outputs off, no glitch on digital reset", MODULE_NAME)
+TEST_CASE("test_3V3_VSQT_EN_off_glitch_deep_sleep", MODULE_NAME)
 {
     board.enable3V3(false);
     board.enableVSQT(false);
     board.setEN(false);
     esp_restart_noos_dig();
 }
-
 
 TEST_CASE("test_TS", MODULE_NAME)
 {
@@ -149,14 +149,49 @@ TEST_CASE("test_BTN_and_LED", MODULE_NAME)
 
 TEST_CASE("test_power_inputs", MODULE_NAME)
 {
+    TEST_ASSERT_EQUAL(ESP_OK, gpio_reset_pin(MainBoard::Pin::LED));
+
+    // Prepare and then apply the LEDC PWM timer configuration
+    ledc_timer_config_t ledc_timer = {
+        .speed_mode       = LEDC_LOW_SPEED_MODE,
+        .duty_resolution  = LEDC_TIMER_13_BIT,
+        .timer_num        = LEDC_TIMER_0,
+        .freq_hz          = 4000,  // Set output frequency at 4 kHz
+        .clk_cfg          = LEDC_AUTO_CLK
+    };
+    TEST_ASSERT_EQUAL(ESP_OK, ledc_timer_config(&ledc_timer));
+
+    // Prepare and then apply the LEDC PWM channel configuration
+    ledc_channel_config_t ledc_channel;
+    memset(&ledc_channel, 0, sizeof(ledc_channel));
+    ledc_channel.speed_mode     = LEDC_LOW_SPEED_MODE;
+    ledc_channel.channel        = LEDC_CHANNEL_0;
+    ledc_channel.timer_sel      = LEDC_TIMER_0;
+    ledc_channel.intr_type      = LEDC_INTR_DISABLE;
+    ledc_channel.gpio_num       = MainBoard::Pin::LED;
+    ledc_channel.duty           = 0; // Set duty to 0;
+    ledc_channel.hpoint         = 0;
+    TEST_ASSERT_EQUAL(ESP_OK, ledc_channel_config(&ledc_channel));
+
+    bool connected, prev_connected;
+    prev_connected = false;
+
     while (true)
     {
-        bool connected;
         TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(connected));
-        gpio_set_level(MainBoard::Pin::LED, connected);
-        printf("supply connected: %d\n", connected);
-        vTaskDelay(pdMS_TO_TICKS(10));
+        if (connected != prev_connected)
+        {
+            printf("supply good: %d\n", connected);
+            uint32_t duty = connected? 8192 : 820;
+            // Set duty to 50%
+            ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty));
+            // Update duty to apply the new value
+            ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
+            prev_connected = connected;
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
+
 }
 
 TEST_CASE("test_ship_mode", MODULE_NAME)
