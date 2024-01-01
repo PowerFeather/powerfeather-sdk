@@ -69,15 +69,15 @@ TEST_CASE("test_EN", MODULE_NAME)
 
 TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_disabled", MODULE_NAME)
 {
-    board.enable3V3(true);
-    board.enableVSQT(true);
+    TEST_ASSERT_EQUAL(Result::Ok, board.enable3V3(false));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(false));
     esp_deep_sleep_start();
 }
 
 TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_enabled", MODULE_NAME)
 {
-    board.enable3V3(false);
-    TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(false));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enable3V3(true));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(true));
     esp_deep_sleep_start();
 }
 
