@@ -333,6 +333,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
+
     Result MainBoard::getBatteryTimeLeft(int& minutes)
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -363,4 +364,31 @@ namespace PowerFeather
         minutes = mins * (discharging ? -1 : 1);
         return Result::Ok;
     }
+
+    Result MainBoard::setBatteryLowVoltageAlarm(uint16_t voltage)
+    {
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE((voltage >= 2500 && voltage <= 5000) || voltage == 0, Result::InvalidArg);
+        RET_IF_FALSE(_fuelGauge.setLowVoltageAlarm(voltage), Result::Failure);
+        return Result::Ok;
+    };
+
+    Result MainBoard::setBatteryHighVoltageAlarm(uint16_t voltage)
+    {
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE((voltage >= 2500 && voltage <= 5000) || voltage == 0, Result::InvalidArg);
+        RET_IF_FALSE(_fuelGauge.setHighVoltageAlarm(voltage), Result::Failure);
+        return Result::Ok;
+    };
+
+    Result MainBoard::setBatteryLowChargeAlarm(uint8_t percent)
+    {
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE((percent >= 1 && percent <= 100) || percent == 0, Result::InvalidArg);
+        RET_IF_FALSE(_fuelGauge.setLowRSOCAlarm(percent), Result::Failure);
+        return Result::Ok;
+    };
 }

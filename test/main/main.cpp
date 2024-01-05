@@ -19,6 +19,7 @@ static void display_charger_status(void* handler_args, esp_event_base_t base, in
 
 static void display_fuel_gauge_status(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
 {
+    printf("fuel gauge alarm!\n");
 }
 
 extern "C" void app_main(void)
@@ -27,7 +28,7 @@ extern "C" void app_main(void)
     TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, CHARGER_INTERRUPT, display_charger_status, NULL, NULL));
     TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, CHARGER_INTERRUPT, display_fuel_gauge_status, NULL, NULL));
 
-    TEST_ASSERT_EQUAL(Result::Ok, Board.init());
+    TEST_ASSERT_EQUAL(Result::Ok, Board.init(650));
 
     gpio_config_t io_conf = {};
     io_conf.intr_type = GPIO_INTR_DISABLE;
@@ -47,7 +48,7 @@ extern "C" void app_main(void)
 
     gpio_install_isr_service(0);
     gpio_isr_handler_add(MainBoard::Pin::CHGI, [](void* arg) { esp_event_post(TEST_EVENTS, CHARGER_INTERRUPT, NULL, 0, portMAX_DELAY); }, NULL);
-    gpio_isr_handler_add(MainBoard::Pin::CHGI, [](void* arg) { esp_event_post(TEST_EVENTS, FUEL_GAUGE_ALARM, NULL, 0, portMAX_DELAY); }, NULL);
+    gpio_isr_handler_add(MainBoard::Pin::FGA, [](void* arg) { esp_event_post(TEST_EVENTS, FUEL_GAUGE_ALARM, NULL, 0, portMAX_DELAY); }, NULL);
 
     gpio_set_level(MainBoard::Pin::LED, true);
     test_main();

@@ -173,15 +173,8 @@ namespace PowerFeather
 
     bool LC709204F::setVoltageAlarm(Registers reg, uint16_t mV)
     {
-        static constexpr uint16_t max = 5000;
-        static constexpr uint16_t min = 2500;
-        static constexpr uint16_t base = 0x09c4;
-        if ((mV >= min && mV <= max) || mV == 0)
-        {
-            uint16_t val = base + (mV - min);
-            return writeReg(reg, val);
-        }
-        return false;
+        uint16_t val = 0x09c4 + (mV - 2500);
+        return writeReg(reg, val);
     }
 
     bool LC709204F::setLowVoltageAlarm(uint16_t mV)
@@ -196,15 +189,8 @@ namespace PowerFeather
 
     bool LC709204F::setLowRSOCAlarm(uint16_t rsoc)
     {
-        static constexpr uint16_t max = 100;
-        static constexpr uint16_t min = 1;
-        static constexpr uint16_t base = 0x01;
-        if ((rsoc >= min && rsoc <= max) || rsoc == 0)
-        {
-            uint16_t val = base + (rsoc - min);
-            return writeReg(Registers::Alarm_Low_RSOC, val);
-        }
-        return false;
+        uint16_t val = 0x01 + (rsoc - 0x01);
+        return writeReg(Registers::Alarm_Low_RSOC, val);
     }
 
     bool LC709204F::setChangeOfParameter(ChangeOfParameter param)

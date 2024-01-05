@@ -278,23 +278,14 @@ TEST_CASE("test_free_io", MODULE_NAME)
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-TEST_CASE("battery health", MODULE_NAME)
+TEST_CASE("fuel gauge alarms", MODULE_NAME)
 {
-    uint8_t percent;
+    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryLowVoltageAlarm(3600));
+    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryHighVoltageAlarm(4100));
+    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryLowChargeAlarm(30));
 
     while (true)
     {
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryHealth(percent));
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -351,10 +342,9 @@ TEST_CASE("discharging and charging", MODULE_NAME)
     }
 }
 
-
 TEST_CASE("fuel guage interrupt", MODULE_NAME)
 {
-    // Write a high temperature to register
+
 }
 
 TEST_CASE("set VBAT min", MODULE_NAME)
@@ -477,6 +467,17 @@ TEST_CASE("current loading", MODULE_NAME)
 
         printf("vbus: %d mV ibus: %d mA\n", vbus, ibus);
 
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+TEST_CASE("battery health", MODULE_NAME)
+{
+    uint8_t percent;
+
+    while (true)
+    {
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryHealth(percent));
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

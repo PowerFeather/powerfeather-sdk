@@ -346,7 +346,7 @@ namespace PowerFeather
          *
          * @param[in] percent Battery charge percent from 1 to 100, setting this to 0 disables the alarm.
          */
-        Result setBatteryLowChargeAlarm(uint8_t& percent);
+        Result setBatteryLowChargeAlarm(uint8_t percent);
 
         BQ2562x& getCharger() { return _charger; }
         LC709204F& getFuelGauge() { return _fuelGauge; }
