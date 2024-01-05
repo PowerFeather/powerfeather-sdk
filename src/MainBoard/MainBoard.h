@@ -327,6 +327,27 @@ namespace PowerFeather
          */
         Result getBatteryCurrent(int16_t& current);
 
+        /**
+         * Set alarm for when battery voltage is below a certain treshold.
+         *
+         * @param[in] voltage Battery voltage in mV, setting this to 0 disables the alarm.
+         */
+        Result setBatteryLowVoltageAlarm(uint16_t voltage);
+
+        /**
+         * Set alarm for when battery voltage is above a certain treshold.
+         *
+         * @param[in] voltage Battery voltage in mV, setting this to 0 disables the alarm.
+         */
+        Result setBatteryHighVoltageAlarm(uint16_t voltage);
+
+        /**
+         * Set alarm for when battery charge percent is below a certain treshold.
+         *
+         * @param[in] percent Battery charge percent from 1 to 100, setting this to 0 disables the alarm.
+         */
+        Result setBatteryLowChargeAlarm(uint8_t& percent);
+
         BQ2562x& getCharger() { return _charger; }
         LC709204F& getFuelGauge() { return _fuelGauge; }
 
