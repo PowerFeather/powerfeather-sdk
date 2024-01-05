@@ -138,7 +138,6 @@ TEST_CASE("test_TS", MODULE_NAME)
 TEST_CASE("test_BTN_and_LED", MODULE_NAME)
 {
     gpio_set_intr_type(MainBoard::Pin::BTN, GPIO_INTR_ANYEDGE);
-    gpio_install_isr_service(0);
     gpio_isr_handler_add(MainBoard::Pin::BTN, [](void* arg) {gpio_set_level(MainBoard::Pin::LED, gpio_get_level(MainBoard::Pin::BTN));}, NULL);
 
     while (true)

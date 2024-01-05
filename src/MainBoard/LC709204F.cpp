@@ -136,6 +136,7 @@ namespace PowerFeather
         return readReg(Registers::TimeToFull, minutes);
     }
 
+
     bool LC709204F::setAPA(uint16_t mAh)
     {
         auto prev = _apaTable[0];
@@ -166,6 +167,42 @@ namespace PowerFeather
             }
 
             prev = cur;
+        }
+        return false;
+    }
+
+    bool LC709204F::setVoltageAlarm(Registers reg, uint16_t mV)
+    {
+        static constexpr uint16_t max = 5000;
+        static constexpr uint16_t min = 2500;
+        static constexpr uint16_t base = 0x09c4;
+        if ((mV >= min && mV <= max) || mV == 0)
+        {
+            uint16_t val = base + (mV - min);
+            return writeReg(reg, val);
+        }
+        return false;
+    }
+
+    bool LC709204F::setLowVoltageAlarm(uint16_t mV)
+    {
+        return setVoltageAlarm(Registers::Alarm_Low_Cell_Voltage, mV);
+    }
+
+    bool LC709204F::setHighVoltageAlarm(uint16_t mV)
+    {
+        return setVoltageAlarm(Registers::Alarm_Low_Cell_Voltage, mV);
+    }
+
+    bool LC709204F::setLowRSOCAlarm(uint16_t rsoc)
+    {
+        static constexpr uint16_t max = 100;
+        static constexpr uint16_t min = 1;
+        static constexpr uint16_t base = 0x01;
+        if ((rsoc >= min && rsoc <= max) || rsoc == 0)
+        {
+            uint16_t val = base + (rsoc - min);
+            return writeReg(Registers::Alarm_Low_RSOC, val);
         }
         return false;
     }

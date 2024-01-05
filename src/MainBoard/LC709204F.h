@@ -55,8 +55,11 @@ namespace PowerFeather
             APA = 0x0b,
             Change_Of_The_Parameter = 0x12,
             Status_Bit = 0x16,
+            Alarm_Low_RSOC = 0x13,
+            Alarm_Low_Cell_Voltage = 0x14,
             IC_Power_Mode = 0x15,
             Cycle_Count = 0x17,
+            Alarm_High_Cell_Voltage = 0x1f
         };
 
         enum class ChangeOfParameter
@@ -80,11 +83,13 @@ namespace PowerFeather
 
         bool setAPA(uint16_t mAh);
         bool setChangeOfParameter(ChangeOfParameter param);
+        bool setLowVoltageAlarm(uint16_t mV);
+        bool setHighVoltageAlarm(uint16_t mV);
+        bool setLowRSOCAlarm(uint16_t rsoc);
         bool enableTSENSE(bool tsense1, bool tsense2);
         bool enableOperation(bool enable);
 
     private:
-
         static constexpr std::tuple<uint16_t, uint8_t> _apaTable[] = {
             { 50, 0x13 },
             { 100, 0x15 },
@@ -98,9 +103,12 @@ namespace PowerFeather
             { 6000, 0x45 },
         };
 
+
         static constexpr uint8_t _i2cAddress = 0x0b;
 
         MasterI2C& _i2c;
+
+        bool setVoltageAlarm(Registers reg, uint16_t mV);
 
         bool readReg(Registers reg, uint16_t& data);
         bool writeReg(Registers reg, uint16_t data);

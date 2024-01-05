@@ -1,4 +1,5 @@
-#include "test_utils.h"
+#include <test_utils.h>
+#include <esp_event.h>
 
 #include <unity.h>
 
@@ -6,37 +7,48 @@
 
 using namespace PowerFeather;
 
+ESP_EVENT_DEFINE_BASE(TEST_EVENTS);
+
+#define CHARGER_INTERRUPT           1
+#define FUEL_GAUGE_ALARM            2
+
+static void display_charger_status(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
+{
+    Board.getCharger().displayInfo();
+}
+
+static void display_fuel_gauge_status(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
+{
+}
+
 extern "C" void app_main(void)
 {
-    TEST_ASSERT_EQUAL(Result::Ok, Board.init(650));
+    TEST_ASSERT_EQUAL(ESP_OK, esp_event_loop_create_default());
+    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, CHARGER_INTERRUPT, display_charger_status, NULL, NULL));
+    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, CHARGER_INTERRUPT, display_fuel_gauge_status, NULL, NULL));
 
-    // Tie potentiometer to temperature sense
-    // Check interrupt, may be combined with another test
-    //zero-initialize the config structure.
+    TEST_ASSERT_EQUAL(Result::Ok, Board.init());
+
     gpio_config_t io_conf = {};
-    //disable interrupt
     io_conf.intr_type = GPIO_INTR_DISABLE;
-    //set as output mode
     io_conf.mode = GPIO_MODE_OUTPUT;
-    //bit mask of the pins that you want to set,e.g.GPIO18/19
     io_conf.pin_bit_mask = ((uint64_t)0b1 << MainBoard::Pin::LED);
-    //disable pull-down mode
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    //disable pull-up mode
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-    //configure GPIO with the given settings
     gpio_config(&io_conf);
 
-    //interrupt of rising edge
-    //bit mask of the pins, use GPIO4/5 here
-    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::BTN;
-    //set as input mode
+    io_conf.pin_bit_mask = ((uint64_t)0b1 << MainBoard::Pin::BTN);
     io_conf.mode = GPIO_MODE_INPUT;
-    //enable pull-up mode
-    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     gpio_config(&io_conf);
+
+    io_conf.pin_bit_mask = ((uint64_t)0b1 << MainBoard::Pin::FGA) | ((uint64_t)0b1 << MainBoard::Pin::CHGI);
+    io_conf.intr_type = GPIO_INTR_NEGEDGE;
+    gpio_config(&io_conf);
+
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(MainBoard::Pin::CHGI, [](void* arg) { esp_event_post(TEST_EVENTS, CHARGER_INTERRUPT, NULL, 0, portMAX_DELAY); }, NULL);
+    gpio_isr_handler_add(MainBoard::Pin::CHGI, [](void* arg) { esp_event_post(TEST_EVENTS, FUEL_GAUGE_ALARM, NULL, 0, portMAX_DELAY); }, NULL);
 
     gpio_set_level(MainBoard::Pin::LED, true);
-
     test_main();
 }
