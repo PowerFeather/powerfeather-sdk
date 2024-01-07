@@ -11,7 +11,6 @@
 #include <esp_mac.h>
 
 #include <unity.h>
-#include <iperf.h>
 
 #include <PowerFeather.h>
 
@@ -33,6 +32,22 @@ static void wait_for_battery()
     }
     gpio_set_level(MainBoard::Pin::LED, 1);
     vTaskDelay(pdMS_TO_TICKS(1000));
+}
+
+static void display_voltages_and_currents()
+{
+    bool gsup = false;
+    int16_t isup = 0, ibat = 0;
+    uint16_t vsup = 0, vbat = 0;
+
+    TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(gsup));
+    TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyVoltage(vsup));
+    TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(isup));
+    TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
+    TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(ibat));
+
+    printf("supply good: %d\tsupply voltage:%d mV\tsupply current: %d mA\tbattery voltage: %d mV\tbattery current:%d mA\n",
+            gsup, vsup, isup, vbat, ibat);
 }
 
 TEST_CASE("test_EN", MODULE_NAME)
@@ -122,7 +137,6 @@ TEST_CASE("test_TS", MODULE_NAME)
     TEST_ASSERT_EQUAL(Result::InvalidState, board.getBatteryTemperature(temp));
 
     TEST_ASSERT_EQUAL(Result::Ok, board.enableTempSense(true));
-    TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
 
     uint8_t adcSetup = 0;
     TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::ADC_Control, adcSetup));
@@ -179,21 +193,13 @@ TEST_CASE("test_power_inputs", MODULE_NAME)
     while (true)
     {
         bool suppg = false;
-        int16_t suppc = 0, battc = 0;
-        uint16_t suppv = 0, battv = 0;
-
         TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(suppg));
-        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyVoltage(suppv));
-        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(suppc));
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(battv));
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(battc));
-
         uint32_t duty = suppg? 8192 : 820;
         ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty));
         ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
 
-        printf("supply good: %d\tsupply voltage:%d mV\tsupply current: %d mA\tbattery voltage: %d mV\tbattery current:%d mA\n",
-             suppg, suppv, suppc, battv, battc);
+        display_voltages_and_currents();
+
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
@@ -295,134 +301,24 @@ TEST_CASE("test_battery_alarms", MODULE_NAME)
     }
 }
 
-
 TEST_CASE("test_battery_information", MODULE_NAME)
 {
 
+    TEST_ASSERT_TRUE(true);
 }
-
 
 TEST_CASE("set VBAT min", MODULE_NAME)
 {
     TEST_ASSERT_EQUAL(Result::Ok, board.setVBATMinVoltage(3.7));
 }
 
-static esp_netif_t *wifi_netif = NULL;
-
-static void start_iperf_server()
-{
-    // Start iperf
-    iperf_cfg_t cfg;
-    memset(&cfg, 0, sizeof(cfg));
-
-    esp_netif_ip_info_t ip;
-    esp_netif_get_ip_info(wifi_netif, &ip);
-
-    cfg.flag |= IPERF_FLAG_SERVER | IPERF_FLAG_TCP;
-    cfg.source_ip4 = ip.ip.addr;
-    cfg.type = IPERF_IP_TYPE_IPV4;
-    cfg.dport = IPERF_DEFAULT_PORT;
-    cfg.sport = IPERF_DEFAULT_PORT;
-    cfg.interval = IPERF_DEFAULT_INTERVAL;
-    cfg.time = UINT32_MAX;
-    cfg.len_send_buf = 0;
-    cfg.bw_lim = IPERF_DEFAULT_NO_BW_LIMIT;
-
-    printf("mode=%s-%s sip=%lu.%lu.%lu.%lu:%d, dip=%lu.%lu.%lu.%lu:%d, interval=%lu, time=%lu\n",
-             cfg.flag & IPERF_FLAG_TCP ? "tcp" : "udp",
-             cfg.flag & IPERF_FLAG_SERVER ? "server" : "client",
-             cfg.source_ip4 & 0xFF, (cfg.source_ip4 >> 8) & 0xFF, (cfg.source_ip4 >> 16) & 0xFF,
-             (cfg.source_ip4 >> 24) & 0xFF, cfg.sport,
-             cfg.destination_ip4 & 0xFF, (cfg.destination_ip4 >> 8) & 0xFF,
-             (cfg.destination_ip4 >> 16) & 0xFF, (cfg.destination_ip4 >> 24) & 0xFF, cfg.dport,
-             cfg.interval, cfg.time);
-
-    iperf_start(&cfg);
-}
-
-static void wifi_event_handler(void* arg, esp_event_base_t event_base,
-                                    int32_t event_id, void* event_data)
-{
-    if (event_id == WIFI_EVENT_AP_STACONNECTED) {
-        wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-        printf("station " MACSTR " join, AID=%d\n", MAC2STR(event->mac), event->aid);
-    } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
-        wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-        printf("station " MACSTR " leave, AID=%d\n", MAC2STR(event->mac), event->aid);
-    }
-}
-
-static void start_ap()
-{
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        nvs_flash_erase();
-        ret = nvs_flash_init();
-    }
-
-    esp_netif_init();
-    esp_event_loop_create_default();
-    wifi_netif = esp_netif_create_default_wifi_ap();
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_wifi_init(&cfg);
-
-    esp_event_handler_instance_register(WIFI_EVENT,
-                                        ESP_EVENT_ANY_ID,
-                                        &wifi_event_handler,
-                                        NULL,
-                                        NULL);
-
-    wifi_config_t wifi_config;
-
-    static constexpr char SSID[] = "powerfeather-ap";
-    static constexpr char PASS[] = "powerfeather-pswd";
-
-    memset(&wifi_config, 0, sizeof(wifi_config));
-
-    strncpy(reinterpret_cast<char*>(wifi_config.ap.ssid), SSID, sizeof(wifi_config.ap.ssid));
-    strncpy(reinterpret_cast<char*>(wifi_config.ap.password), PASS, sizeof(wifi_config.ap.password));
-
-    wifi_config.ap.ssid_len = strlen(SSID);
-    wifi_config.ap.channel = 6;
-    wifi_config.ap.max_connection = 1;
-    wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
-    if (strlen(PASS) == 0) {
-        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
-    }
-
-    esp_wifi_set_mode(WIFI_MODE_AP);
-    esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
-    esp_wifi_start();
-}
-
-bool is_iperf_running()
-{
-    TaskHandle_t iperf_task = xTaskGetHandle("iperf_traffic");
-    return iperf_task;
-}
-
 TEST_CASE("test_current_loading", MODULE_NAME)
 {
-    TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
-
-    start_ap();
+    board.setSupplyMaxCurrent(2000);
 
     while (true)
     {
-        if (!is_iperf_running())
-        {
-            start_iperf_server();
-        }
-
-        uint16_t vbus = 0.0f;
-        int16_t ibus = 0.0f;
-        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyVoltage(vbus));
-        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(ibus));
-
-        printf("vbus: %d mV ibus: %d mA\n", vbus, ibus);
-
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        display_voltages_and_currents();
     }
 }
 
@@ -431,38 +327,42 @@ TEST_CASE("test_battery_charging", MODULE_NAME)
     // Measure VBAT, IBAT
     // Disable charging initially, until certain SOC
     // Enable charging, then disable again once another SOC is reached
-    TEST_ASSERT_TRUE(board.getCharger().setupADC(true));
-    board.getCharger().setChargeCurrent(50);
     TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
+    TEST_ASSERT_EQUAL(Result::Ok, board.setChargingMaxCurrent(1000));
+    TEST_ASSERT_EQUAL(Result::Ok, board.setSupplyMaxCurrent(2000));
+
+    static constexpr uint8_t minSoc = 60;
+    static constexpr uint8_t maxSoc = 70;
 
     while (true)
     {
         uint8_t soc = 0;
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCharge(soc));
 
-        if (soc > 70)
+        if (soc > maxSoc)
         {
             TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
             TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(false));
         }
-        else if (soc < 60)
+        else if (soc < minSoc)
         {
             TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(true));
             TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(true));
-        } else { }
+        } else
+        {
+            // Do nothing
+        }
 
-        int16_t ibat = 0.0f;
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(ibat));
-
-        uint16_t vbat = 0.0f;
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
-
+        int16_t ibat = 0, isup = 0;
+        uint16_t vbat = 0;
         int timeLeft = 0;
-        Result timeLeftRes = board.getBatteryTimeLeft(timeLeft);
-
-        TEST_ASSERT_TRUE(timeLeftRes == Result::Ok || timeLeftRes == Result::NotReady);
-
         BQ2562x::ChargeStat stat;
+
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(ibat));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(isup));
+        Result timeLeftRes = board.getBatteryTimeLeft(timeLeft);
+        TEST_ASSERT_TRUE(timeLeftRes == Result::Ok || timeLeftRes == Result::NotReady);
         TEST_ASSERT_TRUE(board.getCharger().getChargeStat(stat));
 
         if (stat != BQ2562x::ChargeStat::Terminated)
@@ -472,8 +372,9 @@ TEST_CASE("test_battery_charging", MODULE_NAME)
 
         const char* statStr[] = {"terminated", "trickle", "taper", "topoff"};
 
-        printf("time: %lld\tsoc: %d\tstat: %s\tvbat: %d mV\tibat: %d mA\ttimeLeft: %s\n",
-                time(NULL), soc, statStr[static_cast<int>(stat)], vbat, ibat, timeLeftRes == Result::Ok ? std::to_string(timeLeft).c_str() : "<estimating>");
+        printf("time: %lld\tcharge: %d\tphase: %s\tbattery voltage: %d mV\tbattery current: %d mA\tsupply current: %d mA\ttime left: %s\n",
+                time(NULL), soc, statStr[static_cast<int>(stat)], vbat, ibat, isup,
+                timeLeftRes == Result::Ok ? std::to_string(timeLeft).c_str() : "<estimating>");
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }

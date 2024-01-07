@@ -139,7 +139,7 @@ namespace PowerFeather
             {
                 RET_IF_ERR(enableCharging(false));
                 RET_IF_ERR(enableTempSense(false));
-                RET_IF_ERR(setSupplyMaxCurrent(MainBoard::_defaultVSMaxCurrent));
+                RET_IF_ERR(setSupplyMaxCurrent(MainBoard::_defaultSupplyMaxCurrent));
                 RET_IF_ERR(setChargingMaxCurrent(MainBoard::_defaultChargingMaxCurrent));
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
                 RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
@@ -318,12 +318,12 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::setChargingMaxCurrent(uint16_t mA)
+    Result MainBoard::setChargingMaxCurrent(uint16_t current)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(getCharger().setChargeCurrent(mA), Result::Failure);
+        RET_IF_FALSE(getCharger().setChargeCurrent(current), Result::Failure);
         return Result::Ok;
     }
 
