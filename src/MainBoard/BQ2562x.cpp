@@ -92,6 +92,11 @@ namespace PowerFeather
         return writeReg(Registers::Charger_Control_0_WATCHDOG, enable);
     }
 
+    bool BQ2562x::getWD(bool &enable)
+    {
+        return readReg(Registers::Charger_Control_0_WATCHDOG, enable);
+    }
+
     bool BQ2562x::enableHIZ(bool enable)
     {
         return writeReg(Registers::Charger_Control_0_EN_HIZ, enable);

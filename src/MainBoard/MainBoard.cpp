@@ -124,26 +124,28 @@ namespace PowerFeather
         _batteryCapacity = capacity;
 
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
-        _sqtOn = rtc_gpio_get_level(Pin::EN_SQT);
+        _sqtOn = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT); // try to maintain across deep sleep
+        RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, _sqtOn), Result::Failure)
 
-        if (_sqtOn || _isFirst())
+        RET_IF_FALSE(_i2c.init(_i2cPort, Pin::SDA0, Pin::SCL0, _i2cFreq), Result::Failure); // initialize i2c always
+
+        if (_sqtOn)
         {
-            RET_IF_FALSE(_i2c.init(_i2cPort, Pin::SDA0, Pin::SCL0, _i2cFreq), Result::Failure);
-        }
+            bool wdOn = false;
+            RET_IF_FALSE(getCharger().getWD(wdOn), Result::Failure);
 
-        if (_isFirst())
-        {
-            RET_IF_ERR(enableVSQT(true));
-
-            RET_IF_ERR(enableCharging(false));
-            RET_IF_ERR(enableTempSense(false));
-            RET_IF_ERR(setSupplyMaxCurrent(MainBoard::_defaultVSMaxCurrent));
-            RET_IF_ERR(setChargingMaxCurrent(MainBoard::_defaultChargingMaxCurrent));
-            RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
-            RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
-            // Disable the charger watchdog to keep the charger in host mode and to
-            // keep some registers from resetting to their POR values.
-            RET_IF_FALSE(_sqtOn && getCharger().enableWD(false), Result::Failure);
+            if (wdOn) // watchdog disabled means that the initiatialization was done previously
+            {
+                RET_IF_ERR(enableCharging(false));
+                RET_IF_ERR(enableTempSense(false));
+                RET_IF_ERR(setSupplyMaxCurrent(MainBoard::_defaultVSMaxCurrent));
+                RET_IF_ERR(setChargingMaxCurrent(MainBoard::_defaultChargingMaxCurrent));
+                RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
+                RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
+                // Disable the charger watchdog to keep the charger in host mode and to
+                // keep some registers from resetting to their POR values.
+                RET_IF_FALSE(getCharger().enableWD(false), Result::Failure);
+            }
 
             _fgOn = false;
             if (_batteryCapacity)
@@ -207,7 +209,7 @@ namespace PowerFeather
     Result MainBoard::enableVSQT(bool enable)
     {
         TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, enable), Result::Failure)
         _sqtOn = enable;
         return Result::Ok;
