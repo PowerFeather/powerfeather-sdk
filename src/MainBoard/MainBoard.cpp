@@ -109,7 +109,7 @@ namespace PowerFeather
             RET_IF_FALSE(getFuelGauge().setAPA(_batteryCapacity), Result::Failure);
             RET_IF_FALSE(getFuelGauge().setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);
             RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
-            RET_IF_ERR(enableFuelGauge(true));
+            RET_IF_FALSE(getFuelGauge().enableOperation(true), Result::Failure);
         }
         return Result::Ok;
     }
@@ -150,7 +150,7 @@ namespace PowerFeather
             _fgOn = false;
             if (_batteryCapacity)
             {
-                RET_IF_ERR(_initFuelGauge());
+                _initFuelGauge();
                 _fgOn = true;
             }
         }
@@ -174,8 +174,8 @@ namespace PowerFeather
     Result MainBoard::enableFuelGauge(bool enable)
     {
         TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(!enable || (enable && _batteryCapacity), Result::InvalidState);
         RET_IF_FALSE(getFuelGauge().enableOperation(enable), Result::Failure);
         _fgOn = enable;
         return Result::Ok;
@@ -355,10 +355,9 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
-
-        if (getFuelGauge().getCellVoltage(mV)) // if fuel gauge is available, use the reading from it
+        if (!(_batteryCapacity && _fgOn && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(mV))) // if fuel gauge is available, use the reading from it
         {
+            printf("----------\n");
             RET_IF_ERR(_setupChargerADC());
             RET_IF_FALSE(getCharger().getVBAT(mV), Result::Failure);
         }
@@ -399,22 +398,15 @@ namespace PowerFeather
         uint16_t mins = 0;
         bool discharging = ibat < 0;
 
-        if (discharging)
+        RET_IF_FALSE(discharging ? getFuelGauge().getTimeToEmpty(mins) : getFuelGauge().getTimeToFull(mins), Result::Failure);
+
+        if (mins != 0xFFFF)
         {
-            getFuelGauge().getTimeToEmpty(mins);
-        }
-        else
-        {
-            getFuelGauge().getTimeToFull(mins);
+            minutes = mins * (discharging ? -1 : 1);
+            return Result::Ok;
         }
 
-        if (mins == 0xFFFF)
-        {
-            return Result::NotReady;
-        }
-
-        minutes = mins * (discharging ? -1 : 1);
-        return Result::Ok;
+        return Result::NotReady;
     }
 
     Result MainBoard::setBatteryLowVoltageAlarm(uint16_t voltage)
@@ -458,7 +450,7 @@ namespace PowerFeather
         if (_chargerADCTime == 0 || now - _chargerADCTime >= _chargerADCMaxTime)
         {
             bool done = false;
-            RET_IF_FALSE(getCharger().setupADC(true, BQ2562x::ADCRate::Oneshot), Result::Failure);
+            RET_IF_FALSE(getCharger().setupADC(true, BQ2562x::ADCRate::Oneshot, BQ2562x::ADCSampling::Bits_10), Result::Failure);
             vTaskDelay(pdMS_TO_TICKS(10));
             RET_IF_FALSE(getCharger().getADCDone(done), Result::Failure);
             _chargerADCTime = now;

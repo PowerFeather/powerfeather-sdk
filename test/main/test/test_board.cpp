@@ -176,33 +176,26 @@ TEST_CASE("test_power_inputs", MODULE_NAME)
     ledc_channel.hpoint         = 0;
     TEST_ASSERT_EQUAL(ESP_OK, ledc_channel_config(&ledc_channel));
 
-    bool connected, prev_connected;
-    prev_connected = false;
-
     while (true)
     {
-        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(connected));
-        if (connected != prev_connected)
-        {
-            printf("supply good: %d\n", connected);
-            uint32_t duty = connected? 8192 : 820;
-            // Set duty to 50%
-            ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty));
-            // Update duty to apply the new value
-            ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
+        bool suppg = false;
+        int16_t suppc = 0, battc = 0;
+        uint16_t suppv = 0, battv = 0;
 
-            // uint16_t suppv, suppc, battv, battc;
+        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(suppg));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyVoltage(suppv));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(suppc));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(battv));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(battc));
 
-            // TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(suppc));
-            // TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyVoltage(suppv));
-            // TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(battc));
-            // TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(batt));
+        uint32_t duty = suppg? 8192 : 820;
+        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty));
+        ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
 
-            prev_connected = connected;
-        }
+        printf("supply good: %d\tsupply voltage:%d mV\tsupply current: %d mA\tbattery voltage: %d mV\tbattery current:%d mA\n",
+             suppg, suppv, suppc, battv, battc);
         vTaskDelay(pdMS_TO_TICKS(100));
     }
-
 }
 
 TEST_CASE("test_ship_mode", MODULE_NAME)
