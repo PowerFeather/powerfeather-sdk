@@ -117,8 +117,9 @@ namespace PowerFeather
     Result MainBoard::init(uint16_t capacity)
     {
         _mutex.init();
-
         TRY_LOCK(_mutex);
+
+        RET_IF_FALSE(!capacity || (capacity >= _minBatteryCapacity && capacity <= _maxBatteryCapacity), Result::InvalidArg);
 
         _initDone = false;
         _batteryCapacity = capacity;
@@ -175,7 +176,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(!enable || (enable && _batteryCapacity), Result::InvalidState);
+        RET_IF_FALSE(!enable || _batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(getFuelGauge().enableOperation(enable), Result::Failure);
         _fgOn = enable;
         return Result::Ok;
@@ -357,7 +358,6 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         if (!(_batteryCapacity && _fgOn && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(mV))) // if fuel gauge is available, use the reading from it
         {
-            printf("----------\n");
             RET_IF_ERR(_setupChargerADC());
             RET_IF_FALSE(getCharger().getVBAT(mV), Result::Failure);
         }
