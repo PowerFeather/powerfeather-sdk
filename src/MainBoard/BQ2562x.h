@@ -173,6 +173,7 @@ namespace PowerFeather
         bool getVBAT(uint16_t& value);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
                         ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
+        bool getADCDone(bool &done);
 
         bool getVBUSStat(VBUSStat& stat);
         bool getPartInformation(uint8_t& value);

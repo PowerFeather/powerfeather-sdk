@@ -50,7 +50,7 @@ namespace PowerFeather
         if (readReg(Register{reg.address, reg.size, 0, last}, data))
         {
             uint8_t bits = reg.end - reg.start + 1;
-            uint16_t mask = ((0b1 << bits) - 1) << reg.start;
+            uint16_t mask = ((1 << bits) - 1) << reg.start;
             data = (data & ~mask) | ((value << reg.start) & mask);
             return _i2c.write(_i2cAddress, reg.address, reinterpret_cast<uint8_t*>(&data), reg.size);
         }
@@ -200,19 +200,19 @@ namespace PowerFeather
             switch (sampling)
             {
             case ADCSampling::Bits_12:
-                value |= 0b00 << 4;
+                value |= 0 << 4;
                 break;
 
             case ADCSampling::Bits_11:
-                value |= 0b01 << 4;
+                value |= 1 << 4;
                 break;
 
             case ADCSampling::Bits_10:
-                value |= 0b10 << 4;
+                value |= 2 << 4;
                 break;
 
             case ADCSampling::Bits_9:
-                value |= 0b11 << 4;
+                value |= 3 << 4;
                 break;
 
             default:
@@ -224,6 +224,17 @@ namespace PowerFeather
         }
 
         return writeReg(Registers::ADC_Control, value);
+    }
+
+
+    bool BQ2562x::getADCDone(bool &done)
+    {
+        uint8_t data;
+        if (readReg(Registers::Charger_Status_0, data))
+        {
+            done = data & (1 << 6);
+        }
+        return false;
     }
 
     bool BQ2562x::getBatteryVoltage(float& value)
