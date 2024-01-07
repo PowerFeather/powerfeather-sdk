@@ -238,6 +238,7 @@ namespace PowerFeather
         if (readReg(Registers::Charger_Status_0, data))
         {
             done = data & (1 << 6);
+            return true;
         }
         return false;
     }

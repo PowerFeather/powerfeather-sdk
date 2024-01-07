@@ -459,8 +459,8 @@ namespace PowerFeather
         {
             bool done = false;
             RET_IF_FALSE(getCharger().setupADC(true, BQ2562x::ADCRate::Oneshot), Result::Failure);
-            vTaskDelay(pdMS_TO_TICKS(5));
-            RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
+            vTaskDelay(pdMS_TO_TICKS(10));
+            RET_IF_FALSE(getCharger().getADCDone(done), Result::Failure);
             _chargerADCTime = now;
         }
 
