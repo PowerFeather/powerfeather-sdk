@@ -42,6 +42,7 @@ namespace PowerFeather
         InvalidState = -2,
         Timeout = -3,
         InvalidArg = -4,
-        NotReady = -5
+        NotReady = -5,
+        Busy = -6,
     };
 }
