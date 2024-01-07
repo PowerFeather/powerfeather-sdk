@@ -190,6 +190,14 @@ TEST_CASE("test_power_inputs", MODULE_NAME)
             ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty));
             // Update duty to apply the new value
             ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
+
+            // uint16_t suppv, suppc, battv, battc;
+
+            // TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(suppc));
+            // TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyVoltage(suppv));
+            // TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(battc));
+            // TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(batt));
+
             prev_connected = connected;
         }
         vTaskDelay(pdMS_TO_TICKS(100));
