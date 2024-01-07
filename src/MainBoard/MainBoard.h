@@ -359,8 +359,9 @@ namespace PowerFeather
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 100000; // TODO: use 400kHz, probably has something to do with clock stretching.
         static constexpr uint32_t _i2cTimeout = 1000;
-        static constexpr uint32_t _defaultVSMaxCurrent = 3000;
+        static constexpr uint32_t _defaultVSMaxCurrent = 500;
         static constexpr uint32_t _defaultChargingMaxCurrent = 100;
+        static constexpr uint32_t _chargerADCMaxTime = 100;
 
 #ifdef ARDUINO
         ArduinoMasterI2C _i2c {};
@@ -372,14 +373,19 @@ namespace PowerFeather
         LC709204F _fuelGauge {_i2c};
 
         bool _sqtOn { false };
+        bool _tsOn { false };
+        bool _fgOn { false };
         bool _initDone { false };
+        uint32_t _chargerADCTime { 0 };
+        uint16_t _batteryCapacity { 0 };
         Mutex _mutex { 1000 };
 
+        bool _isFirst();
+        bool _setRTCPin(gpio_num_t pin, bool value);
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
-        bool _setRTCPin(gpio_num_t pin, bool value);
-        bool _isFirst();
-        Result _initChargerAndFuelGauge(uint16_t mAh);
+        Result _initFuelGauge();
+        Result _setupChargerADC();
     };
 
     extern MainBoard& Board;

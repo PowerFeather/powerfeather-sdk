@@ -99,8 +99,29 @@ namespace PowerFeather
         return first != firstMagic;
     }
 
-    Result MainBoard::_initChargerAndFuelGauge(uint16_t capacity)
+
+    Result MainBoard::_initFuelGauge()
     {
+        bool op = false;
+        RET_IF_FALSE(getFuelGauge().getOperation(op), Result::Failure);
+
+        if (!op)
+        {
+            RET_IF_FALSE(getFuelGauge().setAPA(_batteryCapacity), Result::Failure);
+            RET_IF_FALSE(getFuelGauge().setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);
+            RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
+            RET_IF_ERR(enableFuelGauge(true));
+        }
+        return Result::Ok;
+    }
+
+    Result MainBoard::init(uint16_t capacity)
+    {
+        _initDone = false;
+        _batteryCapacity = capacity;
+
+        _mutex.init();
+
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
         _sqtOn = rtc_gpio_get_level(Pin::EN_SQT);
 
@@ -117,31 +138,20 @@ namespace PowerFeather
             RET_IF_ERR(enableTempSense(false));
             RET_IF_ERR(setSupplyMaxCurrent(MainBoard::_defaultVSMaxCurrent));
             RET_IF_ERR(setChargingMaxCurrent(MainBoard::_defaultChargingMaxCurrent));
-            RET_IF_FALSE(_charger.setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
-            RET_IF_FALSE(_charger.enableWVBUS(true), Result::Failure);
+            RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
+            RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
             // Disable the charger watchdog to keep the charger in host mode and to
             // keep some registers from resetting to their POR values.
-            RET_IF_FALSE(_sqtOn && _charger.enableWD(false), Result::Failure);
+            RET_IF_FALSE(_sqtOn && getCharger().enableWD(false), Result::Failure);
 
-            if (capacity > 0)
+            _fgOn = false;
+            if (_batteryCapacity)
             {
-                RET_IF_FALSE(_fuelGauge.setAPA(capacity), Result::Failure);
-                RET_IF_FALSE(_fuelGauge.setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);
-                RET_IF_FALSE(_fuelGauge.enableTSENSE(false, false), Result::Failure);
-                RET_IF_ERR(enableFuelGauge(true));
+                RET_IF_ERR(_initFuelGauge());
+                _fgOn = true;
             }
         }
 
-        return Result::Ok;
-    }
-
-    Result MainBoard::init(uint16_t mAh)
-    {
-        _initDone = false;
-
-        _mutex.init();
-
-        RET_IF_ERR(_initChargerAndFuelGauge(mAh));
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN0, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
 
@@ -161,7 +171,9 @@ namespace PowerFeather
     Result MainBoard::enableFuelGauge(bool enable)
     {
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
-        RET_IF_FALSE(_fuelGauge.enableOperation(true), Result::Failure);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(getFuelGauge().enableOperation(enable), Result::Failure);
+        _fgOn = enable;
         return Result::Ok;
     }
 
@@ -169,7 +181,7 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.enableHIZ(!enable), Result::Failure);
+        RET_IF_FALSE(getCharger().enableHIZ(!enable), Result::Failure);
         return Result::Ok;
     }
 
@@ -199,7 +211,7 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.setVINDPM(mV), Result::Failure);
+        RET_IF_FALSE(getCharger().setVINDPM(mV), Result::Failure);
         return Result::Ok;
     }
 
@@ -207,7 +219,8 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.setIINDPM(mA), Result::Failure);
+        RET_IF_FALSE(mA <= 2000, Result::InvalidArg);
+        RET_IF_FALSE(getCharger().setIINDPM(mA), Result::Failure);
         return Result::Ok;
     }
 
@@ -215,7 +228,8 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.getIBUS(mA), Result::Failure);
+        RET_IF_ERR(_setupChargerADC());
+        RET_IF_FALSE(getCharger().getIBUS(mA), Result::Failure);
         return Result::Ok;
     }
 
@@ -223,7 +237,8 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.getVBUS(mV), Result::Failure);
+        RET_IF_ERR(_setupChargerADC());
+        RET_IF_FALSE(getCharger().getVBUS(mV), Result::Failure);
         return Result::Ok;
     }
 
@@ -238,7 +253,7 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.setVINDPM(mV), Result::Failure);
+        RET_IF_FALSE(getCharger().setVINDPM(mV), Result::Failure);
         return Result::Ok;
     }
 
@@ -246,7 +261,7 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.setBATFETControl(BQ2562x::BATFETControl::ShipMode), Result::Failure);
+        RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShipMode), Result::Failure);
         return Result::Ok;
     }
 
@@ -254,7 +269,7 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.setBATFETControl(BQ2562x::BATFETControl::ShutdownMode), Result::Failure);
+        RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShutdownMode), Result::Failure);
         return Result::Ok;
     }
 
@@ -262,7 +277,7 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset), Result::Failure);
+        RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset), Result::Failure);
         return Result::Ok;
     }
 
@@ -270,7 +285,8 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.enableTS(enable), Result::Failure);
+        RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
+        _tsOn = true;
         return Result::Ok;
     }
 
@@ -278,7 +294,7 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.enableCharging(enable), Result::Failure);
+        RET_IF_FALSE(getCharger().enableCharging(enable), Result::Failure);
         return Result::Ok;
     }
 
@@ -286,7 +302,7 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.setChargeCurrent(mA), Result::Failure);
+        RET_IF_FALSE(getCharger().setChargeCurrent(mA), Result::Failure);
         return Result::Ok;
     }
 
@@ -294,8 +310,10 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_tsOn, Result::InvalidState);
+        RET_IF_ERR(_setupChargerADC());
         float x = 0;
-        RET_IF_FALSE(_charger.getTS_ADC(x), Result::Failure);
+        RET_IF_FALSE(getCharger().getTS_ADC(x), Result::Failure);
         // Map percent to temperature given 103AT thermistor with fitted curve (see ts_calc.fods).
         celsius = (-1866.96172 * powf(x, 4)) + (3169.31754 * powf(x, 3)) - (1849.96775 * powf(x, 2)) + (276.6656 * x) + 81.98758;
         return Result::Ok;
@@ -305,7 +323,8 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.getIBAT(mA), Result::Failure);
+        RET_IF_ERR(_setupChargerADC());
+        RET_IF_FALSE(getCharger().getIBAT(mA), Result::Failure);
         return Result::Ok;
     }
 
@@ -313,7 +332,12 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_charger.getVBAT(mV), Result::Failure);
+        RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
+        if (getFuelGauge().getCellVoltage(mV)) // if fuel gauge is available, use the reading from it
+        {
+            RET_IF_ERR(_setupChargerADC());
+            RET_IF_FALSE(getCharger().getVBAT(mV), Result::Failure);
+        }
         return Result::Ok;
     }
 
@@ -321,7 +345,8 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_fuelGauge.getRSOC(percent), Result::Failure);
+        RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
+        RET_IF_FALSE(getFuelGauge().getRSOC(percent), Result::Failure);
         return Result::Ok;
     }
 
@@ -329,7 +354,8 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        percent = _fuelGauge.getSOH(percent) / 100.0f;
+        RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
+        percent = getFuelGauge().getSOH(percent) / 100.0f;
         return Result::Ok;
     }
 
@@ -338,6 +364,7 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
 
         TRY_LOCK(_mutex);
 
@@ -349,11 +376,11 @@ namespace PowerFeather
 
         if (discharging)
         {
-            _fuelGauge.getTimeToEmpty(mins);
+            getFuelGauge().getTimeToEmpty(mins);
         }
         else
         {
-            _fuelGauge.getTimeToFull(mins);
+            getFuelGauge().getTimeToFull(mins);
         }
 
         if (mins == 0xFFFF)
@@ -369,8 +396,9 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
         RET_IF_FALSE((voltage >= 2500 && voltage <= 5000) || voltage == 0, Result::InvalidArg);
-        RET_IF_FALSE(_fuelGauge.setLowVoltageAlarm(voltage), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().setLowVoltageAlarm(voltage), Result::Failure);
         return Result::Ok;
     };
 
@@ -378,8 +406,11 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
         RET_IF_FALSE((voltage >= 2500 && voltage <= 5000) || voltage == 0, Result::InvalidArg);
-        RET_IF_FALSE(_fuelGauge.setHighVoltageAlarm(voltage), Result::Failure);
+        bool oper = 0;
+        RET_IF_FALSE(getFuelGauge().getOperation(oper), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().setHighVoltageAlarm(voltage), Result::Failure);
         return Result::Ok;
     };
 
@@ -387,8 +418,24 @@ namespace PowerFeather
     {
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
         RET_IF_FALSE((percent >= 1 && percent <= 100) || percent == 0, Result::InvalidArg);
-        RET_IF_FALSE(_fuelGauge.setLowRSOCAlarm(percent), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().setLowRSOCAlarm(percent), Result::Failure);
         return Result::Ok;
     };
+
+    Result MainBoard::_setupChargerADC()
+    {
+        uint32_t now = 0;
+        if (_chargerADCTime == 0 || now - _chargerADCTime >= _chargerADCMaxTime)
+        {
+            bool done = false;
+            RET_IF_FALSE(getCharger().setupADC(true, BQ2562x::ADCRate::Oneshot), Result::Failure);
+            vTaskDelay(pdMS_TO_TICKS(5));
+            RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
+            _chargerADCTime = now;
+        }
+
+        return Result::Ok;
+    }
 }
