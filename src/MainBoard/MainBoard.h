@@ -378,7 +378,7 @@ namespace PowerFeather
         bool _initDone { false };
         uint32_t _chargerADCTime { 0 };
         uint16_t _batteryCapacity { 0 };
-        Mutex _mutex { 1000 };
+        Mutex _mutex { 100 };
 
         bool _isFirst();
         bool _setRTCPin(gpio_num_t pin, bool value);
