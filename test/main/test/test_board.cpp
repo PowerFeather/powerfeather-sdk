@@ -426,7 +426,7 @@ TEST_CASE("test_current_loading", MODULE_NAME)
     }
 }
 
-TEST_CASE("test_battery_information", MODULE_NAME)
+TEST_CASE("test_battery_charging", MODULE_NAME)
 {
     // Measure VBAT, IBAT
     // Disable charging initially, until certain SOC
