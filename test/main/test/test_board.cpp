@@ -65,7 +65,57 @@ static void display_voltages_and_currents()
             gsup, vsup, isup, vbat, ibat);
 }
 
-TEST_CASE("test_EN", MODULE_NAME)
+TEST_CASE("test_3V3_VSQT_EN_on_glitch_deep_sleep", MODULE_NAME)
+{
+    board.enable3V3(true);
+    board.enableVSQT(true);
+    board.setEN(true);
+    esp_deep_sleep(MS_TO_US(100));
+}
+
+TEST_CASE("test_3V3_VSQT_EN_on_glitch_digital_reset", MODULE_NAME)
+{
+    board.enable3V3(true);
+    board.enableVSQT(true);
+    board.setEN(true);
+    esp_restart();
+}
+
+TEST_CASE("test_3V3_VSQT_EN_on_glitch_light_sleep", MODULE_NAME)
+{
+    board.enable3V3(true);
+    board.enableVSQT(true);
+    board.setEN(true);
+    esp_sleep_enable_timer_wakeup(MS_TO_US(1000));
+    esp_light_sleep_start();
+}
+
+TEST_CASE("test_3V3_VSQT_EN_off_glitch_deep_sleep", MODULE_NAME)
+{
+    board.enable3V3(false);
+    board.enableVSQT(false);
+    board.setEN(false);
+    esp_deep_sleep(MS_TO_US(100));
+}
+
+TEST_CASE("test_3V3_VSQT_EN_off_glitch_digital_reset", MODULE_NAME)
+{
+    board.enable3V3(false);
+    board.enableVSQT(false);
+    board.setEN(false);
+    esp_restart();
+}
+
+TEST_CASE("test_3V3_VSQT_EN_off_glitch_light_sleep", MODULE_NAME)
+{
+    board.enable3V3(false);
+    board.enableVSQT(false);
+    board.setEN(false);
+    esp_sleep_enable_timer_wakeup(MS_TO_US(1000));
+    esp_light_sleep_start();
+}
+
+TEST_CASE("test_board_enable", MODULE_NAME)
 {
     // Tie potentiometer to temperature sense
     // Check interrupt, may be combined with another test
@@ -86,13 +136,15 @@ TEST_CASE("test_EN", MODULE_NAME)
 
     bool enable = false;
 
-    while (true)
+    for (int i = 0; i < 10; i++)
     {
         TEST_ASSERT_EQUAL(Result::Ok, board.setEN(enable));
         vTaskDelay(pdMS_TO_TICKS(1000));
+
         bool _enable = gpio_get_level(MainBoard::Pin::EN);
+
+        printf("en0: %d\ten: %d\n", enable, _enable);
         TEST_ASSERT_EQUAL(enable, _enable);
-        printf("enable: %d\n", _enable);
         enable = !enable;
     }
 }
@@ -111,38 +163,7 @@ TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_enabled", MODULE_NAME)
     esp_deep_sleep_start();
 }
 
-TEST_CASE("test_3V3_VSQT_EN_on_glitch_deep_sleep", MODULE_NAME)
-{
-    board.enable3V3(true);
-    board.enableVSQT(true);
-    board.setEN(true);
-    esp_deep_sleep(MS_TO_US(100));
-}
 
-
-TEST_CASE("test_3V3_VSQT_EN_off_glitch_deep_sleep", MODULE_NAME)
-{
-    board.enable3V3(false);
-    board.enableVSQT(false);
-    board.setEN(false);
-    esp_deep_sleep(MS_TO_US(100));
-}
-
-TEST_CASE("test_3V3_VSQT_EN_on_glitch_deep_sleep", MODULE_NAME)
-{
-    board.enable3V3(true);
-    board.enableVSQT(true);
-    board.setEN(true);
-    esp_restart_noos_dig();
-}
-
-TEST_CASE("test_3V3_VSQT_EN_off_glitch_deep_sleep", MODULE_NAME)
-{
-    board.enable3V3(false);
-    board.enableVSQT(false);
-    board.setEN(false);
-    esp_restart_noos_dig();
-}
 
 TEST_CASE("test_TS", MODULE_NAME)
 {
