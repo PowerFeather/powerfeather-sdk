@@ -25,8 +25,9 @@ extern "C" void app_main(void)
     io_conf.mode = GPIO_MODE_INPUT;
     gpio_config(&io_conf);
 
+    gpio_set_level(MainBoard::Pin::LED, true);
+
     gpio_install_isr_service(0);
 
-    gpio_set_level(MainBoard::Pin::LED, true);
     test_main();
 }

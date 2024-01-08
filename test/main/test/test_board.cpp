@@ -115,7 +115,7 @@ TEST_CASE("test_3V3_VSQT_EN_off_glitch_light_sleep", MODULE_NAME)
     esp_light_sleep_start();
 }
 
-TEST_CASE("test_board_enable", MODULE_NAME)
+TEST_CASE("test_EN", MODULE_NAME)
 {
     // Tie potentiometer to temperature sense
     // Check interrupt, may be combined with another test
@@ -149,57 +149,6 @@ TEST_CASE("test_board_enable", MODULE_NAME)
     }
 }
 
-TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_disabled", MODULE_NAME)
-{
-    TEST_ASSERT_EQUAL(Result::Ok, board.enable3V3(false));
-    TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(false));
-    esp_deep_sleep_start();
-}
-
-TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_enabled", MODULE_NAME)
-{
-    TEST_ASSERT_EQUAL(Result::Ok, board.enable3V3(true));
-    TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(true));
-    esp_deep_sleep_start();
-}
-
-
-
-TEST_CASE("test_TS", MODULE_NAME)
-{
-    gpio_config_t io_conf = {};
-    io_conf.intr_type = GPIO_INTR_NEGEDGE;
-    io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::INT;
-    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-    gpio_config(&io_conf);
-
-    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, CHARGER_INTERRUPT, display_charger_status, NULL, NULL));
-    gpio_isr_handler_add(MainBoard::Pin::INT, [](void* arg) { esp_event_post(TEST_EVENTS, CHARGER_INTERRUPT, NULL, 0, portMAX_DELAY); }, NULL);
-
-    float temp = 0.0f;
-
-    //TODO: check that temperature reading is invalid before enabling temperature
-    TEST_ASSERT_EQUAL(Result::InvalidState, board.getBatteryTemperature(temp));
-
-    TEST_ASSERT_EQUAL(Result::Ok, board.enableTempSense(true));
-
-    uint8_t adcSetup = 0;
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::ADC_Control, adcSetup));
-    TEST_ASSERT_EQUAL(0xb0, adcSetup);
-
-    board.getCharger().displayInfo();
-
-    while (true)
-    {
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryTemperature(temp));
-        printf("temperature: %f\n", temp);
-
-        vTaskDelay(pdMS_TO_TICKS(100));
-    }
-}
-
 TEST_CASE("test_BTN_and_LED", MODULE_NAME)
 {
     gpio_set_intr_type(MainBoard::Pin::BTN, GPIO_INTR_ANYEDGE);
@@ -209,63 +158,6 @@ TEST_CASE("test_BTN_and_LED", MODULE_NAME)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
-}
-
-TEST_CASE("test_power_inputs", MODULE_NAME)
-{
-    TEST_ASSERT_EQUAL(ESP_OK, gpio_reset_pin(MainBoard::Pin::LED));
-
-    // Prepare and then apply the LEDC PWM timer configuration
-    ledc_timer_config_t ledc_timer = {
-        .speed_mode       = LEDC_LOW_SPEED_MODE,
-        .duty_resolution  = LEDC_TIMER_13_BIT,
-        .timer_num        = LEDC_TIMER_0,
-        .freq_hz          = 4000,  // Set output frequency at 4 kHz
-        .clk_cfg          = LEDC_AUTO_CLK
-    };
-    TEST_ASSERT_EQUAL(ESP_OK, ledc_timer_config(&ledc_timer));
-
-    // Prepare and then apply the LEDC PWM channel configuration
-    ledc_channel_config_t ledc_channel;
-    memset(&ledc_channel, 0, sizeof(ledc_channel));
-    ledc_channel.speed_mode     = LEDC_LOW_SPEED_MODE;
-    ledc_channel.channel        = LEDC_CHANNEL_0;
-    ledc_channel.timer_sel      = LEDC_TIMER_0;
-    ledc_channel.intr_type      = LEDC_INTR_DISABLE;
-    ledc_channel.gpio_num       = MainBoard::Pin::LED;
-    ledc_channel.duty           = 0; // Set duty to 0;
-    ledc_channel.hpoint         = 0;
-    TEST_ASSERT_EQUAL(ESP_OK, ledc_channel_config(&ledc_channel));
-
-    while (true)
-    {
-        bool suppg = false;
-        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(suppg));
-        uint32_t duty = suppg? 8192 : 820;
-        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty));
-        ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
-
-        display_voltages_and_currents();
-
-        vTaskDelay(pdMS_TO_TICKS(100));
-    }
-}
-
-TEST_CASE("test_ship_mode", MODULE_NAME)
-{
-    wait_for_battery();
-    board.enterShipMode();
-}
-
-TEST_CASE("test_shutdown_mode", MODULE_NAME)
-{
-    wait_for_battery();
-    board.enterShutdownMode();
-}
-
-TEST_CASE("test_power_cycle", MODULE_NAME)
-{
-    TEST_ASSERT_EQUAL(Result::Ok, board.doPowerCycle());
 }
 
 TEST_CASE("test_free_io", MODULE_NAME)
@@ -335,6 +227,118 @@ TEST_CASE("test_free_io", MODULE_NAME)
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
+
+
+TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_disabled", MODULE_NAME)
+{
+    TEST_ASSERT_EQUAL(Result::Ok, board.enable3V3(false));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(false));
+    esp_deep_sleep_start();
+}
+
+TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_enabled", MODULE_NAME)
+{
+    TEST_ASSERT_EQUAL(Result::Ok, board.enable3V3(true));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(true));
+    esp_deep_sleep_start();
+}
+
+
+
+TEST_CASE("test_TS", MODULE_NAME)
+{
+    gpio_config_t io_conf = {};
+    io_conf.intr_type = GPIO_INTR_NEGEDGE;
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::INT;
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    gpio_config(&io_conf);
+
+    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, CHARGER_INTERRUPT, display_charger_status, NULL, NULL));
+    gpio_isr_handler_add(MainBoard::Pin::INT, [](void* arg) { esp_event_post(TEST_EVENTS, CHARGER_INTERRUPT, NULL, 0, portMAX_DELAY); }, NULL);
+
+    float temp = 0.0f;
+
+    //TODO: check that temperature reading is invalid before enabling temperature
+    TEST_ASSERT_EQUAL(Result::InvalidState, board.getBatteryTemperature(temp));
+
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableTempSense(true));
+
+    uint8_t adcSetup = 0;
+    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::ADC_Control, adcSetup));
+    TEST_ASSERT_EQUAL(0xb0, adcSetup);
+
+    board.getCharger().displayInfo();
+
+    while (true)
+    {
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryTemperature(temp));
+        printf("temperature: %f\n", temp);
+
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
+
+TEST_CASE("test_power_inputs", MODULE_NAME)
+{
+    TEST_ASSERT_EQUAL(ESP_OK, gpio_reset_pin(MainBoard::Pin::LED));
+
+    // Prepare and then apply the LEDC PWM timer configuration
+    ledc_timer_config_t ledc_timer = {
+        .speed_mode       = LEDC_LOW_SPEED_MODE,
+        .duty_resolution  = LEDC_TIMER_13_BIT,
+        .timer_num        = LEDC_TIMER_0,
+        .freq_hz          = 4000,  // Set output frequency at 4 kHz
+        .clk_cfg          = LEDC_AUTO_CLK
+    };
+    TEST_ASSERT_EQUAL(ESP_OK, ledc_timer_config(&ledc_timer));
+
+    // Prepare and then apply the LEDC PWM channel configuration
+    ledc_channel_config_t ledc_channel;
+    memset(&ledc_channel, 0, sizeof(ledc_channel));
+    ledc_channel.speed_mode     = LEDC_LOW_SPEED_MODE;
+    ledc_channel.channel        = LEDC_CHANNEL_0;
+    ledc_channel.timer_sel      = LEDC_TIMER_0;
+    ledc_channel.intr_type      = LEDC_INTR_DISABLE;
+    ledc_channel.gpio_num       = MainBoard::Pin::LED;
+    ledc_channel.duty           = 0; // Set duty to 0;
+    ledc_channel.hpoint         = 0;
+    TEST_ASSERT_EQUAL(ESP_OK, ledc_channel_config(&ledc_channel));
+
+    while (true)
+    {
+        bool suppg = false;
+        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(suppg));
+        uint32_t duty = suppg? 8192 : 820;
+        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty));
+        ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
+
+        display_voltages_and_currents();
+
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
+TEST_CASE("test_ship_mode", MODULE_NAME)
+{
+    wait_for_battery();
+    board.enterShipMode();
+}
+
+TEST_CASE("test_shutdown_mode", MODULE_NAME)
+{
+    wait_for_battery();
+    board.enterShutdownMode();
+}
+
+TEST_CASE("test_power_cycle", MODULE_NAME)
+{
+    TEST_ASSERT_EQUAL(Result::Ok, board.doPowerCycle());
+}
+
+
 
 TEST_CASE("test_battery_alarms", MODULE_NAME)
 {
