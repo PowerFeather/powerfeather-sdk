@@ -16,11 +16,26 @@
 
 using namespace PowerFeather;
 
+ESP_EVENT_DEFINE_BASE(TEST_EVENTS);
+
+#define CHARGER_INTERRUPT           1
+#define FUEL_GAUGE_ALARM            2
+
 MainBoard& board = Board;
 
 static constexpr char MODULE_NAME[] = "[MainBoard]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
+
+static void display_charger_status(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
+{
+    // Board.getCharger().displayInfo();
+}
+
+static void display_fuel_gauge_status(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
+{
+    // printf("fuel gauge alarm!\n");
+}
 
 static void wait_for_battery()
 {
@@ -131,6 +146,17 @@ TEST_CASE("test_3V3_VSQT_EN_off_glitch_deep_sleep", MODULE_NAME)
 
 TEST_CASE("test_TS", MODULE_NAME)
 {
+    gpio_config_t io_conf = {};
+    io_conf.intr_type = GPIO_INTR_NEGEDGE;
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::INT;
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    gpio_config(&io_conf);
+
+    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, CHARGER_INTERRUPT, display_charger_status, NULL, NULL));
+    gpio_isr_handler_add(MainBoard::Pin::INT, [](void* arg) { esp_event_post(TEST_EVENTS, CHARGER_INTERRUPT, NULL, 0, portMAX_DELAY); }, NULL);
+
     float temp = 0.0f;
 
     //TODO: check that temperature reading is invalid before enabling temperature
@@ -291,6 +317,17 @@ TEST_CASE("test_free_io", MODULE_NAME)
 
 TEST_CASE("test_battery_alarms", MODULE_NAME)
 {
+    gpio_config_t io_conf = {};
+    io_conf.intr_type = GPIO_INTR_NEGEDGE;
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::ALARM;
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    gpio_config(&io_conf);
+
+    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, FUEL_GAUGE_ALARM, display_fuel_gauge_status, NULL, NULL));
+    gpio_isr_handler_add(MainBoard::Pin::ALARM, [](void* arg) { esp_event_post(TEST_EVENTS, FUEL_GAUGE_ALARM, NULL, 0, portMAX_DELAY); }, NULL);
+
     TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryLowVoltageAlarm(3600));
     TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryHighVoltageAlarm(4000));
     TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryLowChargeAlarm(30));

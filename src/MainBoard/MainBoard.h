@@ -87,8 +87,8 @@ namespace PowerFeather
 
             // Pins that are connected to a component on the board and has a
             // pre-determined/pre-configured function.
-            static constexpr gpio_num_t FGA =       GPIO_NUM_21; // FuelGauge ALARM, Input
-            static constexpr gpio_num_t CHGI =      GPIO_NUM_5; // Charger INT, Input
+            static constexpr gpio_num_t ALARM =     GPIO_NUM_21; // FuelGauge ALARM, Input
+            static constexpr gpio_num_t INT =       GPIO_NUM_5; // Charger INT, Input
 
             static constexpr gpio_num_t LED =       GPIO_NUM_46; // MainBoard LED, Output
             static constexpr gpio_num_t BTN =       GPIO_NUM_0; // MainBoard BTN, Input
