@@ -370,6 +370,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
+        RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getRSOC(percent), Result::Failure);
         return Result::Ok;
     }
@@ -380,6 +381,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
+        RET_IF_ERR(_initFuelGauge());
         percent = getFuelGauge().getSOH(percent) / 100.0f;
         return Result::Ok;
     }
@@ -391,6 +393,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
+        RET_IF_ERR(_initFuelGauge());
 
         int16_t ibat = 0;
         RET_IF_ERR(getBatteryCurrent(ibat));
@@ -415,6 +418,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
+        RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE((voltage >= 2500 && voltage <= 5000) || voltage == 0, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setLowVoltageAlarm(voltage), Result::Failure);
         return Result::Ok;
@@ -426,6 +430,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
+        RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE((voltage >= 2500 && voltage <= 5000) || voltage == 0, Result::InvalidArg);
         bool oper = 0;
         RET_IF_FALSE(getFuelGauge().getOperation(oper), Result::Failure);
@@ -439,6 +444,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
+        RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE((percent >= 1 && percent <= 100) || percent == 0, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setLowRSOCAlarm(percent), Result::Failure);
         return Result::Ok;
