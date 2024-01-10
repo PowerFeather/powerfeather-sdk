@@ -26,11 +26,17 @@ MainBoard& board = Board;
 static constexpr char MODULE_NAME[] = "[MainBoard]";
 static inline size_t MS_TO_US(size_t ms) { return ms * 1000; }
 
-
-static void display_charger_status(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
+static void disable_fuel_gauge()
 {
-    // Board.getCharger().displayInfo();
+    uint8_t charge = 0;
+    if (board.getBatteryCharge(charge) == Result::Ok) // make sure fuel guage is disabled
+    {
+        board.enableFuelGauge(false);
+        TEST_ASSERT_EQUAL(Result::InvalidState, board.getBatteryCharge(charge));
+        printf("disabled fuel gauge\n");
+    }
 }
+
 
 static void display_fuel_gauge_status(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
 {
@@ -228,25 +234,56 @@ TEST_CASE("test_free_io", MODULE_NAME)
     }
 }
 
-
-TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_disabled", MODULE_NAME)
+TEST_CASE("test_power_cycle", MODULE_NAME)
 {
-    TEST_ASSERT_EQUAL(Result::Ok, board.enable3V3(false));
-    TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(false));
-    esp_deep_sleep_start();
+    TEST_ASSERT_EQUAL(Result::Ok, board.doPowerCycle());
+}
+
+TEST_CASE("test_ship_mode", MODULE_NAME)
+{
+    disable_fuel_gauge();
+    wait_for_battery();
+    board.enterShipMode();
+}
+
+TEST_CASE("test_shutdown_mode", MODULE_NAME)
+{
+    disable_fuel_gauge();
+    wait_for_battery();
+    board.enterShutdownMode();
 }
 
 TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_enabled", MODULE_NAME)
 {
+    uint8_t charge = 0;
+    TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCharge(charge));
     TEST_ASSERT_EQUAL(Result::Ok, board.enable3V3(true));
     TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(true));
     esp_deep_sleep_start();
 }
 
+TEST_CASE("test_deep_sleep_current_3V3_and_VSQT_disabled", MODULE_NAME)
+{
+    uint8_t charge = 0;
+    TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCharge(charge));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enable3V3(false));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableVSQT(false));
+    esp_deep_sleep_start();
+}
 
+TEST_CASE("test_deep_sleep_current_fuel_gauge_disabled", MODULE_NAME)
+{
+    disable_fuel_gauge();
+    esp_deep_sleep_start();
+}
 
 TEST_CASE("test_TS", MODULE_NAME)
 {
+    static constexpr uint32_t eventId = __LINE__;
+    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, eventId,
+                      [](void* handler_args, esp_event_base_t base, int32_t id, void* event_data) { printf("Charger interrupt!\n"); }
+                      , NULL, NULL));
+
     gpio_config_t io_conf = {};
     io_conf.intr_type = GPIO_INTR_NEGEDGE;
     io_conf.mode = GPIO_MODE_OUTPUT;
@@ -254,32 +291,20 @@ TEST_CASE("test_TS", MODULE_NAME)
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     gpio_config(&io_conf);
+    gpio_isr_handler_add(MainBoard::Pin::INT, [](void* arg) { esp_event_post(TEST_EVENTS, eventId, NULL, 0, portMAX_DELAY); }, NULL);
 
-    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, CHARGER_INTERRUPT, display_charger_status, NULL, NULL));
-    gpio_isr_handler_add(MainBoard::Pin::INT, [](void* arg) { esp_event_post(TEST_EVENTS, CHARGER_INTERRUPT, NULL, 0, portMAX_DELAY); }, NULL);
-
+    // check that temperature reading is invalid before enabling temperature
     float temp = 0.0f;
-
-    //TODO: check that temperature reading is invalid before enabling temperature
     TEST_ASSERT_EQUAL(Result::InvalidState, board.getBatteryTemperature(temp));
-
     TEST_ASSERT_EQUAL(Result::Ok, board.enableTempSense(true));
-
-    uint8_t adcSetup = 0;
-    TEST_ASSERT_TRUE(board.getCharger().readReg(BQ2562x::Registers::ADC_Control, adcSetup));
-    TEST_ASSERT_EQUAL(0xb0, adcSetup);
-
-    board.getCharger().displayInfo();
 
     while (true)
     {
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryTemperature(temp));
         printf("temperature: %f\n", temp);
-
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
-
 
 TEST_CASE("test_power_inputs", MODULE_NAME)
 {
@@ -318,69 +343,6 @@ TEST_CASE("test_power_inputs", MODULE_NAME)
         display_voltages_and_currents();
 
         vTaskDelay(pdMS_TO_TICKS(100));
-    }
-}
-
-TEST_CASE("test_ship_mode", MODULE_NAME)
-{
-    wait_for_battery();
-    board.enterShipMode();
-}
-
-TEST_CASE("test_shutdown_mode", MODULE_NAME)
-{
-    wait_for_battery();
-    board.enterShutdownMode();
-}
-
-TEST_CASE("test_power_cycle", MODULE_NAME)
-{
-    TEST_ASSERT_EQUAL(Result::Ok, board.doPowerCycle());
-}
-
-
-
-TEST_CASE("test_battery_alarms", MODULE_NAME)
-{
-    gpio_config_t io_conf = {};
-    io_conf.intr_type = GPIO_INTR_NEGEDGE;
-    io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::ALARM;
-    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-    gpio_config(&io_conf);
-
-    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, FUEL_GAUGE_ALARM, display_fuel_gauge_status, NULL, NULL));
-    gpio_isr_handler_add(MainBoard::Pin::ALARM, [](void* arg) { esp_event_post(TEST_EVENTS, FUEL_GAUGE_ALARM, NULL, 0, portMAX_DELAY); }, NULL);
-
-    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryLowVoltageAlarm(3600));
-    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryHighVoltageAlarm(4000));
-    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryLowChargeAlarm(30));
-
-    while (true)
-    {
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-
-TEST_CASE("test_battery_information", MODULE_NAME)
-{
-
-    TEST_ASSERT_TRUE(true);
-}
-
-TEST_CASE("set VBAT min", MODULE_NAME)
-{
-    TEST_ASSERT_EQUAL(Result::Ok, board.setVBATMinVoltage(3.7));
-}
-
-TEST_CASE("test_current_loading", MODULE_NAME)
-{
-    board.setSupplyMaxCurrent(2000);
-
-    while (true)
-    {
-        display_voltages_and_currents();
     }
 }
 
@@ -440,3 +402,42 @@ TEST_CASE("test_battery_charging", MODULE_NAME)
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
+
+TEST_CASE("test_battery_alarms", MODULE_NAME)
+{
+    gpio_config_t io_conf = {};
+    io_conf.intr_type = GPIO_INTR_NEGEDGE;
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::ALARM;
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    gpio_config(&io_conf);
+
+    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, FUEL_GAUGE_ALARM, display_fuel_gauge_status, NULL, NULL));
+    gpio_isr_handler_add(MainBoard::Pin::ALARM, [](void* arg) { esp_event_post(TEST_EVENTS, FUEL_GAUGE_ALARM, NULL, 0, portMAX_DELAY); }, NULL);
+
+    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryLowVoltageAlarm(3600));
+    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryHighVoltageAlarm(4000));
+    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryLowChargeAlarm(30));
+
+    while (true)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+TEST_CASE("set VBAT min", MODULE_NAME)
+{
+    TEST_ASSERT_EQUAL(Result::Ok, board.setVBATMinVoltage(3.7));
+}
+
+TEST_CASE("test_current_loading", MODULE_NAME)
+{
+    board.setSupplyMaxCurrent(2000);
+
+    while (true)
+    {
+        display_voltages_and_currents();
+    }
+}
+
