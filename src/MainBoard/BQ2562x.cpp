@@ -113,6 +113,16 @@ namespace PowerFeather
         return readReg(Registers::Part_Information, value);
     }
 
+    bool BQ2562x::enableInterrupts(bool enable)
+    {
+        uint8_t data = enable ? 0x00 : 0xFF;
+        if (writeReg(Registers::Charger_Mask_0, data))
+        {
+            return writeReg(Registers::Charger_Mask_1, data);
+        }
+        return false;
+    }
+
     bool BQ2562x::enableCharging(bool state)
     {
         return writeReg(Registers::Charger_Control_0_EN_CHG, state);

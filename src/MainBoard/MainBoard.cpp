@@ -143,6 +143,7 @@ namespace PowerFeather
                 RET_IF_ERR(setChargingMaxCurrent(MainBoard::_defaultChargingMaxCurrent));
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
                 RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
+                RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
                 // Disable the charger watchdog to keep the charger in host mode and to
                 // keep some registers from resetting to their POR values.
                 RET_IF_FALSE(getCharger().enableWD(false), Result::Failure);

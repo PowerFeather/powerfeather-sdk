@@ -169,6 +169,7 @@ namespace PowerFeather
         bool enableHIZ(bool enable);
         bool setBATFETControl(BATFETControl control);
         bool setBATFETDelay(BATFETDelay delay);
+        bool enableInterrupts(bool enable);
         bool enableWVBUS(bool enable);
         bool getVBAT(uint16_t& value);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
