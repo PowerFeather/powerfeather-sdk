@@ -107,6 +107,17 @@ namespace PowerFeather
         return false;
     }
 
+    bool LC709204F::getCycles(uint16_t& cycles)
+    {
+        uint16_t val = 0;
+        if (readReg(Registers::Cycle_Count, val))
+        {
+            cycles = val;
+            return true;
+        }
+        return false;
+    }
+
     bool LC709204F::getSOH(uint8_t& soh)
     {
         uint16_t val = 0;

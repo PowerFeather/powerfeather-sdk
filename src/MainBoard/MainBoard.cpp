@@ -387,6 +387,17 @@ namespace PowerFeather
         return Result::Ok;
     }
 
+    Result MainBoard::getBatteryCycles(uint16_t& cycles)
+    {
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
+        RET_IF_ERR(_initFuelGauge());
+        cycles = getFuelGauge().getCycles(cycles);
+        return Result::Ok;
+    }
+
     Result MainBoard::getBatteryTimeLeft(int& minutes)
     {
         TRY_LOCK(_mutex);

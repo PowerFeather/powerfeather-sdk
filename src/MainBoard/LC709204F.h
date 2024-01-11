@@ -78,7 +78,7 @@ namespace PowerFeather
         bool getSOH(uint8_t& rsoh);
         bool getTimeToEmpty(uint16_t& minutes);
         bool getTimeToFull(uint16_t& minutes);
-        bool getBatteryCycles(uint16_t& cycles);
+        bool getCycles(uint16_t& cycles);
         bool getOperation(bool& enabled);
 
         bool setAPA(uint16_t mAh);
