@@ -340,8 +340,23 @@ TEST_CASE("test_battery_charging", MODULE_NAME)
 
     while (true)
     {
-        uint8_t soc = 0;
+        uint8_t soc = 0, soh = 0;
+        int16_t ibat = 0, isup = 0;
+        uint16_t vbat = 0;
+        int timeLeft = 0;
+        uint16_t cycles = 0;
+
+        BQ2562x::ChargeStat stat = BQ2562x::ChargeStat::Terminated;
+
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCharge(soc));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryHealth(soh));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCycles(cycles));
+
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(ibat));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
+        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(isup));
+        Result timeLeftRes = board.getBatteryTimeLeft(timeLeft);
+        TEST_ASSERT_TRUE(timeLeftRes == Result::Ok || timeLeftRes == Result::NotReady);
 
         if (soc > maxSoc)
         {
@@ -354,22 +369,12 @@ TEST_CASE("test_battery_charging", MODULE_NAME)
             TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(true));
         } else
         {
-            // Do nothing
+            // Discharge first
+            TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
         }
 
-        int16_t ibat = 0, isup = 0;
-        uint16_t vbat = 0;
-        int timeLeft = 0;
-        BQ2562x::ChargeStat stat = BQ2562x::ChargeStat::Terminated;
-
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(ibat));
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
-        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(isup));
-        Result timeLeftRes = board.getBatteryTimeLeft(timeLeft);
-        TEST_ASSERT_TRUE(timeLeftRes == Result::Ok || timeLeftRes == Result::NotReady);
-
-        printf("time: %lld\tcharge: %d\t\tbattery voltage: %d mV\tbattery current: %d mA\tsupply current: %d mA\ttime left: %s\n",
-                time(NULL), soc, vbat, ibat, isup,
+        printf("time: %lld\tcharge: %d\thealth: %d\t cycles: %d\tvbat: %d mV\tibat: %d mA\tisup: %d mA\ttime left: %s\n",
+                time(NULL), soc, soh, cycles, vbat, ibat, isup,
                 timeLeftRes == Result::Ok ? std::to_string(timeLeft).c_str() : "<estimating>");
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
@@ -379,17 +384,6 @@ TEST_CASE("set VBAT min", MODULE_NAME)
 {
     TEST_ASSERT_EQUAL(Result::Ok, board.setVBATMinVoltage(3.7));
 }
-
-TEST_CASE("test_current_loading", MODULE_NAME)
-{
-    board.setSupplyMaxCurrent(2000);
-
-    while (true)
-    {
-        display_voltages_and_currents();
-    }
-}
-
 
 TEST_CASE("test_power_inputs", MODULE_NAME)
 {
@@ -402,5 +396,15 @@ TEST_CASE("test_power_inputs", MODULE_NAME)
         TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(good));
         display_voltages_and_currents();
         vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
+TEST_CASE("test_current_loading", MODULE_NAME)
+{
+    board.setSupplyMaxCurrent(2000);
+
+    while (true)
+    {
+        display_voltages_and_currents();
     }
 }
