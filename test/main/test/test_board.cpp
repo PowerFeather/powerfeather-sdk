@@ -281,12 +281,12 @@ TEST_CASE("test_TS", MODULE_NAME)
 {
     static constexpr uint32_t eventId = __LINE__;
     TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, eventId,
-                      [](void* handler_args, esp_event_base_t base, int32_t id, void* event_data) { printf("Charger interrupt!\n"); }
+                      [](void* handler_args, esp_event_base_t base, int32_t id, void* event_data) { printf("charger interrupt\n"); }
                       , NULL, NULL));
 
     gpio_config_t io_conf = {};
     io_conf.intr_type = GPIO_INTR_NEGEDGE;
-    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.mode = GPIO_MODE_INPUT;
     io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::INT;
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
