@@ -156,7 +156,8 @@ namespace PowerFeather
                 uint16_t prev_cap = std::get<0>(prev);
                 if (mAh < cap && (prev != cur && cap > prev_cap))
                 {
-                    float val = round(std::get<1>(prev) + (std::get<1>(cur) - std::get<1>(prev)) * ((static_cast<float>(mAh) - prev_cap) / (cap - prev_cap)));
+                    float val = round(std::get<1>(prev) + (std::get<1>(cur) - std::get<1>(prev)) *
+                                ((static_cast<float>(mAh) - prev_cap) / (cap - prev_cap)));
                     apa = (static_cast<uint8_t>(val) << 8) | static_cast<uint8_t>(val);
                 }
             }
