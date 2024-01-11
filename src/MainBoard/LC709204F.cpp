@@ -185,7 +185,7 @@ namespace PowerFeather
 
     bool LC709204F::setHighVoltageAlarm(uint16_t mV)
     {
-        return setVoltageAlarm(Registers::Alarm_Low_Cell_Voltage, mV);
+        return setVoltageAlarm(Registers::Alarm_High_Cell_Voltage, mV);
     }
 
     bool LC709204F::setLowRSOCAlarm(uint16_t rsoc)

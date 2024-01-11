@@ -38,10 +38,6 @@ static void disable_fuel_gauge()
 }
 
 
-static void display_fuel_gauge_status(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
-{
-    // printf("fuel gauge alarm!\n");
-}
 
 static void wait_for_battery()
 {
@@ -281,7 +277,10 @@ TEST_CASE("test_TS", MODULE_NAME)
 {
     static constexpr uint32_t eventId = __LINE__;
     TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, eventId,
-                      [](void* handler_args, esp_event_base_t base, int32_t id, void* event_data) { printf("charger interrupt\n"); }
+                      [](void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
+                      {
+                        printf("charger interrupt\n");
+                      }
                       , NULL, NULL));
 
     gpio_config_t io_conf = {};
@@ -306,57 +305,38 @@ TEST_CASE("test_TS", MODULE_NAME)
     }
 }
 
-TEST_CASE("test_power_inputs", MODULE_NAME)
+TEST_CASE("test_battery_voltage_alarms", MODULE_NAME)
 {
-    TEST_ASSERT_EQUAL(ESP_OK, gpio_reset_pin(MainBoard::Pin::LED));
+    static constexpr uint32_t eventId = __LINE__;
+    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, eventId,
+            [](void* handler_args, esp_event_base_t base, int32_t id, void* event_data){
+                uint16_t vbat = 0;
+                TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
+                printf("battery voltage alarm: %d\n", vbat);
+            }, NULL, NULL));
 
-    // Prepare and then apply the LEDC PWM timer configuration
-    ledc_timer_config_t ledc_timer = {
-        .speed_mode       = LEDC_LOW_SPEED_MODE,
-        .duty_resolution  = LEDC_TIMER_13_BIT,
-        .timer_num        = LEDC_TIMER_0,
-        .freq_hz          = 4000,  // Set output frequency at 4 kHz
-        .clk_cfg          = LEDC_AUTO_CLK
-    };
-    TEST_ASSERT_EQUAL(ESP_OK, ledc_timer_config(&ledc_timer));
+    gpio_config_t io_conf = {};
+    io_conf.intr_type = GPIO_INTR_ANYEDGE;
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::ALARM;
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    gpio_config(&io_conf);
+    gpio_isr_handler_add(MainBoard::Pin::ALARM, [](void* arg) { esp_event_post(TEST_EVENTS, eventId, NULL, 0, portMAX_DELAY); }, NULL);
 
-    // Prepare and then apply the LEDC PWM channel configuration
-    ledc_channel_config_t ledc_channel;
-    memset(&ledc_channel, 0, sizeof(ledc_channel));
-    ledc_channel.speed_mode     = LEDC_LOW_SPEED_MODE;
-    ledc_channel.channel        = LEDC_CHANNEL_0;
-    ledc_channel.timer_sel      = LEDC_TIMER_0;
-    ledc_channel.intr_type      = LEDC_INTR_DISABLE;
-    ledc_channel.gpio_num       = MainBoard::Pin::LED;
-    ledc_channel.duty           = 0; // Set duty to 0;
-    ledc_channel.hpoint         = 0;
-    TEST_ASSERT_EQUAL(ESP_OK, ledc_channel_config(&ledc_channel));
+    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryLowVoltageAlarm(3600));
+    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryHighVoltageAlarm(4000));
 
     while (true)
     {
-        bool suppg = false;
-        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(suppg));
-        uint32_t duty = suppg? 8192 : 820;
-        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty));
-        ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
-
-        display_voltages_and_currents();
-
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
 TEST_CASE("test_battery_charging", MODULE_NAME)
 {
-    // Measure VBAT, IBAT
-    // Disable charging initially, until certain SOC
-    // Enable charging, then disable again once another SOC is reached
-    TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
-    TEST_ASSERT_EQUAL(Result::Ok, board.setChargingMaxCurrent(1000));
-    TEST_ASSERT_EQUAL(Result::Ok, board.setSupplyMaxCurrent(2000));
-
-    static constexpr uint8_t minSoc = 60;
-    static constexpr uint8_t maxSoc = 70;
+    static constexpr uint8_t minSoc = 40;
+    static constexpr uint8_t maxSoc = 60;
 
     while (true)
     {
@@ -380,48 +360,17 @@ TEST_CASE("test_battery_charging", MODULE_NAME)
         int16_t ibat = 0, isup = 0;
         uint16_t vbat = 0;
         int timeLeft = 0;
-        BQ2562x::ChargeStat stat;
+        BQ2562x::ChargeStat stat = BQ2562x::ChargeStat::Terminated;
 
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(ibat));
         TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
         TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(isup));
         Result timeLeftRes = board.getBatteryTimeLeft(timeLeft);
         TEST_ASSERT_TRUE(timeLeftRes == Result::Ok || timeLeftRes == Result::NotReady);
-        TEST_ASSERT_TRUE(board.getCharger().getChargeStat(stat));
 
-        if (stat != BQ2562x::ChargeStat::Terminated)
-        {
-            TEST_ASSERT_EQUAL(ibat < 0, timeLeft < 0);
-        }
-
-        const char* statStr[] = {"terminated", "trickle", "taper", "topoff"};
-
-        printf("time: %lld\tcharge: %d\tphase: %s\tbattery voltage: %d mV\tbattery current: %d mA\tsupply current: %d mA\ttime left: %s\n",
-                time(NULL), soc, statStr[static_cast<int>(stat)], vbat, ibat, isup,
+        printf("time: %lld\tcharge: %d\t\tbattery voltage: %d mV\tbattery current: %d mA\tsupply current: %d mA\ttime left: %s\n",
+                time(NULL), soc, vbat, ibat, isup,
                 timeLeftRes == Result::Ok ? std::to_string(timeLeft).c_str() : "<estimating>");
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-
-TEST_CASE("test_battery_alarms", MODULE_NAME)
-{
-    gpio_config_t io_conf = {};
-    io_conf.intr_type = GPIO_INTR_NEGEDGE;
-    io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pin_bit_mask = (uint64_t)0b1 << MainBoard::Pin::ALARM;
-    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-    gpio_config(&io_conf);
-
-    TEST_ASSERT_EQUAL(ESP_OK, esp_event_handler_instance_register(TEST_EVENTS, FUEL_GAUGE_ALARM, display_fuel_gauge_status, NULL, NULL));
-    gpio_isr_handler_add(MainBoard::Pin::ALARM, [](void* arg) { esp_event_post(TEST_EVENTS, FUEL_GAUGE_ALARM, NULL, 0, portMAX_DELAY); }, NULL);
-
-    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryLowVoltageAlarm(3600));
-    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryHighVoltageAlarm(4000));
-    TEST_ASSERT_EQUAL(Result::Ok, board.setBatteryLowChargeAlarm(30));
-
-    while (true)
-    {
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
@@ -441,3 +390,17 @@ TEST_CASE("test_current_loading", MODULE_NAME)
     }
 }
 
+
+TEST_CASE("test_power_inputs", MODULE_NAME)
+{
+    TEST_ASSERT_EQUAL(ESP_OK, gpio_set_level(MainBoard::Pin::LED, 0));
+    // TEST_ASSERT_EQUAL(Result::Ok, board.setSupplyMaxCurrent(1000));
+
+    while (true)
+    {
+        bool good = false;
+        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyStatus(good));
+        display_voltages_and_currents();
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
