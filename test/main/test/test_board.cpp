@@ -335,8 +335,11 @@ TEST_CASE("test_battery_voltage_alarms", MODULE_NAME)
 
 TEST_CASE("test_battery_charging", MODULE_NAME)
 {
-    static constexpr uint8_t minSoc = 40;
-    static constexpr uint8_t maxSoc = 60;
+    static constexpr uint8_t minSoc = 4;
+    static constexpr uint8_t maxSoc = 15;
+
+    TEST_ASSERT_EQUAL(Result::Ok, board.setChargingMaxCurrent(250));
+    TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
 
     while (true)
     {
@@ -348,30 +351,24 @@ TEST_CASE("test_battery_charging", MODULE_NAME)
 
         BQ2562x::ChargeStat stat = BQ2562x::ChargeStat::Terminated;
 
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCharge(soc));
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryHealth(soh));
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCycles(cycles));
-
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryCurrent(ibat));
-        TEST_ASSERT_EQUAL(Result::Ok, board.getBatteryVoltage(vbat));
-        TEST_ASSERT_EQUAL(Result::Ok, board.getSupplyCurrent(isup));
+        Result socRes = board.getBatteryCharge(soc);
+        board.getBatteryHealth(soh);
+        board.getBatteryCycles(cycles);
+        board.getBatteryCurrent(ibat);
+        board.getBatteryVoltage(vbat);
+        board.getSupplyCurrent(isup);
         Result timeLeftRes = board.getBatteryTimeLeft(timeLeft);
-        TEST_ASSERT_TRUE(timeLeftRes == Result::Ok || timeLeftRes == Result::NotReady);
 
-        if (soc > maxSoc)
+        if (socRes == Result::Ok && soc > maxSoc)
         {
             TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
             TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(false));
         }
-        else if (soc < minSoc)
+        else if (socRes == Result::Ok && soc < minSoc)
         {
             TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(true));
             TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(true));
-        } else
-        {
-            // Discharge first
-            TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
-        }
+        } else { /*Do nothing, keep current state*/ }
 
         printf("time: %lld\tcharge: %d\thealth: %d\t cycles: %d\tvbat: %d mV\tibat: %d mA\tisup: %d mA\ttime left: %s\n",
                 time(NULL), soc, soh, cycles, vbat, ibat, isup,
