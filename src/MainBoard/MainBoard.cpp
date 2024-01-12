@@ -106,15 +106,18 @@ namespace PowerFeather
 
         if (!op)
         {
-            RET_IF_FALSE(getFuelGauge().setAPA(_batteryCapacity), Result::Failure);
-            RET_IF_FALSE(getFuelGauge().setChangeOfParameter(LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2), Result::Failure);
+            LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650 ?
+                                                 LC709204F::ChangeOfParameter::ICR18650_26H :
+                                                 LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
+            RET_IF_FALSE(getFuelGauge().setAPA(_batteryCapacity, param), Result::Failure);
+            RET_IF_FALSE(getFuelGauge().setChangeOfParameter(param), Result::Failure);
             RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
             RET_IF_FALSE(getFuelGauge().enableOperation(true), Result::Failure);
         }
         return Result::Ok;
     }
 
-    Result MainBoard::init(uint16_t capacity)
+    Result MainBoard::init(uint16_t capacity, BatteryType type)
     {
         _mutex.init();
         TRY_LOCK(_mutex);
@@ -123,6 +126,7 @@ namespace PowerFeather
 
         _initDone = false;
         _batteryCapacity = capacity;
+        _batteryType = type;
 
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
         _sqtOn = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT); // try to maintain across deep sleep

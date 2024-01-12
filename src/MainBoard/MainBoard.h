@@ -51,6 +51,12 @@ namespace PowerFeather
     class MainBoard
     {
     public:
+        enum class BatteryType
+        {
+            Generic_3V7,
+            ICR18650
+        };
+
         class Pin
         {
         public:
@@ -120,7 +126,7 @@ namespace PowerFeather
          *
          * @param[in] capacity Battery capacity in mAh.
          */
-        Result init(uint16_t capacity = 0);
+        Result init(uint16_t capacity = 0, BatteryType type = BatteryType::Generic_3V7);
 
         /**
          * Set EN pin state.
@@ -380,6 +386,7 @@ namespace PowerFeather
         bool _initDone { false };
         uint32_t _chargerADCTime { 0 };
         uint16_t _batteryCapacity { 0 };
+        BatteryType _batteryType { BatteryType::Generic_3V7 };
         Mutex _mutex { 100 };
 
         bool _isFirst();

@@ -9,7 +9,7 @@ using namespace PowerFeather;
 
 extern "C" void app_main(void)
 {
-    TEST_ASSERT_EQUAL(Result::Ok, Board.init(500));
+    TEST_ASSERT_EQUAL(Result::Ok, Board.init(3000, MainBoard::BatteryType::ICR18650));
 
     TEST_ASSERT_EQUAL(ESP_OK, esp_event_loop_create_default());
 

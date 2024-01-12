@@ -81,7 +81,7 @@ namespace PowerFeather
         bool getCycles(uint16_t& cycles);
         bool getOperation(bool& enabled);
 
-        bool setAPA(uint16_t mAh);
+        bool setAPA(uint16_t mAh, ChangeOfParameter param);
         bool setChangeOfParameter(ChangeOfParameter param);
         bool setLowVoltageAlarm(uint16_t mV);
         bool setHighVoltageAlarm(uint16_t mV);
