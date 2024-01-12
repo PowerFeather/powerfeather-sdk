@@ -339,7 +339,7 @@ TEST_CASE("test_battery_charging", MODULE_NAME)
     static constexpr uint8_t maxSoc = 15;
 
     TEST_ASSERT_EQUAL(Result::Ok, board.setChargingMaxCurrent(250));
-    TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
+    TEST_ASSERT_EQUAL(Result::Ok, board.forceRunOnBattery(false));
 
     while (true)
     {
@@ -359,12 +359,12 @@ TEST_CASE("test_battery_charging", MODULE_NAME)
 
         if (socRes == Result::Ok && soc > maxSoc)
         {
-            TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(false));
+            TEST_ASSERT_EQUAL(Result::Ok, board.forceRunOnBattery(false));
             TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(false));
         }
         else if (socRes == Result::Ok && soc < minSoc)
         {
-            TEST_ASSERT_EQUAL(Result::Ok, board.enableSupply(true));
+            TEST_ASSERT_EQUAL(Result::Ok, board.forceRunOnBattery(true));
             TEST_ASSERT_EQUAL(Result::Ok, board.enableCharging(true));
         } else { /*Do nothing, keep current state*/ }
 

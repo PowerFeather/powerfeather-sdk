@@ -187,12 +187,12 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::enableSupply(bool enable)
+    Result MainBoard::forceRunOnBattery(bool force)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(getCharger().enableHIZ(!enable), Result::Failure);
+        RET_IF_FALSE(getCharger().enableHIZ(!force), Result::Failure);
         return Result::Ok;
     }
 

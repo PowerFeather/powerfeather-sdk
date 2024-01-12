@@ -173,15 +173,15 @@ namespace PowerFeather
         Result getSupplyStatus(bool& good);
 
         /**
-         * Enable or disable the supply.
+         * Force the board to run on battery.
          *
-         * Disabling the supply means that the battery will power the board, even if a USB or DC
-         * adapter is connected.
+         * The battery will power the board on VBAT, even if a USB or DC adapter is connected.
+         * Useful for deliberately discharging the battery.
          *
          * @param[in] enable If true, supply is enabled; otherwise disabled.
          * @return
          */
-        Result enableSupply(bool enable);
+        Result forceRunOnBattery(bool force);
 
         /**
          * Sets the minimum supply voltage that should be maintained.
