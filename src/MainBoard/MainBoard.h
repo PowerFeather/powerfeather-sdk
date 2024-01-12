@@ -54,7 +54,8 @@ namespace PowerFeather
         enum class BatteryType
         {
             Generic_3V7,
-            ICR18650
+            ICR18650,
+            UR18650ZY,
         };
 
         class Pin

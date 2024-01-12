@@ -106,8 +106,8 @@ namespace PowerFeather
 
         if (!op)
         {
-            LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650 ?
-                                                 LC709204F::ChangeOfParameter::ICR18650_26H :
+            LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650 ? LC709204F::ChangeOfParameter::ICR18650_26H :
+                                                 _batteryType == BatteryType::UR18650ZY ? LC709204F::ChangeOfParameter::UR18650ZY :
                                                  LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
             RET_IF_FALSE(getFuelGauge().setAPA(_batteryCapacity, param), Result::Failure);
             RET_IF_FALSE(getFuelGauge().setChangeOfParameter(param), Result::Failure);

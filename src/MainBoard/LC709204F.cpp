@@ -154,6 +154,10 @@ namespace PowerFeather
         {
             return writeReg(Registers::APA, 0x0606);
         }
+        else if (param == ChangeOfParameter::UR18650ZY)
+        {
+            return writeReg(Registers::APA, 0x1010);
+        }
         else
         {
             auto prev = _apaTable[0];

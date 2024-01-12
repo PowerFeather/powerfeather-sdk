@@ -349,8 +349,6 @@ TEST_CASE("test_battery_charging", MODULE_NAME)
         int timeLeft = 0;
         uint16_t cycles = 0;
 
-        BQ2562x::ChargeStat stat = BQ2562x::ChargeStat::Terminated;
-
         Result socRes = board.getBatteryCharge(soc);
         board.getBatteryHealth(soh);
         board.getBatteryCycles(cycles);
