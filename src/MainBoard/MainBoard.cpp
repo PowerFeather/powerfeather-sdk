@@ -221,42 +221,42 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::setSupplyMinVoltage(uint16_t mV)
+    Result MainBoard::setSupplyMinVoltage(uint16_t voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(getCharger().setVINDPM(mV), Result::Failure);
+        RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::setSupplyMaxCurrent(uint16_t mA)
+    Result MainBoard::setSupplyMaxCurrent(uint16_t current)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(mA <= 2000, Result::InvalidArg);
-        RET_IF_FALSE(getCharger().setIINDPM(mA), Result::Failure);
+        RET_IF_FALSE(current <= 2000, Result::InvalidArg);
+        RET_IF_FALSE(getCharger().setIINDPM(current), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::getSupplyCurrent(int16_t& mA)
+    Result MainBoard::getSupplyCurrent(int16_t& current)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_ERR(_setupChargerADC());
-        RET_IF_FALSE(getCharger().getIBUS(mA), Result::Failure);
+        RET_IF_FALSE(getCharger().getIBUS(current), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::getSupplyVoltage(uint16_t& mV)
+    Result MainBoard::getSupplyVoltage(uint16_t& voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_ERR(_setupChargerADC());
-        RET_IF_FALSE(getCharger().getVBUS(mV), Result::Failure);
+        RET_IF_FALSE(getCharger().getVBUS(voltage), Result::Failure);
         return Result::Ok;
     }
 
@@ -268,12 +268,12 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::setVBATMinVoltage(uint16_t mV)
+    Result MainBoard::setVBATMinVoltage(uint16_t voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(getCharger().setVINDPM(mV), Result::Failure);
+        RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
         return Result::Ok;
     }
 
@@ -328,6 +328,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(current <= 2000, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setChargeCurrent(current), Result::Failure);
         return Result::Ok;
     }
@@ -346,25 +347,25 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryCurrent(int16_t& mA)
+    Result MainBoard::getBatteryCurrent(int16_t& current)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_ERR(_setupChargerADC());
-        RET_IF_FALSE(getCharger().getIBAT(mA), Result::Failure);
+        RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryVoltage(uint16_t& mV)
+    Result MainBoard::getBatteryVoltage(uint16_t& voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        if (!(_batteryCapacity && _fgOn && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(mV))) // if fuel gauge is available, use the reading from it
+        if (!(_batteryCapacity && _fgOn && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(voltage))) // if fuel gauge is available, use the reading from it
         {
             RET_IF_ERR(_setupChargerADC());
-            RET_IF_FALSE(getCharger().getVBAT(mV), Result::Failure);
+            RET_IF_FALSE(getCharger().getVBAT(voltage), Result::Failure);
         }
         return Result::Ok;
     }
