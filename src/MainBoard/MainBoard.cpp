@@ -388,7 +388,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        percent = getFuelGauge().getSOH(percent) / 100.0f;
+        RET_IF_FALSE(getFuelGauge().getSOH(percent), Result::Failure);
         return Result::Ok;
     }
 
@@ -399,7 +399,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgOn, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        cycles = getFuelGauge().getCycles(cycles);
+        RET_IF_FALSE(getFuelGauge().getCycles(cycles), Result::Failure);
         return Result::Ok;
     }
 
