@@ -123,6 +123,39 @@ namespace PowerFeather
         return false;
     }
 
+    bool BQ2562x::enableInterrupt(Interrupt num, bool en)
+    {
+        uint8_t reg0 = 0;
+        uint8_t reg1 = 0;
+
+        if (readReg(Registers::Charger_Mask_0, reg0))
+        {
+            uint8_t mask0 = 0, mask1 = 0;
+
+            if (readReg(Registers::Charger_Mask_1, reg1))
+            {
+                switch (num)
+                {
+                case Interrupt::VBUS:
+                    mask1 = 0b1 << 0;
+                    break;
+                default:
+                    break;
+                }
+
+                reg0 = en ? reg0 & ~(mask0) : reg0 | mask0;
+                reg1 = en ? reg1 & ~(mask1) : reg1 | mask1;
+
+                if (writeReg(Registers::Charger_Mask_0, reg0))
+                {
+                    return writeReg(Registers::Charger_Mask_1, reg1);
+                }
+            }
+        }
+
+        return false;
+    }
+
     bool BQ2562x::enableCharging(bool state)
     {
         return writeReg(Registers::Charger_Control_0_EN_CHG, state);

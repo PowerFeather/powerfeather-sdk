@@ -153,6 +153,11 @@ namespace PowerFeather
             Delay10s,
         };
 
+        enum class Interrupt : uint8_t
+        {
+            VBUS
+        };
+
         BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
 
         template <typename T>
@@ -170,6 +175,7 @@ namespace PowerFeather
         bool setBATFETControl(BATFETControl control);
         bool setBATFETDelay(BATFETDelay delay);
         bool enableInterrupts(bool enable);
+        bool enableInterrupt(Interrupt mask, bool en);
         bool enableWVBUS(bool enable);
         bool getVBAT(uint16_t& value);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
