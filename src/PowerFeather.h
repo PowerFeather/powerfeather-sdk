@@ -32,9 +32,11 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#pragma once
+
 #include "MainBoard/MainBoard.h"
 
-#if ARDUINO
+#ifdef ARDUINO
 #ifndef ARDUINO_ESP32S3_POWERFEATHER
 #error "Board not supported by PowerFeather SDK"
 #endif

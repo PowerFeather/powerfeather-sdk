@@ -32,6 +32,8 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#pragma once
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 

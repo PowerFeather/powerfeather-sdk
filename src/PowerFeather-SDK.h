@@ -31,6 +31,12 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#pragma once
 
 #include "PowerFeather.h"
+
+// This only exists to silence arduino-lint warning regarding
+// the best practice of naming the header file the same as the declared library
+// name.
+#warning "Please include 'PowerFeather.h' instead of 'PowerFeather-SDK.h'"
 
