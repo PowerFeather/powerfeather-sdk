@@ -1,0 +1,15 @@
+dependencies:
+  idf:
+    component_hash: null
+    source:
+      type: idf
+    version: 5.1.2
+  powerfeather/powerfeather-sdk:
+    component_hash: null
+    source:
+      path: /home/renz/Projects/powerfeather/powerfeather-sdk
+      type: local
+    version: 0.0.1
+manifest_hash: 316c9814f6226a6173c89cb03adad28e08fe7ec077401428c4ba6af82766cfaa
+target: esp32s3
+version: 1.0.0

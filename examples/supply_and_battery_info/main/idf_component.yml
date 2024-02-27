@@ -1,0 +1,6 @@
+version: "0.0.1"
+description: "PowerFeather SDK Supply and Battery Info Example"
+dependencies:
+  powerfeather/powerfeather-sdk:
+    version: "^0.0.1"
+    override_path: "../../../" # three levels up, pointing the directory with the component itself

@@ -1,4 +1,7 @@
 version: "0.0.1"
-description: "Supporting software development kit for PowerFeather boards"
+description: "Software development kit for PowerFeather boards"
 url: "https://github.com/PowerFeather/powerfeather-sdk"
 license: PowerFeather 4-Clause License
+dependencies:
+  idf:
+    version: ">=5.0"
