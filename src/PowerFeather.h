@@ -33,3 +33,9 @@
 */
 
 #include "MainBoard/MainBoard.h"
+
+#if ARDUINO
+#ifndef ARDUINO_ESP32S3_POWERFEATHER
+#error "Board not supported by PowerFeather SDK"
+#endif
+#endif
