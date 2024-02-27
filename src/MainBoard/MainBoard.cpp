@@ -209,6 +209,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
         RET_IF_FALSE(_setRTCPin(Pin::EN_3V3, enable), Result::Failure);
+        vTaskDelay(pdMS_TO_TICKS(10));
         return Result::Ok;
     }
 
@@ -218,6 +219,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, enable), Result::Failure)
         _sqtOn = enable;
+        vTaskDelay(pdMS_TO_TICKS(10));
         return Result::Ok;
     }
 
@@ -474,7 +476,7 @@ namespace PowerFeather
         {
             bool done = false;
             RET_IF_FALSE(getCharger().setupADC(true, BQ2562x::ADCRate::Oneshot, BQ2562x::ADCSampling::Bits_10), Result::Failure);
-            vTaskDelay(pdMS_TO_TICKS(10));
+            vTaskDelay(pdMS_TO_TICKS(100));
             RET_IF_FALSE(getCharger().getADCDone(done), Result::Failure);
             _chargerADCTime = now;
         }
