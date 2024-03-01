@@ -174,26 +174,15 @@ namespace PowerFeather
         Result getSupplyStatus(bool& good);
 
         /**
-         * Force the board to run on battery.
-         *
-         * The battery will power the board on VBAT, even if a USB or DC adapter is connected.
-         * Useful for deliberately discharging the battery.
-         *
-         * @param[in] enable If true, supply is enabled; otherwise disabled.
-         * @return
-         */
-        Result forceRunOnBattery(bool force);
-
-        /**
          * Sets the minimum supply voltage that should be maintained.
          *
          * This is usually the MPP (maximum power point) voltage of the power supply. The
-         * voltage is maintained by automatically reducing current draw. This results to
+         * voltage is maintained by automatically reducing charging current. This results to
          * the maximum power extracted from the supply.
          *
          * @param[in] voltage The maintained voltage in mV.
          */
-        Result setSupplyMinVoltage(uint16_t voltage);
+        Result setSupplyMaintainVoltage(uint16_t voltage);
 
         /**
          * Set the maximum current draw from the power supply.
@@ -205,16 +194,6 @@ namespace PowerFeather
          * @param[in] current The maximum current draw in mA.
          */
         Result setSupplyMaxCurrent(uint16_t current);
-
-        /**
-         * Set VBAT minimum output voltage.
-         *
-         * Set the minimum output voltage on VBAT even if there is no battery or the
-         * battery is fully depleted. The default value is 3.7 V.
-         *
-         * @param voltage Minimum voltage to set VBAT output to, valid input range [2.2, 4.3]
-         */
-        Result setVBATMinVoltage(uint16_t mV);
 
         /**
          * Enter ship mode.
@@ -363,6 +342,27 @@ namespace PowerFeather
 
     private:
         MainBoard() {}
+
+        /**
+         * Set VBAT minimum output voltage.
+         *
+         * Set the minimum output voltage on VBAT even if there is no battery or the
+         * battery is fully depleted. The default value is 3.7 V.
+         *
+         * @param voltage Minimum voltage to set VBAT output to, valid input range [2.2, 4.3]
+         */
+        Result setVBATMinVoltage(uint16_t mV);
+
+        /**
+         * Force the board to run on battery.
+         *
+         * The battery will power the board on VBAT, even if a USB or DC adapter is connected.
+         * Useful for deliberately discharging the battery.
+         *
+         * @param[in] enable If true, supply is enabled; otherwise disabled.
+         * @return
+         */
+        Result forceRunOnBattery(bool force);
 
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 100000; // TODO: use 400kHz, probably has something to do with clock stretching.

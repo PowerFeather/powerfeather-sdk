@@ -187,15 +187,6 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::forceRunOnBattery(bool force)
-    {
-        TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(getCharger().enableHIZ(!force), Result::Failure);
-        return Result::Ok;
-    }
-
     Result MainBoard::setEN(bool value)
     {
         TRY_LOCK(_mutex);
@@ -223,7 +214,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::setSupplyMinVoltage(uint16_t voltage)
+    Result MainBoard::setSupplyMaintainVoltage(uint16_t voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
