@@ -396,7 +396,7 @@ namespace PowerFeather
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
         Result _initFuelGauge();
-        Result _setupChargerADC();
+        Result _setupChargerADC(BQ2562x::Adc adc);
     };
 
     extern MainBoard& Board;

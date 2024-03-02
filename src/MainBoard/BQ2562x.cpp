@@ -104,8 +104,14 @@ namespace PowerFeather
 
     bool BQ2562x::enableTS(bool enable)
     {
-        return writeReg(Registers::NTC_Control_0_TS_IGNORE, !enable) &&
-               writeReg(Registers::ADC_Function_Disable_0_TS_ADC_DIS, !enable);
+        return writeReg(Registers::NTC_Control_0_TS_IGNORE, !enable) && enableADC(Adc::TS, enable);
+    }
+
+    bool BQ2562x::enableADC(Adc adc, bool enable)
+    {
+        Register reg = Registers::ADC_Function_Disable_0;
+        reg.start = reg.end = static_cast<uint8_t>(adc);
+        return writeReg(reg, !enable);
     }
 
     bool BQ2562x::getPartInformation(uint8_t& value)

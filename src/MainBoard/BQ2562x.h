@@ -85,8 +85,8 @@ namespace PowerFeather
             static constexpr Register FAULT_Mask_0 =                         { 0x25, 1, 2, 2 };
 
             static constexpr Register ADC_Control =                          { 0x26, 1, 0, 7 };
+
             static constexpr Register ADC_Function_Disable_0 =               { 0x27, 1, 0, 7 };
-            static constexpr Register ADC_Function_Disable_0_TS_ADC_DIS =    { 0x27, 1, 0, 7 };
 
             static constexpr Register IBUS_ADC =                             { 0x28, 2, 1, 15 };
             static constexpr Register IBAT_ADC =                             { 0x2a, 2, 2, 15 };
@@ -158,6 +158,18 @@ namespace PowerFeather
             VBUS
         };
 
+        enum class Adc : uint8_t
+        {
+            IBUS = 7,
+            IBAT = 6,
+            VBUS = 5,
+            VBAT = 4,
+            VSYS = 3,
+            TS = 2,
+            TDIE = 1,
+            VPMID = 0
+        };
+
         BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
 
         template <typename T>
@@ -178,6 +190,7 @@ namespace PowerFeather
         bool enableInterrupt(Interrupt mask, bool en);
         bool enableWVBUS(bool enable);
         bool getVBAT(uint16_t& value);
+        bool enableADC(Adc adc, bool enable);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
                         ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
         bool getADCDone(bool &done);
