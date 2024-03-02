@@ -1,17 +1,16 @@
 # PowerFeather SDK
 
-Software development kit for PowerFeather boards. The following boards are supported:
+The following boards are supported:
 
 | Board                 | Supported | Platform          |
 |-----------------------|-----------|-------------------|
 | ESP32-S3 PowerFeather | Yes       | Arduino & ESP-IDF |
 
+## Setup
 
-## Installation
-
-Installation is documented on [docs.powerfeather.dev/sdk/install](docs.powerfeather.dev/sdk/install).
+Setup for supported platforms is documented on [docs.powerfeather.dev/sdk/setup](docs.powerfeather.dev/sdk/setup).
 
 ## Examples
 
-- [supply_and_battery_info](examples/supply_and_battery_info/) - Illustrates how to retrieve basic information about the external supply and battery for ESP-IDF.
-- [Supply_and_Battery_Info](examples/Supply_and_Battery_Info/) -  Illustrates how to retrieve basic information about the external supply and battery for Arduino.
+- [supply_and_battery_info](examples/supply_and_battery_info/) - Demonstrates how to retrieve basic information about the external supply and battery for ESP-IDF.
+- [Supply_and_Battery_Info](examples/Supply_and_Battery_Info/) - Demonstrates how to retrieve basic information about the external supply and battery for Arduino.
