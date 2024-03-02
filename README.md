@@ -1,4 +1,4 @@
-# PowerFeather SDK
+# PowerFeather-SDK
 
 The following boards are supported:
 
