@@ -143,7 +143,6 @@ namespace PowerFeather
             {
                 RET_IF_ERR(enableCharging(false));
                 RET_IF_ERR(enableTempSense(false));
-                RET_IF_ERR(setSupplyMaxCurrent(MainBoard::_defaultSupplyMaxCurrent));
                 RET_IF_ERR(setChargingMaxCurrent(MainBoard::_defaultChargingMaxCurrent));
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
                 RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);

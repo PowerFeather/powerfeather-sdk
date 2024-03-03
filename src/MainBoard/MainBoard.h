@@ -184,16 +184,6 @@ namespace PowerFeather
          */
         Result setSupplyMaintainVoltage(uint16_t voltage);
 
-        /**
-         * Set the maximum current draw from the power supply.
-         *
-         * This includes current draw from on-board components, the load on the VS pin,
-         * and the charger current. The sum of all these current draws must not exceed this
-         * current. Default is 1000 mA.
-         *
-         * @param[in] current The maximum current draw in mA.
-         */
-        Result setSupplyMaxCurrent(uint16_t current);
 
         /**
          * Enter ship mode.
@@ -364,10 +354,20 @@ namespace PowerFeather
          */
         Result forceRunOnBattery(bool force);
 
+        /**
+         * Set the maximum current draw from the power supply.
+         *
+         * This includes current draw from on-board components, the load on the VS pin,
+         * and the charger current. The sum of all these current draws must not exceed this
+         * current. Default is 1000 mA.
+         *
+         * @param[in] current The maximum current draw in mA.
+         */
+        Result setSupplyMaxCurrent(uint16_t current);
+
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 100000; // TODO: use 400kHz, probably has something to do with clock stretching.
         static constexpr uint32_t _i2cTimeout = 1000;
-        static constexpr uint32_t _defaultSupplyMaxCurrent = 500;
         static constexpr uint32_t _defaultChargingMaxCurrent = 100;
         static constexpr uint32_t _minBatteryCapacity = 100;
         static constexpr uint32_t _maxBatteryCapacity = 15000;
