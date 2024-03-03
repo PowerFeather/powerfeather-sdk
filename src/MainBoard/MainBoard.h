@@ -125,9 +125,13 @@ namespace PowerFeather
          * Initialize board
          *
          * Initializes the power management and monitoring features. Sets the following defaults:
-         *   - charging, disabled
-         *   - 3V3 & VSQT enabled
-         *   - max charging current, 100 mA
+         *   - charging = disabled
+         *   - 3V3 & VSQT = enabled
+         *   - max charging current = 100 mA
+         *   - temperature sense = disabled
+         *   - supply maintain voltage = 4.6 V
+         *   - battery alarms = disabled
+         * If using batteries connected in parallel, specify the capacity for one cell.
          *
          * @param[in] capacity Battery capacity in mAh
          * @param[in] type Battery type
