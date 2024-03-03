@@ -333,38 +333,6 @@ namespace PowerFeather
     private:
         MainBoard() {}
 
-        /**
-         * Set VBAT minimum output voltage.
-         *
-         * Set the minimum output voltage on VBAT even if there is no battery or the
-         * battery is fully depleted. The default value is 3.7 V.
-         *
-         * @param voltage Minimum voltage to set VBAT output to, valid input range [2.2, 4.3]
-         */
-        Result setVBATMinVoltage(uint16_t mV);
-
-        /**
-         * Force the board to run on battery.
-         *
-         * The battery will power the board on VBAT, even if a USB or DC adapter is connected.
-         * Useful for deliberately discharging the battery.
-         *
-         * @param[in] enable If true, supply is enabled; otherwise disabled.
-         * @return
-         */
-        Result forceRunOnBattery(bool force);
-
-        /**
-         * Set the maximum current draw from the power supply.
-         *
-         * This includes current draw from on-board components, the load on the VS pin,
-         * and the charger current. The sum of all these current draws must not exceed this
-         * current. Default is 1000 mA.
-         *
-         * @param[in] current The maximum current draw in mA.
-         */
-        Result setSupplyMaxCurrent(uint16_t current);
-
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 100000; // TODO: use 400kHz, probably has something to do with clock stretching.
         static constexpr uint32_t _i2cTimeout = 1000;

@@ -219,16 +219,6 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::setSupplyMaxCurrent(uint16_t current)
-    {
-        TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
-        RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(current <= 2000, Result::InvalidArg);
-        RET_IF_FALSE(getCharger().setIINDPM(current), Result::Failure);
-        return Result::Ok;
-    }
-
     Result MainBoard::getSupplyCurrent(int16_t& current)
     {
         TRY_LOCK(_mutex);
@@ -254,15 +244,6 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         connected = gpio_get_level(Pin::PG) == 0;
-        return Result::Ok;
-    }
-
-    Result MainBoard::setVBATMinVoltage(uint16_t voltage)
-    {
-        TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
         return Result::Ok;
     }
 
