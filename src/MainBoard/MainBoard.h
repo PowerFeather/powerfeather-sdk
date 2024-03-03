@@ -369,9 +369,9 @@ namespace PowerFeather
         static constexpr uint32_t _i2cTimeout = 1000;
         static constexpr uint32_t _defaultSupplyMaxCurrent = 500;
         static constexpr uint32_t _defaultChargingMaxCurrent = 100;
-        static constexpr uint32_t _chargerADCMaxTime = 100;
         static constexpr uint32_t _minBatteryCapacity = 100;
         static constexpr uint32_t _maxBatteryCapacity = 15000;
+        static constexpr uint32_t _chargerADCWaitTime = 100;
 
 #ifdef ARDUINO
         ArduinoMasterI2C _i2c {};
@@ -396,7 +396,7 @@ namespace PowerFeather
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
         Result _initFuelGauge();
-        Result _setupChargerADC(BQ2562x::Adc adc);
+        Result _udpateChargerADC();
     };
 
     extern MainBoard& Board;

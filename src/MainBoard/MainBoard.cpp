@@ -236,7 +236,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_ERR(_setupChargerADC(BQ2562x::Adc::IBUS));
+        RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBUS(current), Result::Failure);
         return Result::Ok;
     }
@@ -246,7 +246,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_ERR(_setupChargerADC(BQ2562x::Adc::VBUS));
+        RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getVBUS(voltage), Result::Failure);
         return Result::Ok;
     }
@@ -329,8 +329,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(_tsOn, Result::InvalidState);
-        RET_IF_ERR(_setupChargerADC(BQ2562x::Adc::TS));
+        RET_IF_ERR(_udpateChargerADC());
         float x = 0;
         RET_IF_FALSE(getCharger().getTS_ADC(x), Result::Failure);
         // Map percent to temperature given 103AT thermistor with fitted curve (see ts_calc.fods).
@@ -343,7 +342,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_ERR(_setupChargerADC(BQ2562x::Adc::IBAT));
+        RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
         return Result::Ok;
     }
@@ -355,7 +354,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         if (!(_batteryCapacity && _fgOn && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(voltage))) // if fuel gauge is available, use the reading from it
         {
-            RET_IF_ERR(_setupChargerADC(BQ2562x::Adc::VBAT));
+            RET_IF_ERR(_udpateChargerADC());
             RET_IF_FALSE(getCharger().getVBAT(voltage), Result::Failure);
         }
         return Result::Ok;
@@ -458,20 +457,18 @@ namespace PowerFeather
         return Result::Ok;
     };
 
-    Result MainBoard::_setupChargerADC(BQ2562x::Adc adc)
+    Result MainBoard::_udpateChargerADC()
     {
         uint32_t now = 0;
-        if (_chargerADCTime == 0 || now - _chargerADCTime >= _chargerADCMaxTime)
+        // Since updating ADC values take a long time, only update it again after _chargerADCWaitTime has elapsed.
+        if (_chargerADCTime == 0 || now - _chargerADCTime >= _chargerADCWaitTime)
         {
             bool done = false;
-            RET_IF_FALSE(adc == BQ2562x::Adc::TS || getCharger().enableADC(adc, true), Result::Failure);
             RET_IF_FALSE(getCharger().setupADC(true, BQ2562x::ADCRate::Oneshot, BQ2562x::ADCSampling::Bits_10), Result::Failure);
-            vTaskDelay(pdMS_TO_TICKS(10));
-            RET_IF_FALSE(getCharger().getADCDone(done), Result::Failure);
-            RET_IF_FALSE(adc == BQ2562x::Adc::TS || getCharger().enableADC(adc, false), Result::Failure);
+            vTaskDelay(pdMS_TO_TICKS(_chargerADCWaitTime));
+            RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
             _chargerADCTime = now;
         }
-
         return Result::Ok;
     }
 }
