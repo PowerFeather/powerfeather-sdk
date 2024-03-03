@@ -1,4 +1,0 @@
-[] Get _tsON state at initialization
-[] Support IDF building for 4.4
-[] Remove set maximum supply current?
-[] Cleanup docstrings

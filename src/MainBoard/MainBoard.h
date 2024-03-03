@@ -56,7 +56,7 @@ namespace PowerFeather
         {
             Generic_3V7,
             ICR18650,
-            UR18650ZY,
+            UR18650ZY
         };
 
         class Pin
@@ -64,8 +64,14 @@ namespace PowerFeather
         public:
             friend MainBoard;
 
-            // Pins that are not connected to anything on the board, and
-            // can be freely configured/used by the user.
+            /**
+             * Pin Definitions. There are three types:
+             *      - Free IO
+             *      - User-Managed Fixed
+             *      - SDK-Managed Fixed
+            */
+
+            // Free IO
             static constexpr gpio_num_t A0 =        GPIO_NUM_10;
             static constexpr gpio_num_t A1 =        GPIO_NUM_9;
             static constexpr gpio_num_t A2 =        GPIO_NUM_8;
@@ -89,44 +95,42 @@ namespace PowerFeather
             static constexpr gpio_num_t MOSI =      GPIO_NUM_40;
             static constexpr gpio_num_t SCK =       GPIO_NUM_39;
             static constexpr gpio_num_t TX0 =       GPIO_NUM_43;
-
             static constexpr gpio_num_t SCL =       GPIO_NUM_36;
             static constexpr gpio_num_t SDA =       GPIO_NUM_35;
 
-            // Pins that are connected to a component on the board and has a
-            // pre-determined/pre-configured function.
-            static constexpr gpio_num_t ALARM =     GPIO_NUM_21; // FuelGauge ALARM, Input
-            static constexpr gpio_num_t INT =       GPIO_NUM_5; // Charger INT, Input
+            // User-Managed Fixed
+            static constexpr gpio_num_t ALARM =     GPIO_NUM_21; // FuelGauge ALARM
+            static constexpr gpio_num_t INT =       GPIO_NUM_5;  // Charger INT
 
-            static constexpr gpio_num_t LED =       GPIO_NUM_46; // MainBoard LED, Output
-            static constexpr gpio_num_t BTN =       GPIO_NUM_0; // MainBoard BTN, Input
-            static constexpr gpio_num_t EN =        GPIO_NUM_7; // MainBoard EN, Input
+            static constexpr gpio_num_t LED =       GPIO_NUM_46; // User LED
+            static constexpr gpio_num_t BTN =       GPIO_NUM_0;  // User button
+            static constexpr gpio_num_t EN =        GPIO_NUM_7;  // FeatherWings enable/disable (read)
 
         private:
-            static constexpr gpio_num_t USB_DP =    GPIO_NUM_20;
-            static constexpr gpio_num_t USB_DM =    GPIO_NUM_19;
+            // SDK-Managed Fixed
+            static constexpr gpio_num_t USBDP =    GPIO_NUM_20;  // USB D+
+            static constexpr gpio_num_t USBDM =    GPIO_NUM_19;  // USB D-
 
-            static constexpr gpio_num_t EN_3V3 =    GPIO_NUM_4;
-            static constexpr gpio_num_t EN_SQT =    GPIO_NUM_14;
-            static constexpr gpio_num_t EN0 =       GPIO_NUM_13;
+            static constexpr gpio_num_t EN_3V3 =    GPIO_NUM_4;  // 3V3 enable/disable
+            static constexpr gpio_num_t EN_SQT =    GPIO_NUM_14; // VSQT enable/disable
+            static constexpr gpio_num_t EN0 =       GPIO_NUM_13; // FeatherWings enable/disable (write)
 
-            static constexpr gpio_num_t SCL0 =      GPIO_NUM_48;
-            static constexpr gpio_num_t SDA0 =      GPIO_NUM_47;
+            static constexpr gpio_num_t SCL0 =      GPIO_NUM_48; // STEMMA QT I2C SCL
+            static constexpr gpio_num_t SDA0 =      GPIO_NUM_47; // STEMMA QT I2C SDA
 
-            static constexpr gpio_num_t PG =        GPIO_NUM_38;
+            static constexpr gpio_num_t PG =        GPIO_NUM_38; // Charger Power Good
         };
 
-
         /**
-         * Initialize and set defaults.
+         * Initialize board
          *
-         * Max input current: 500 mA
-         * Charging: disabled
-         * 3V3: enabled
-         * VSQT: enabled
-         * Max charging current = 0.5C
+         * Initializes the power management and monitoring features. Sets the following defaults:
+         *   - charging, disabled
+         *   - 3V3 & VSQT enabled
+         *   - max charging current, 100 mA
          *
-         * @param[in] capacity Battery capacity in mAh.
+         * @param[in] capacity Battery capacity in mAh
+         * @param[in] type Battery type
          */
         Result init(uint16_t capacity = 0, BatteryType type = BatteryType::Generic_3V7);
 

@@ -39,12 +39,12 @@ namespace PowerFeather
 {
     enum class Result
     {
-        Ok = 0,
-        Failure = -1,
+        Ok = 0, // Operation suceeded without error
+        Failure = -1, // General Failure
         InvalidState = -2,
         Timeout = -3,
-        InvalidArg = -4,
-        NotReady = -5,
-        Busy = -6,
+        InvalidArg = -4, // Argument out of range or invalid value
+        NotReady = -5, // Unable to complete operation
+        Busy = -6, // TODO: merge with NotReady?
     };
 }
