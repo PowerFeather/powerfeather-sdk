@@ -171,7 +171,6 @@ namespace PowerFeather
         }
 
         RET_IF_FALSE(_initInternalDigitalPin(Pin::PG, GPIO_MODE_INPUT), Result::Failure);
-
         first = firstMagic;
         _initDone = true;
         return Result::Ok;
@@ -301,7 +300,6 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
-        _tsOn = true;
         return Result::Ok;
     }
 
@@ -329,11 +327,17 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
+
+        bool enabled = false;
+        RET_IF_FALSE(getCharger().getTS(enabled) && enabled, Result::InvalidState);
+
         RET_IF_ERR(_udpateChargerADC());
-        float x = 0;
-        RET_IF_FALSE(getCharger().getTS_ADC(x), Result::Failure);
+
+        float voltage = 0;
+        RET_IF_FALSE(getCharger().getTS_ADC(voltage), Result::Failure);
         // Map percent to temperature given 103AT thermistor with fitted curve (see ts_calc.fods).
-        celsius = (-1866.96172 * powf(x, 4)) + (3169.31754 * powf(x, 3)) - (1849.96775 * powf(x, 2)) + (276.6656 * x) + 81.98758;
+        celsius = (-1866.96172 * powf(voltage, 4)) + (3169.31754 * powf(voltage, 3)) - (1849.96775 * powf(voltage, 2)) + (276.6656 * voltage) + 81.98758;
+
         return Result::Ok;
     }
 

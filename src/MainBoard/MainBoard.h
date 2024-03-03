@@ -383,7 +383,6 @@ namespace PowerFeather
         LC709204F _fuelGauge {_i2c};
 
         bool _sqtOn { false };
-        bool _tsOn { false };
         bool _fgOn { false };
         bool _initDone { false };
         uint32_t _chargerADCTime { 0 };

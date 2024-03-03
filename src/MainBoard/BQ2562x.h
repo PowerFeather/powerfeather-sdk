@@ -201,6 +201,7 @@ namespace PowerFeather
         bool getChargeStat(ChargeStat& stat);
         bool getIBUS(int16_t &value);
         bool getWD(bool &enabled);
+        bool getTS(bool& enabled);
 
         bool getVBUS(uint16_t& value);
         bool getIBAT(int16_t& value);

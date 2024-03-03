@@ -92,9 +92,24 @@ namespace PowerFeather
         return writeReg(Registers::Charger_Control_0_WATCHDOG, enable);
     }
 
-    bool BQ2562x::getWD(bool &enable)
+    bool BQ2562x::getWD(bool &enabled)
     {
-        return readReg(Registers::Charger_Control_0_WATCHDOG, enable);
+        return readReg(Registers::Charger_Control_0_WATCHDOG, enabled);
+    }
+
+    bool BQ2562x::getTS(bool &enabled)
+    {
+        bool tsIgnore = false, tsDis = false;
+        if (readReg(Registers::NTC_Control_0_TS_IGNORE, tsIgnore) )
+        {
+            Register reg = Registers::ADC_Function_Disable_0;
+            reg.start = reg.end = static_cast<uint8_t>(Adc::TS);
+            if (readReg(reg, tsDis))
+            {
+                return (!tsIgnore) && (!tsDis);
+            }
+        }
+        return false;
     }
 
     bool BQ2562x::enableHIZ(bool enable)
