@@ -44,59 +44,12 @@ namespace PowerFeather
     class BQ2562x
     {
     public:
-
         struct Register
         {
             uint8_t address;
             uint8_t size;
             uint8_t start;
             uint8_t end;
-        };
-
-        class Registers
-        {
-        public:
-            static constexpr Register Charge_Current_Limit_ICHG =            { 0x02, 2, 5, 11 };
-
-            static constexpr Register Input_Current_Limit_IINDPM =           { 0x06, 2, 4, 11 };
-            static constexpr Register Input_Current_Limit_VINDPM =           { 0x08, 2, 5, 13 };
-
-            static constexpr Register Charger_Control_0_EN_CHG =             { 0x16, 1, 5, 5 };
-            static constexpr Register Charger_Control_0_WATCHDOG =           { 0x16, 1, 0, 1 };
-            static constexpr Register Charger_Control_0_EN_HIZ =             { 0x16, 1, 4, 4 };
-
-            static constexpr Register Charger_Control_2 =                    { 0x18, 1, 0, 7 };
-            static constexpr Register Charger_Control_2_BATFET_CTRL =        { 0x18, 1, 0, 1 };
-            static constexpr Register Charger_Control_2_BATFET_DLY =         { 0x18, 1, 2, 2 };
-            static constexpr Register Charger_Control_2_WVBUS =              { 0x18, 1, 3, 3 };
-
-            static constexpr Register NTC_Control_0_TS_IGNORE =              { 0x1a, 1, 7, 7 };
-
-            static constexpr Register Charger_Status_0 =                     { 0x1d, 1, 0, 7 };
-            static constexpr Register Charger_Status_1 =                     { 0x1e, 1, 0, 7 };
-            static constexpr Register Charger_Status_1_VBUS_STAT =           { 0x1e, 1, 0, 2 };
-            static constexpr Register Charger_Status_1_CHG_STAT =            { 0x1e, 1, 3, 4 };
-            static constexpr Register FAULT_Status_0 =                       { 0x1f, 1, 0, 7 };
-            static constexpr Register Charger_Flag_0 =                       { 0x20, 1, 0, 7 };
-            static constexpr Register Charger_Flag_1 =                       { 0x21, 1, 0, 7 };
-            static constexpr Register FAULT_Flag_0 =                         { 0x22, 1, 0, 7 };
-            static constexpr Register Charger_Mask_0 =                       { 0x23, 1, 0, 7 };
-            static constexpr Register Charger_Mask_1 =                       { 0x24, 1, 0, 7 };
-            static constexpr Register FAULT_Mask_0 =                         { 0x25, 1, 2, 2 };
-
-            static constexpr Register ADC_Control =                          { 0x26, 1, 0, 7 };
-
-            static constexpr Register ADC_Function_Disable_0 =               { 0x27, 1, 0, 7 };
-
-            static constexpr Register IBUS_ADC =                             { 0x28, 2, 1, 15 };
-            static constexpr Register IBAT_ADC =                             { 0x2a, 2, 2, 15 };
-            static constexpr Register VBUS_ADC =                             { 0x2c, 2, 2, 14 };
-            static constexpr Register VBAT_ADC =                             { 0x30, 2, 1, 12 };
-            static constexpr Register TS_ADC =                               { 0x34, 2, 0, 11 };
-
-            static constexpr Register Part_Information =                     { 0x38, 1, 0, 7 };
-            static constexpr Register Part_Information_PN =                  { 0x38, 1, 3, 5 };
-            static constexpr Register Part_Information_DEV_REV =             { 0x38, 1, 0, 2 };
         };
 
         enum class VBUSStat
@@ -209,6 +162,48 @@ namespace PowerFeather
         bool setIINDPM(uint32_t mA);
 
     private:
+        const Register Charge_Current_Limit_ICHG = {1, 2, 3, 4};
+
+        const Register Input_Current_Limit_IINDPM =           { 0x06, 2, 4, 11 };
+        const Register Input_Current_Limit_VINDPM =           { 0x08, 2, 5, 13 };
+
+        const Register Charger_Control_0_EN_CHG =             { 0x16, 1, 5, 5 };
+        const Register Charger_Control_0_WATCHDOG =           { 0x16, 1, 0, 1 };
+        const Register Charger_Control_0_EN_HIZ =             { 0x16, 1, 4, 4 };
+
+        const Register Charger_Control_2 =                    { 0x18, 1, 0, 7 };
+        const Register Charger_Control_2_BATFET_CTRL =        { 0x18, 1, 0, 1 };
+        const Register Charger_Control_2_BATFET_DLY =         { 0x18, 1, 2, 2 };
+        const Register Charger_Control_2_WVBUS =              { 0x18, 1, 3, 3 };
+
+        const Register NTC_Control_0_TS_IGNORE =              { 0x1a, 1, 7, 7 };
+
+        const Register Charger_Status_0 =                     { 0x1d, 1, 0, 7 };
+        const Register Charger_Status_1 =                     { 0x1e, 1, 0, 7 };
+        const Register Charger_Status_1_VBUS_STAT =           { 0x1e, 1, 0, 2 };
+        const Register Charger_Status_1_CHG_STAT =            { 0x1e, 1, 3, 4 };
+        const Register FAULT_Status_0 =                       { 0x1f, 1, 0, 7 };
+        const Register Charger_Flag_0 =                       { 0x20, 1, 0, 7 };
+        const Register Charger_Flag_1 =                       { 0x21, 1, 0, 7 };
+        const Register FAULT_Flag_0 =                         { 0x22, 1, 0, 7 };
+        const Register Charger_Mask_0 =                       { 0x23, 1, 0, 7 };
+        const Register Charger_Mask_1 =                       { 0x24, 1, 0, 7 };
+        const Register FAULT_Mask_0 =                         { 0x25, 1, 2, 2 };
+
+        const Register ADC_Control =                          { 0x26, 1, 0, 7 };
+
+        const Register ADC_Function_Disable_0 =               { 0x27, 1, 0, 7 };
+
+        const Register IBUS_ADC =                             { 0x28, 2, 1, 15 };
+        const Register IBAT_ADC =                             { 0x2a, 2, 2, 15 };
+        const Register VBUS_ADC =                             { 0x2c, 2, 2, 14 };
+        const Register VBAT_ADC =                             { 0x30, 2, 1, 12 };
+        const Register TS_ADC =                               { 0x34, 2, 0, 11 };
+
+        const Register Part_Information =                     { 0x38, 1, 0, 7 };
+        const Register Part_Information_PN =                  { 0x38, 1, 3, 5 };
+        const Register Part_Information_DEV_REV =             { 0x38, 1, 0, 2 };
+
         static constexpr uint8_t _i2cAddress = 0x6a;
         MasterI2C& _i2c;
     };

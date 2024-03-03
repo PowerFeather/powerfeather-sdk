@@ -7,4 +7,4 @@ repository: "https://github.com/PowerFeather/powerfeather-sdk.git"
 issues: "https://github.com/PowerFeather/powerfeather-sdk/issues"
 license: "PowerFeather 4-Clause License"
 dependencies:
-  idf: ">=5.1"
+  idf: ">=4.4"

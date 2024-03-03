@@ -90,7 +90,8 @@ namespace PowerFeather
         bool enableOperation(bool enable);
 
     private:
-        static constexpr std::tuple<uint16_t, uint8_t> _apaTable[] = {
+        const std::tuple<uint16_t, uint8_t> _apaTable[10] =
+        {
             { 50, 0x13 },
             { 100, 0x15 },
             { 200, 0x18 },
@@ -102,7 +103,6 @@ namespace PowerFeather
             { 5000, 0x44 },
             { 6000, 0x45 },
         };
-
 
         static constexpr uint8_t _i2cAddress = 0x0b;
 
