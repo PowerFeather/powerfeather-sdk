@@ -162,7 +162,7 @@ namespace PowerFeather
         bool setIINDPM(uint32_t mA);
 
     private:
-        const Register Charge_Current_Limit_ICHG = {1, 2, 3, 4};
+        const Register Charge_Current_Limit_ICHG =            { 0x02, 2, 5, 11 };
 
         const Register Input_Current_Limit_IINDPM =           { 0x06, 2, 4, 11 };
         const Register Input_Current_Limit_VINDPM =           { 0x08, 2, 5, 13 };
