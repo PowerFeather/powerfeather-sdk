@@ -1,6 +1,6 @@
 
 /**
- *                           POWERFEATHER 4-CLAUSE LICENSE
+ *  POWERFEATHER 4-CLAUSE LICENSE
  *
  *  Copyright (C) 2023, PowerFeather.
  *
