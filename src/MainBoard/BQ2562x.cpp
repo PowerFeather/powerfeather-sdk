@@ -147,34 +147,12 @@ namespace PowerFeather
 
     bool BQ2562x::enableInterrupt(Interrupt num, bool en)
     {
-        uint8_t reg0 = 0;
-        uint8_t reg1 = 0;
-
-        if (readReg(Charger_Mask_0, reg0))
+        if (num == Interrupt::VBUS) // only uses Charger_Mask_1 for now
         {
-            uint8_t mask0 = 0, mask1 = 0;
-
-            if (readReg(Charger_Mask_1, reg1))
-            {
-                switch (num)
-                {
-                case Interrupt::VBUS:
-                    mask1 = 0b1 << 0;
-                    break;
-                default:
-                    break;
-                }
-
-                reg0 = en ? reg0 & ~(mask0) : reg0 | mask0;
-                reg1 = en ? reg1 & ~(mask1) : reg1 | mask1;
-
-                if (writeReg(Charger_Mask_0, reg0))
-                {
-                    return writeReg(Charger_Mask_1, reg1);
-                }
-            }
+            Register reg = Charger_Mask_1;
+            reg.start = reg.end = static_cast<uint8_t>(num);
+            return writeReg(reg, !en);
         }
-
         return false;
     }
 
