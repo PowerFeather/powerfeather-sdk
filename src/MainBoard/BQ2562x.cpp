@@ -106,7 +106,8 @@ namespace PowerFeather
             reg.start = reg.end = static_cast<uint8_t>(Adc::TS);
             if (readReg(reg, tsDis))
             {
-                return (!tsIgnore) && (!tsDis);
+                enabled =  (!tsIgnore) && (!tsDis);
+                return true;
             }
         }
         return false;
