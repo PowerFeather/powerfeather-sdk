@@ -18,7 +18,7 @@ extern "C" void app_main()
     gpio_set_direction(MainBoard::Pin::BTN, GPIO_MODE_INPUT);
 
     gpio_reset_pin(MainBoard::Pin::LED);
-    gpio_set_direction(MainBoard::Pin::LED, GPIO_MODE_OUTPUT);
+    gpio_set_direction(MainBoard::Pin::LED, GPIO_MODE_INPUT_OUTPUT);
 
     vTaskDelay(pdMS_TO_TICKS(1000));
 
