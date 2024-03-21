@@ -201,8 +201,8 @@ namespace PowerFeather
         RET_IF_FALSE(_initInternalDigitalPin(Pin::PG, GPIO_MODE_INPUT), Result::Failure);
         if (_isFirst())
         {
-            RET_IF_ERR(setEN(true));
-            RET_IF_ERR(enable3V3(true));
+            RET_IF_FALSE(_setRTCPin(Pin::EN0, true), Result::Failure);
+            RET_IF_FALSE(_setRTCPin(Pin::EN_3V3, true), Result::Failure);
         }
 
         first = firstMagic;
@@ -224,7 +224,7 @@ namespace PowerFeather
     Result MainBoard::setEN(bool value)
     {
         TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_setRTCPin(Pin::EN0, value), Result::Failure);
         return Result::Ok;
     }
@@ -232,7 +232,7 @@ namespace PowerFeather
     Result MainBoard::enable3V3(bool enable)
     {
         TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_setRTCPin(Pin::EN_3V3, enable), Result::Failure);
         return Result::Ok;
     }
