@@ -35,7 +35,7 @@ void loop() {
 
     // Only enable charging when button is pressed.
     // When charging is enabled, red CHG LED turns on.
-    Board.enableCharging(digitalRead(BTN) == LOW); // BTN is LOW when pressed
+    Board.enableBatteryCharging(digitalRead(BTN) == LOW); // BTN is LOW when pressed
 
     // Get information about supply and battery
     uint16_t supplyVoltage = 0, batteryVoltage = 0;

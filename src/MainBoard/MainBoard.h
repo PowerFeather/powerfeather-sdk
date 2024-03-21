@@ -224,7 +224,7 @@ namespace PowerFeather
          *
          * @param[in] enable Charging is enabled if true; otherwise disabled.
          */
-        Result enableCharging(bool enable);
+        Result enableBatteryCharging(bool enable);
 
         /**
          * Enable temperature monitor.
@@ -235,7 +235,7 @@ namespace PowerFeather
          *
          * @param[in] enable Battery temperature sensing is enabled if true; otherwise disabled.
          */
-        Result enableTempSense(bool enable);
+        Result enableBatteryTempSense(bool enable);
 
         /**
          * Enable the fuel gauge.
@@ -255,7 +255,7 @@ namespace PowerFeather
          *
          * @param[in] current Maximum charging current in mA.
          */
-        Result setChargingMaxCurrent(uint16_t current);
+        Result setBatteryChargingMaxCurrent(uint16_t current);
 
         /**
          * Measure battery voltage.
@@ -291,7 +291,7 @@ namespace PowerFeather
         /**
          * Measure the battery temperature.
          *
-         * Temperature sensing must be enabled via enableTempSense to get a reading.
+         * Temperature sensing must be enabled via enableBatteryTempSense to get a reading.
          *
          * @param[out] celsius Battery current in °C.
          */

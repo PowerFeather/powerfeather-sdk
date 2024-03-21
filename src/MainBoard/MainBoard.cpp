@@ -167,7 +167,7 @@ namespace PowerFeather
 
             if (wdOn) // watchdog disabled means that the initiatialization was done previously
             {
-                RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
+                RET_IF_FALSE(getCharger().enableBatteryCharging(false), Result::Failure);
                 RET_IF_FALSE(getCharger().enableTS(false), Result::Failure);
                 RET_IF_FALSE(getCharger().setChargeCurrent(_defaultMaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
@@ -323,31 +323,34 @@ namespace PowerFeather
         return Result::Failure;
     }
 
-    Result MainBoard::enableTempSense(bool enable)
+    Result MainBoard::enableBatteryTempSense(bool enable)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
         ESP_LOGD(TAG, "Temperature sense set to: %d.", enable);
         return Result::Ok;
     }
 
-    Result MainBoard::enableCharging(bool enable)
+    Result MainBoard::enableBatteryCharging(bool enable)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(getCharger().enableCharging(enable), Result::Failure);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(getCharger().enableBatteryCharging(enable), Result::Failure);
         ESP_LOGD(TAG, "Charging set to: %d.", enable);
         return Result::Ok;
     }
 
-    Result MainBoard::setChargingMaxCurrent(uint16_t current)
+    Result MainBoard::setBatteryChargingMaxCurrent(uint16_t current)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(current <= _maxChargingCurrent, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setChargeCurrent(current), Result::Failure);
         ESP_LOGD(TAG, "Max charging current set to: %d mA.", current);
@@ -359,8 +362,9 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
 
-        // Temperature sensing must be enabled using enableTempSense(true), only
+        // Temperature sensing must be enabled using enableBatteryTempSense(true), only
         // then can the battery temperature be measured.
         bool enabled = false;
         RET_IF_FALSE(getCharger().getTS(enabled) && enabled, Result::InvalidState);
@@ -379,6 +383,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
         ESP_LOGD(TAG, "Measured battery current: %d mA.", current);
@@ -413,7 +418,9 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        if (!(_batteryCapacity && _fgEnabled && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(voltage))) // if fuel gauge is available, use the reading from it
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        // If fuel gauge is available, use the reading from it.
+        if (!(_fgEnabled && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(voltage))) 
         {
             RET_IF_ERR(_udpateChargerADC());
             RET_IF_FALSE(getCharger().getVBAT(voltage), Result::Failure);
@@ -429,6 +436,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getRSOC(percent), Result::Failure);
+        ESP_LOGD(TAG, "Estimated battery charge: %d %%.", percent);
         return Result::Ok;
     }
 
@@ -440,7 +448,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getSOH(percent), Result::Failure);
-        ESP_LOGD(TAG, "Estimated battery charge health: %d %%.", percent);
+        ESP_LOGD(TAG, "Estimated battery health: %d %%.", percent);
         return Result::Ok;
     }
 
