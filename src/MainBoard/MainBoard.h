@@ -132,6 +132,7 @@ namespace PowerFeather
          *   - supply maintain voltage = 4.6 V
          *   - battery alarms = disabled
          * If using batteries connected in parallel, specify the capacity for one cell.
+         * Battery type is ignored if capacity = 0.
          *
          * @param[in] capacity Battery capacity in mAh
          * @param[in] type Battery type
@@ -179,7 +180,7 @@ namespace PowerFeather
          * @param[out] good If true, supply is good; if not battery is powering the board.
          * @return
          */
-        Result getSupplyStatus(bool& good);
+        Result checkSupplyGood(bool& good);
 
         /**
          * Sets the minimum supply voltage that should be maintained.

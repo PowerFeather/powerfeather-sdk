@@ -44,13 +44,13 @@
 
 namespace PowerFeather
 {
-    static_assert(CHAR_BIT == 8, "Unsupported architecture");
+    static_assert(CHAR_BIT == 8, "Unsupported architecture.");
 
     static const char* TAG = "MainBoard";
 
     /*extern*/ MainBoard& Board = MainBoard::get();
 
-    #define LOG_FAIL(r)                 ESP_LOGE(TAG, "Unexpected result %d on %s:%d", (r), __FUNCTION__, __LINE__)
+    #define LOG_FAIL(r)                 ESP_LOGE(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
     #define RET_IF_ERR(f)               { Result r = (f); if (r != Result::Ok) { LOG_FAIL(1); return r; } }
     #define RET_IF_NOK(f)               { esp_err_t r = (f); if (r != ESP_OK) { LOG_FAIL(r); return false; } }
     #define RET_IF_FALSE(f, r)          { if ((f) == false) { LOG_FAIL(false); return (r); } }
@@ -73,7 +73,7 @@ namespace PowerFeather
         RET_IF_NOK(rtc_gpio_set_direction_in_sleep(pin, mode));
         RET_IF_NOK(rtc_gpio_pullup_dis(pin));
         RET_IF_NOK(rtc_gpio_pulldown_dis(pin));
-        ESP_LOGD(TAG, "Initialized RTC pin %d with mode %d", pin, mode);
+        ESP_LOGD(TAG, "Initialized RTC pin %d with mode %d.", pin, mode);
         return true;
     }
 
@@ -88,7 +88,7 @@ namespace PowerFeather
         io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
         io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
         RET_IF_NOK(gpio_config(&io_conf));
-        ESP_LOGD(TAG, "Initialized digital pin %d with mode %d", pin, mode);
+        ESP_LOGD(TAG, "Initialized digital pin %d with mode %d.", pin, mode);
         return true;
     }
 
@@ -98,7 +98,7 @@ namespace PowerFeather
         rtc_gpio_hold_dis(pin);
         rtc_gpio_set_level(pin, value);
         rtc_gpio_hold_en(pin);
-        ESP_LOGD(TAG, "Set RTC pin %d to %d", pin, value);
+        ESP_LOGD(TAG, "Set RTC pin %d to %d.", pin, value);
         return true;
     }
 
@@ -106,7 +106,7 @@ namespace PowerFeather
     {
         // If the RTC is domain is shutdown, consider next boot as first boot.
         bool isFirst = (first != firstMagic);
-        ESP_LOGD(TAG, "Check if first boot: %d", isFirst);
+        ESP_LOGD(TAG, "Check if first boot: %d.", isFirst);
         return isFirst;
     }
 
@@ -126,11 +126,11 @@ namespace PowerFeather
             RET_IF_FALSE(getFuelGauge().setChangeOfParameter(param), Result::Failure);
             RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
             RET_IF_FALSE(getFuelGauge().enableOperation(true), Result::Failure);
-            ESP_LOGD(TAG, "Fuel gauge initialized");
+            ESP_LOGD(TAG, "Fuel gauge initialized.");
         }
         else
         {
-            ESP_LOGD(TAG, "Fuel gauge already initialized");
+            ESP_LOGD(TAG, "Fuel gauge already initialized.");
         }
 
         return Result::Ok;
@@ -150,13 +150,13 @@ namespace PowerFeather
 
         _batteryCapacity = capacity;
         _batteryType = type;
-        ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
+        ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
 
         // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
         _sqtOn = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT);
         RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, _sqtOn), Result::Failure)
-        ESP_LOGD(TAG, "EN_SQT set to %d", _sqtOn);
+        ESP_LOGD(TAG, "VSQT set to %d during initialization", _sqtOn);
 
         RET_IF_FALSE(_i2c.init(_i2cPort, Pin::SDA0, Pin::SCL0, _i2cFreq), Result::Failure); // always initialize STEMMA QT, charger, fuel gauge I2C; TODO: check disabling
 
@@ -176,11 +176,11 @@ namespace PowerFeather
                 // Disable the charger watchdog to keep the charger in host mode and to
                 // keep some registers from resetting to their POR values.
                 RET_IF_FALSE(getCharger().enableWD(false), Result::Failure);
-                ESP_LOGD(TAG, "Charger IC initialized");
+                ESP_LOGD(TAG, "Charger IC initialized.");
             }
             else
             {
-                ESP_LOGD(TAG, "Charger IC already initialized");
+                ESP_LOGD(TAG, "Charger IC already initialized.");
             }
 
             // If battery capacity is not 0, initialize the fuel gauge. This can fail if during
@@ -199,6 +199,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN0, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
         RET_IF_FALSE(_initInternalDigitalPin(Pin::PG, GPIO_MODE_INPUT), Result::Failure);
+
         if (_isFirst())
         {
             RET_IF_FALSE(_setRTCPin(Pin::EN0, true), Result::Failure);
@@ -207,6 +208,8 @@ namespace PowerFeather
 
         first = firstMagic;
         _initDone = true;
+
+        ESP_LOGD(TAG, "Initialization done.");
 
         return Result::Ok;
     }
@@ -217,8 +220,11 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState); // system is expected to have a battery
+        // Just set to operational mode, no need to do same initializations
+        // as _initFuelGauge(). TODO: verify
         RET_IF_FALSE(getFuelGauge().enableOperation(enable), Result::Failure);
         _fgOn = enable;
+        ESP_LOGD(TAG, "Fuel gauge set to: %d.", _fgOn);
         return Result::Ok;
     }
 
@@ -227,6 +233,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_setRTCPin(Pin::EN0, value), Result::Failure);
+        ESP_LOGD(TAG, "EN set to: %d.", value);
         return Result::Ok;
     }
 
@@ -235,6 +242,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_setRTCPin(Pin::EN_3V3, enable), Result::Failure);
+        ESP_LOGD(TAG, "3V3 set to: %d.", enable);
         return Result::Ok;
     }
 
@@ -244,6 +252,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, enable), Result::Failure)
         _sqtOn = enable;
+        ESP_LOGD(TAG, "VSQT set to: %d.", _sqtOn);
         return Result::Ok;
     }
 
@@ -253,6 +262,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
+        ESP_LOGD(TAG, "Maintain supply voltage set to: %d mV.", voltage);
         return Result::Ok;
     }
 
@@ -263,6 +273,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBUS(current), Result::Failure);
+        ESP_LOGD(TAG, "Measured supply current: %d mA.", current);
         return Result::Ok;
     }
 
@@ -273,14 +284,16 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getVBUS(voltage), Result::Failure);
+        ESP_LOGD(TAG, "Measured supply voltage: %d mV.", voltage);
         return Result::Ok;
     }
 
-    Result MainBoard::getSupplyStatus(bool& connected)
+    Result MainBoard::checkSupplyGood(bool& good)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        connected = gpio_get_level(Pin::PG) == 0;
+        good = (gpio_get_level(Pin::PG) == 0);
+        ESP_LOGD(TAG, "Check power supply good: %d.", good);
         return Result::Ok;
     }
 
