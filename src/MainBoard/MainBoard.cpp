@@ -118,7 +118,7 @@ namespace PowerFeather
         if (!op) // if op is false, fuel gauge in sleep mode
         {
             // Reinitialize even if fuel gauge has been previously initialized, and was just
-            // put into sleep mode using enableFuelGauge(false). TODO: verify
+            // put into sleep mode using enableBatteryFuelGauge(false). TODO: verify
             LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650 ? LC709204F::ChangeOfParameter::ICR18650_26H :
                                                  _batteryType == BatteryType::UR18650ZY ? LC709204F::ChangeOfParameter::UR18650ZY :
                                                  LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
@@ -390,7 +390,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::enableFuelGauge(bool enable)
+    Result MainBoard::enableBatteryFuelGauge(bool enable)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);

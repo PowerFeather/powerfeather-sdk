@@ -244,7 +244,7 @@ namespace PowerFeather
          *
          * @param[in] enable Fuel gauge is enabled if true; otherwise disabled.
          */
-        Result enableFuelGauge(bool enable);
+        Result enableBatteryFuelGauge(bool enable);
 
         /**
          * Set maximum charging current.
