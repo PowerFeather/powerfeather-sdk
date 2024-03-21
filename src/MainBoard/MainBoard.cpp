@@ -118,7 +118,7 @@ namespace PowerFeather
         if (!op) // if op is false, fuel gauge in sleep mode
         {
             // Reinitialize even if fuel gauge has been previously initialized, and was just
-            // put into sleep mode using enableFuelGauge(false).
+            // put into sleep mode using enableFuelGauge(false). TODO: verify
             LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650 ? LC709204F::ChangeOfParameter::ICR18650_26H :
                                                  _batteryType == BatteryType::UR18650ZY ? LC709204F::ChangeOfParameter::UR18650ZY :
                                                  LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
@@ -430,6 +430,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getSOH(percent), Result::Failure);
+        ESP_LOGD(TAG, "Estimated battery charge health: %d %%.", percent);
         return Result::Ok;
     }
 
@@ -441,6 +442,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getCycles(cycles), Result::Failure);
+        ESP_LOGD(TAG, "Estimated battery cycles: %d.", cycles);
         return Result::Ok;
     }
 
@@ -453,20 +455,25 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
 
+        // Check first the current direction, whether to or from the battery.
+        // Negative means from battery to the board (discharge), positive
+        // means from board to battery (charge).
         int16_t ibat = 0;
         RET_IF_ERR(getBatteryCurrent(ibat));
-
-        uint16_t mins = 0;
         bool discharging = ibat < 0;
 
+        // Get the time-to-empty or time-to-full depending on battery is charging
+        // or discharging.
+        uint16_t mins = 0;
         RET_IF_FALSE(discharging ? getFuelGauge().getTimeToEmpty(mins) : getFuelGauge().getTimeToFull(mins), Result::Failure);
 
-        if (mins != 0xFFFF)
+        if (mins != 0xFFFF) // check if already the required 10 % rise/drop in charge
         {
-            minutes = mins * (discharging ? -1 : 1);
+            minutes = mins * (discharging ? -1 : 1); // return negative amount of time for discharging
             return Result::Ok;
         }
 
+        ESP_LOGD(TAG, "Estimated battery time left (%s): %d mins.", discharging ? "discharging" : "charging", abs(minutes));
         return Result::NotReady;
     }
 
@@ -479,6 +486,7 @@ namespace PowerFeather
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE((voltage >= 2500 && voltage <= 5000) || voltage == 0, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setLowVoltageAlarm(voltage), Result::Failure);
+        ESP_LOGD(TAG, "Low battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
     };
 
@@ -489,10 +497,11 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE((voltage >= 2500 && voltage <= 5000) || voltage == 0, Result::InvalidArg);
+        RET_IF_FALSE((voltage >= 2500 && voltage <= 5000) || voltage == 0, Result::InvalidArg); // TODO: clear alarm when 0
         bool oper = 0;
         RET_IF_FALSE(getFuelGauge().getOperation(oper), Result::Failure);
         RET_IF_FALSE(getFuelGauge().setHighVoltageAlarm(voltage), Result::Failure);
+        ESP_LOGD(TAG, "High battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
     };
 
@@ -503,8 +512,9 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE((percent >= 1 && percent <= 100) || percent == 0, Result::InvalidArg);
+        RET_IF_FALSE((percent >= 1 && percent <= 100) || percent == 0, Result::InvalidArg); // TODO: clear alarm when 0
         RET_IF_FALSE(getFuelGauge().setLowRSOCAlarm(percent), Result::Failure);
+        ESP_LOGD(TAG, "Low charge alarm set to: %d %%.", (int)percent);
         return Result::Ok;
     };
 
