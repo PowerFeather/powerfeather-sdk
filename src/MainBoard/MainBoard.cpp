@@ -291,7 +291,11 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShipMode), Result::Failure);
-        return Result::Ok;
+        // If this executes, then charger did not enter ship mode. Return to normal operation
+        // and return failure status. TODO: verify
+        RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::Normal), Result::Failure);
+        ESP_LOGD(TAG, "Failed to enter ship mode.");
+        return Result::Failure;
     }
 
     Result MainBoard::enterShutdownMode()
@@ -300,7 +304,10 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShutdownMode), Result::Failure);
-        return Result::Ok;
+        // If this executes, then charger did not enter shutdown mode. According to the datasheet,
+        // charger automatically returns to normal mode, so just return failure. TODO: verify
+        ESP_LOGD(TAG, "Failed to enter shutdown mode.");
+        return Result::Failure;
     }
 
     Result MainBoard::doPowerCycle()
