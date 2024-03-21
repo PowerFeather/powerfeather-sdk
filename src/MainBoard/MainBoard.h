@@ -349,6 +349,7 @@ namespace PowerFeather
         static constexpr uint32_t _minBatteryCapacity = 100;
         static constexpr uint32_t _maxBatteryCapacity = 15000;
         static constexpr uint32_t _chargerADCWaitTime = 100;
+        static constexpr uint32_t _batfetCtrlWaitTime = 30;
 
 #ifdef ARDUINO
         ArduinoMasterI2C _i2c {};
