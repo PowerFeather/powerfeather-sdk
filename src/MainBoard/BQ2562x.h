@@ -30,14 +30,11 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 #pragma once
 
 #include "Utils/MasterI2C.h"
-
-#define BYTE(x)		static_cast<uint8_t>(x)
-#define SHORT(x)	static_cast<uint16_t>(x)
 
 namespace PowerFeather
 {
@@ -123,14 +120,14 @@ namespace PowerFeather
             VPMID = 0
         };
 
-        BQ2562x(MasterI2C &i2c):_i2c(i2c) {}
+        BQ2562x(MasterI2C &i2c) : _i2c(i2c) {}
 
         template <typename T>
         bool writeReg(Register reg, T value);
         template <typename T>
-        bool readReg(Register reg, T& value);
+        bool readReg(Register reg, T &value);
 
-        bool getTS_ADC(float& value);
+        bool getTS_ADC(float &value);
         bool setChargeCurrent(uint16_t current);
         bool enableCharging(bool state);
         bool enableSTAT(bool enable);
@@ -142,24 +139,22 @@ namespace PowerFeather
         bool enableInterrupts(bool enable);
         bool enableInterrupt(Interrupt mask, bool en);
         bool enableWVBUS(bool enable);
-        bool getVBAT(uint16_t& value);
         bool enableADC(Adc adc, bool enable);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
-                        ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
-        bool getADCDone(bool &done);
-
-        bool getVBUSStat(VBUSStat& stat);
-        bool getPartInformation(uint8_t& value);
-        bool getBatteryVoltage(float& voltage);
-        bool getChargeStat(ChargeStat& stat);
-        bool getIBUS(int16_t &value);
-        bool getWD(bool &enabled);
-        bool getTS(bool& enabled);
-
-        bool getVBUS(uint16_t& value);
-        bool getIBAT(int16_t& value);
+                      ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
         bool setVINDPM(uint32_t mV);
         bool setIINDPM(uint32_t mA);
+        bool getADCDone(bool &done);
+        bool getVBUSStat(VBUSStat &stat);
+        bool getPartInformation(uint8_t &value);
+        bool getBatteryVoltage(float &voltage);
+        bool getChargeStat(ChargeStat &stat);
+        bool getIBUS(int16_t &value);
+        bool getWD(bool &enabled);
+        bool getTS(bool &enabled);
+        bool getVBUS(uint16_t &value);
+        bool getIBAT(int16_t &value);
+        bool getVBAT(uint16_t &value);
 
     private:
         const Register Charge_Current_Limit_ICHG =            { 0x02, 2, 5, 11 };
@@ -205,6 +200,6 @@ namespace PowerFeather
         const Register Part_Information_DEV_REV =             { 0x38, 1, 0, 2 };
 
         static constexpr uint8_t _i2cAddress = 0x6a;
-        MasterI2C& _i2c;
+        MasterI2C &_i2c;
     };
 }

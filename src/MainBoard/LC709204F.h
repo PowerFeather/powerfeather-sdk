@@ -30,7 +30,7 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 #pragma once
 
@@ -43,7 +43,6 @@ namespace PowerFeather
     class LC709204F
     {
     public:
-
         enum class Registers
         {
             Cell_Voltage = 0x09,
@@ -67,19 +66,19 @@ namespace PowerFeather
             Nominal_3V7_Charging_4V2 = 0x00,
             UR18650ZY = 0x01,
             ICR18650_26H = 0x02,
-            Nominal_3V8_Charging_4V35= 0x03,
-            Nominal_3V85_Charging_4V4= 0x04,
+            Nominal_3V8_Charging_4V35 = 0x03,
+            Nominal_3V85_Charging_4V4 = 0x04,
         };
 
-        LC709204F(MasterI2C& i2c):_i2c(i2c) {}
+        LC709204F(MasterI2C &i2c) : _i2c(i2c) {}
 
-        bool getCellVoltage(uint16_t& mV);
-        bool getRSOC(uint8_t& rsoc);
-        bool getSOH(uint8_t& rsoh);
-        bool getTimeToEmpty(uint16_t& minutes);
-        bool getTimeToFull(uint16_t& minutes);
-        bool getCycles(uint16_t& cycles);
-        bool getOperation(bool& enabled);
+        bool getCellVoltage(uint16_t &mV);
+        bool getRSOC(uint8_t &rsoc);
+        bool getSOH(uint8_t &rsoh);
+        bool getTimeToEmpty(uint16_t &minutes);
+        bool getTimeToFull(uint16_t &minutes);
+        bool getCycles(uint16_t &cycles);
+        bool getOperation(bool &enabled);
 
         bool setAPA(uint16_t mAh, ChangeOfParameter param);
         bool setChangeOfParameter(ChangeOfParameter param);
@@ -92,25 +91,25 @@ namespace PowerFeather
     private:
         const std::tuple<uint16_t, uint8_t> _apaTable[10] =
         {
-            { 50, 0x13 },
-            { 100, 0x15 },
-            { 200, 0x18 },
-            { 500, 0x21 },
-            { 1000, 0x2D },
-            { 2000, 0x3A },
-            { 3000, 0x3F },
-            { 4000, 0x42 },
-            { 5000, 0x44 },
-            { 6000, 0x45 },
+            {50, 0x13},
+            {100, 0x15},
+            {200, 0x18},
+            {500, 0x21},
+            {1000, 0x2D},
+            {2000, 0x3A},
+            {3000, 0x3F},
+            {4000, 0x42},
+            {5000, 0x44},
+            {6000, 0x45},
         };
 
         static constexpr uint8_t _i2cAddress = 0x0b;
 
-        MasterI2C& _i2c;
+        MasterI2C &_i2c;
 
         bool setVoltageAlarm(Registers reg, uint16_t mV);
 
-        bool readReg(Registers reg, uint16_t& data);
+        bool readReg(Registers reg, uint16_t &data);
         bool writeReg(Registers reg, uint16_t data);
         uint8_t computeCRC8(uint8_t *data, int len);
     };

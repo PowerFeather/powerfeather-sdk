@@ -30,7 +30,7 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 #include <math.h>
 
@@ -38,14 +38,15 @@
 
 namespace PowerFeather
 {
-    bool LC709204F::readReg(Registers reg, uint16_t& data)
+    bool LC709204F::readReg(Registers reg, uint16_t &data)
     {
         uint8_t reply[6];
-        reply[0] = _i2cAddress << 1; // write byte
-        reply[1] = static_cast<uint8_t>(reg);     // register
-        reply[2] = reply[0] | 0x1;                // read byte
+        reply[0] = _i2cAddress << 1;          // write byte
+        reply[1] = static_cast<uint8_t>(reg); // register
+        reply[2] = reply[0] | 0x1;            // read byte
 
-        if (!_i2c.read(_i2cAddress, reply[1], reply + 3, 3)) {
+        if (!_i2c.read(_i2cAddress, reply[1], reply + 3, 3))
+        {
             return false;
         }
 
@@ -91,12 +92,12 @@ namespace PowerFeather
         return crc;
     }
 
-    bool LC709204F::getCellVoltage(uint16_t& mV)
+    bool LC709204F::getCellVoltage(uint16_t &mV)
     {
         return readReg(Registers::Cell_Voltage, mV);
     }
 
-    bool LC709204F::getRSOC(uint8_t& rsoc)
+    bool LC709204F::getRSOC(uint8_t &rsoc)
     {
         uint16_t val = 0;
         if (readReg(Registers::RSOC, val))
@@ -107,7 +108,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool LC709204F::getCycles(uint16_t& cycles)
+    bool LC709204F::getCycles(uint16_t &cycles)
     {
         uint16_t val = 0;
         if (readReg(Registers::Cycle_Count, val))
@@ -118,7 +119,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool LC709204F::getSOH(uint8_t& soh)
+    bool LC709204F::getSOH(uint8_t &soh)
     {
         uint16_t val = 0;
         if (readReg(Registers::State_Of_Health, val))
@@ -129,7 +130,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool LC709204F::getOperation(bool& enabled)
+    bool LC709204F::getOperation(bool &enabled)
     {
         uint16_t val = 0;
         bool res = readReg(Registers::IC_Power_Mode, val);
@@ -137,16 +138,15 @@ namespace PowerFeather
         return res;
     }
 
-    bool LC709204F::getTimeToEmpty(uint16_t& minutes)
+    bool LC709204F::getTimeToEmpty(uint16_t &minutes)
     {
         return readReg(Registers::TimeToEmpty, minutes);
     }
 
-    bool LC709204F::getTimeToFull(uint16_t& minutes)
+    bool LC709204F::getTimeToFull(uint16_t &minutes)
     {
         return readReg(Registers::TimeToFull, minutes);
     }
-
 
     bool LC709204F::setAPA(uint16_t mAh, ChangeOfParameter param)
     {
@@ -161,7 +161,7 @@ namespace PowerFeather
         else
         {
             auto prev = _apaTable[0];
-            for (int i = 0; i < sizeof(_apaTable)/sizeof(prev); i++)
+            for (int i = 0; i < sizeof(_apaTable) / sizeof(prev); i++)
             {
                 auto cur = _apaTable[i];
                 uint16_t cap = std::get<0>(cur);
@@ -177,8 +177,7 @@ namespace PowerFeather
                     uint16_t prev_cap = std::get<0>(prev);
                     if (mAh < cap && (prev != cur && cap > prev_cap))
                     {
-                        float val = round(std::get<1>(prev) + (std::get<1>(cur) - std::get<1>(prev)) *
-                                    ((static_cast<float>(mAh) - prev_cap) / (cap - prev_cap)));
+                        float val = round(std::get<1>(prev) + (std::get<1>(cur) - std::get<1>(prev)) * ((static_cast<float>(mAh) - prev_cap) / (cap - prev_cap)));
                         apa = (static_cast<uint8_t>(val) << 8) | static_cast<uint8_t>(val);
                     }
                 }

@@ -30,7 +30,7 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 #include <climits>
 #include <cstdint>
@@ -46,9 +46,9 @@ namespace PowerFeather
 {
     static_assert(CHAR_BIT == 8, "Unsupported architecture.");
 
-    static const char* TAG = "MainBoard";
+    static const char *TAG = "MainBoard";
 
-    /*extern*/ MainBoard& Board = MainBoard::get();
+    /*extern*/ MainBoard &Board = MainBoard::get();
 
     #define LOG_FAIL(r)                 ESP_LOGE(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
     #define RET_IF_ERR(f)               { Result r = (f); if (r != Result::Ok) { LOG_FAIL(1); return r; } }
@@ -59,7 +59,7 @@ namespace PowerFeather
     static RTC_NOINIT_ATTR uint32_t first;
     static const uint32_t firstMagic = 0xdeadbeef;
 
-    /*static*/ MainBoard& MainBoard::get()
+    /*static*/ MainBoard &MainBoard::get()
     {
         static MainBoard board;
         return board;
@@ -253,7 +253,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::getSupplyCurrent(int16_t& current)
+    Result MainBoard::getSupplyCurrent(int16_t &current)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -264,7 +264,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::getSupplyVoltage(uint16_t& voltage)
+    Result MainBoard::getSupplyVoltage(uint16_t &voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -275,7 +275,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::checkSupplyGood(bool& good)
+    Result MainBoard::checkSupplyGood(bool &good)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -357,7 +357,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryTemperature(float& celsius)
+    Result MainBoard::getBatteryTemperature(float &celsius)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -378,7 +378,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryCurrent(int16_t& current)
+    Result MainBoard::getBatteryCurrent(int16_t &current)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -413,14 +413,14 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryVoltage(uint16_t& voltage)
+    Result MainBoard::getBatteryVoltage(uint16_t &voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         // If fuel gauge is available, use the reading from it.
-        if (!(_fgEnabled && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(voltage))) 
+        if (!(_fgEnabled && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(voltage)))
         {
             RET_IF_ERR(_udpateChargerADC());
             RET_IF_FALSE(getCharger().getVBAT(voltage), Result::Failure);
@@ -428,7 +428,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryCharge(uint8_t& percent)
+    Result MainBoard::getBatteryCharge(uint8_t &percent)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -440,7 +440,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryHealth(uint8_t& percent)
+    Result MainBoard::getBatteryHealth(uint8_t &percent)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -452,7 +452,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryCycles(uint16_t& cycles)
+    Result MainBoard::getBatteryCycles(uint16_t &cycles)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -464,7 +464,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::getBatteryTimeLeft(int& minutes)
+    Result MainBoard::getBatteryTimeLeft(int &minutes)
     {
         TRY_LOCK(_mutex);
 

@@ -30,7 +30,7 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 #pragma once
 
@@ -47,10 +47,12 @@ namespace PowerFeather
     public:
         ArduinoMasterI2C(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq) :
                          MasterI2C(port, sdaPin, sclPin, freq) {};
+
         bool start() override;
         bool end() override;
         bool write(uint8_t address, uint8_t reg, const uint8_t *buf, size_t len) override;
         bool read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len) override;
+
     private:
         bool read(uint8_t address, uint8_t *buffer, size_t len);
         TwoWire *_wire;

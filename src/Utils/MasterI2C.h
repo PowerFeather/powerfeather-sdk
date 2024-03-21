@@ -30,7 +30,7 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 #pragma once
 
@@ -44,10 +44,12 @@ namespace PowerFeather
     public:
         MasterI2C(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq) :
                   _port(port), _sdaPin(sdaPin), _sclPin(sclPin), _freq(freq) {};
+
         virtual bool start();
         virtual bool end();
         virtual bool write(uint8_t address, uint8_t reg, const uint8_t *buf, size_t len);
         virtual bool read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len);
+
     protected:
         i2c_port_t _port;
         uint8_t _sdaPin;

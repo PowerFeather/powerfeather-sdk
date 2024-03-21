@@ -30,7 +30,7 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 #include "ArduinoMasterI2C.h"
 
@@ -66,7 +66,7 @@ namespace PowerFeather
 
     bool ArduinoMasterI2C::read(uint8_t address, uint8_t *buf, size_t len)
     {
-        size_t recv = _wire->requestFrom(address, (uint8_t) len);
+        size_t recv = _wire->requestFrom(address, static_cast<uint8_t>(len));
 
         if (recv != len)
         {

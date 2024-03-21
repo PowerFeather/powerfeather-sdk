@@ -30,7 +30,7 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 #include "BQ2562x.h"
 
@@ -52,21 +52,21 @@ namespace PowerFeather
             uint8_t bits = reg.end - reg.start + 1;
             uint16_t mask = ((1 << bits) - 1) << reg.start;
             data = (data & ~mask) | ((value << reg.start) & mask);
-            return _i2c.write(_i2cAddress, reg.address, reinterpret_cast<uint8_t*>(&data), reg.size);
+            return _i2c.write(_i2cAddress, reg.address, reinterpret_cast<uint8_t *>(&data), reg.size);
         }
 
         return false;
     }
 
     template <typename T>
-    bool BQ2562x::readReg(Register reg, T& value)
+    bool BQ2562x::readReg(Register reg, T &value)
     {
         assert(reg.size <= sizeof(value));
         assert(reg.start <= reg.end);
         assert(reg.end <= (reg.size * CHAR_BIT) - 1);
 
         uint16_t data = 0;
-        if (_i2c.read(_i2cAddress, reg.address, reinterpret_cast<uint8_t*>(&data), reg.size))
+        if (_i2c.read(_i2cAddress, reg.address, reinterpret_cast<uint8_t *>(&data), reg.size))
         {
             int left = (((sizeof(data) * CHAR_BIT) - 1) - reg.end);
             data <<= left;
@@ -100,13 +100,13 @@ namespace PowerFeather
     bool BQ2562x::getTS(bool &enabled)
     {
         bool tsIgnore = false, tsDis = false;
-        if (readReg(NTC_Control_0_TS_IGNORE, tsIgnore) )
+        if (readReg(NTC_Control_0_TS_IGNORE, tsIgnore))
         {
             Register reg = ADC_Function_Disable_0;
             reg.start = reg.end = static_cast<uint8_t>(Adc::TS);
             if (readReg(reg, tsDis))
             {
-                enabled =  (!tsIgnore) && (!tsDis);
+                enabled = (!tsIgnore) && (!tsDis);
                 return true;
             }
         }
@@ -130,7 +130,7 @@ namespace PowerFeather
         return writeReg(reg, !enable);
     }
 
-    bool BQ2562x::getPartInformation(uint8_t& value)
+    bool BQ2562x::getPartInformation(uint8_t &value)
     {
         return readReg(Part_Information, value);
     }
@@ -161,7 +161,7 @@ namespace PowerFeather
         return writeReg(Charger_Control_0_EN_CHG, state);
     }
 
-    bool BQ2562x::getVBUS(uint16_t& value)
+    bool BQ2562x::getVBUS(uint16_t &value)
     {
         uint16_t data = 0;
         if (readReg(VBUS_ADC, data))
@@ -173,7 +173,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool BQ2562x::getIBAT(int16_t& value)
+    bool BQ2562x::getIBAT(int16_t &value)
     {
         uint16_t data = 0;
         if (readReg(IBAT_ADC, data))
@@ -182,7 +182,7 @@ namespace PowerFeather
             {
                 if (data >= 0x38AD && data <= 0x3FFF)
                 {
-                    data = ((0x3FFF - data + 1) * 4) * - 1;
+                    data = ((0x3FFF - data + 1) * 4) * -1;
                 }
                 else
                 {
@@ -196,7 +196,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool BQ2562x::getIBUS(int16_t& value)
+    bool BQ2562x::getIBUS(int16_t &value)
     {
         uint16_t data = 0;
         if (readReg(IBUS_ADC, data))
@@ -216,7 +216,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool BQ2562x::getVBAT(uint16_t& value)
+    bool BQ2562x::getVBAT(uint16_t &value)
     {
         uint16_t res = 0;
         if (readReg(VBAT_ADC, res))
@@ -274,7 +274,6 @@ namespace PowerFeather
         return writeReg(ADC_Control, value);
     }
 
-
     bool BQ2562x::getADCDone(bool &done)
     {
         uint8_t data;
@@ -286,7 +285,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool BQ2562x::getBatteryVoltage(float& value)
+    bool BQ2562x::getBatteryVoltage(float &value)
     {
         uint16_t data = 0;
         if (readReg(VBAT_ADC, data))
@@ -297,7 +296,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool BQ2562x::getVBUSStat(VBUSStat& stat)
+    bool BQ2562x::getVBUSStat(VBUSStat &stat)
     {
         uint8_t data = 0;
         if (readReg(Charger_Status_1_VBUS_STAT, data))
@@ -315,7 +314,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool BQ2562x::getChargeStat(ChargeStat& stat)
+    bool BQ2562x::getChargeStat(ChargeStat &stat)
     {
         uint8_t value = 0;
         if (readReg(Charger_Status_1_CHG_STAT, value))
@@ -392,7 +391,7 @@ namespace PowerFeather
         return writeReg(Charger_Control_2_WVBUS, enable);
     }
 
-    bool BQ2562x::getTS_ADC(float& value)
+    bool BQ2562x::getTS_ADC(float &value)
     {
         uint16_t res = 0;
         if (readReg(TS_ADC, res))

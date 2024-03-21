@@ -30,7 +30,7 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 #pragma once
 
 #include <driver/rtc_io.h>
@@ -69,7 +69,7 @@ namespace PowerFeather
              *      - Free IO
              *      - User-Managed Fixed
              *      - SDK-Managed Fixed
-            */
+             */
 
             // Free IO
             static constexpr gpio_num_t A0 =        GPIO_NUM_10;
@@ -165,14 +165,14 @@ namespace PowerFeather
          *
          * @param[out] voltage Measured voltage in mV.
          */
-        Result getSupplyVoltage(uint16_t& voltage);
+        Result getSupplyVoltage(uint16_t &voltage);
 
         /**
          * Measure the supply current.
          *
          * @param[out] current Measured current in mA.
          */
-        Result getSupplyCurrent(int16_t& current);
+        Result getSupplyCurrent(int16_t &current);
 
         /**
          * Check that the power supply, is a 'good' source as determined by the charger.
@@ -180,7 +180,7 @@ namespace PowerFeather
          * @param[out] good If true, supply is good; if not battery is powering the board.
          * @return
          */
-        Result checkSupplyGood(bool& good);
+        Result checkSupplyGood(bool &good);
 
         /**
          * Sets the minimum supply voltage that should be maintained.
@@ -192,7 +192,6 @@ namespace PowerFeather
          * @param[in] voltage The maintained voltage in mV.
          */
         Result setSupplyMaintainVoltage(uint16_t voltage);
-
 
         /**
          * Enter ship mode.
@@ -262,21 +261,21 @@ namespace PowerFeather
          *
          * @param[out] voltage Battery voltage current in mV.
          */
-        Result getBatteryVoltage(uint16_t& voltage);
+        Result getBatteryVoltage(uint16_t &voltage);
 
         /**
          * Get an estimate of battery state-of-charge from 0 (empty) to 100 (full).
          *
          * @param[out] percent Battery charge percentage from 0 to 100.
          */
-        Result getBatteryCharge(uint8_t& percent);
+        Result getBatteryCharge(uint8_t &percent);
 
         /**
          * Get an estimate of battery state-of-health from 0 (dead) to 100 (healthy).
          *
          * @param[out] percent Battery health percentage from 0 to 100.
          */
-        Result getBatteryHealth(uint8_t& percent);
+        Result getBatteryHealth(uint8_t &percent);
 
         /**
          * Get the time left before fully empty/fully charged.
@@ -286,7 +285,7 @@ namespace PowerFeather
          *
          * @param[out] minutes Charge/discharge time left in minutes.
          */
-        Result getBatteryTimeLeft(int& minutes);
+        Result getBatteryTimeLeft(int &minutes);
 
         /**
          * Measure the battery temperature.
@@ -295,14 +294,14 @@ namespace PowerFeather
          *
          * @param[out] celsius Battery current in °C.
          */
-        Result getBatteryTemperature(float& celsius);
+        Result getBatteryTemperature(float &celsius);
 
         /**
          * Get the number of charge/discharge cycles the battery has gone through.
          *
          * @param[out] cycles Number of battery cycles.
          */
-        Result getBatteryCycles(uint16_t& cycles);
+        Result getBatteryCycles(uint16_t &cycles);
 
         /**
          * Measure the charge/discharge current to/from the battery.
@@ -311,7 +310,7 @@ namespace PowerFeather
          *
          * @param[out] current Battery current in mA.
          */
-        Result getBatteryCurrent(int16_t& current);
+        Result getBatteryCurrent(int16_t &current);
 
         /**
          * Set alarm for when battery voltage is below a certain treshold.
@@ -334,10 +333,10 @@ namespace PowerFeather
          */
         Result setBatteryLowChargeAlarm(uint8_t percent);
 
-        BQ2562x& getCharger() { return _charger; }
-        LC709204F& getFuelGauge() { return _fuelGauge; }
+        BQ2562x &getCharger() { return _charger; }
+        LC709204F &getFuelGauge() { return _fuelGauge; }
 
-        static MainBoard& get();
+        static MainBoard &get();
 
     private:
         MainBoard() {}
@@ -353,21 +352,21 @@ namespace PowerFeather
         static constexpr uint32_t _maxChargingCurrent = 2000;
 
 #ifdef ARDUINO
-        ArduinoMasterI2C _i2c {};
+        ArduinoMasterI2C _i2c{_i2cPort, Pin::SCL, Pin::SDA, _i2cFreq};
 #else
-        MasterI2C _i2c { _i2cPort, Pin::SCL, Pin::SDA, _i2cFreq };
+        MasterI2C _i2c{_i2cPort, Pin::SCL, Pin::SDA, _i2cFreq};
 #endif
 
-        BQ2562x _charger {_i2c};
-        LC709204F _fuelGauge {_i2c};
+        BQ2562x _charger{_i2c};
+        LC709204F _fuelGauge{_i2c};
 
-        bool _sqtEnabled { false };
-        bool _fgEnabled { false };
-        bool _initDone { false };
-        uint32_t _chargerADCTime { 0 };
-        uint16_t _batteryCapacity { 0 };
-        BatteryType _batteryType { BatteryType::Generic_3V7 };
-        Mutex _mutex { 100 };
+        bool _sqtEnabled{false};
+        bool _fgEnabled{false};
+        bool _initDone{false};
+        uint32_t _chargerADCTime{0};
+        uint16_t _batteryCapacity{0};
+        BatteryType _batteryType{BatteryType::Generic_3V7};
+        Mutex _mutex{100};
 
         bool _isFirst();
         bool _setRTCPin(gpio_num_t pin, bool value);
@@ -377,5 +376,5 @@ namespace PowerFeather
         Result _udpateChargerADC();
     };
 
-    extern MainBoard& Board;
+    extern MainBoard &Board;
 }
