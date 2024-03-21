@@ -32,10 +32,14 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <esp_log.h>
+
 #include "BQ2562x.h"
 
 namespace PowerFeather
 {
+    static const char *TAG = "BQ2562x";
+
     template <typename T>
     bool BQ2562x::writeReg(Register reg, T value)
     {
@@ -52,7 +56,16 @@ namespace PowerFeather
             uint8_t bits = reg.end - reg.start + 1;
             uint16_t mask = ((1 << bits) - 1) << reg.start;
             data = (data & ~mask) | ((value << reg.start) & mask);
-            return _i2c.write(_i2cAddress, reg.address, reinterpret_cast<uint8_t *>(&data), reg.size);
+            bool res = _i2c.write(_i2cAddress, reg.address, reinterpret_cast<uint8_t *>(&data), reg.size);
+            if (res)
+            {
+                ESP_LOGD(TAG, "Write bit%d to bit%d on %d-byte register %02x, value = %d.", reg.start, reg.end, reg.size, reg.address, data);
+            }
+            else
+            {
+                ESP_LOGE(TAG, "Write bit%d to bit%d on %d-byte register %02x failed.", reg.start, reg.end, reg.size, reg.address);
+            }
+            return res;
         }
 
         return false;
@@ -72,8 +85,11 @@ namespace PowerFeather
             data <<= left;
             data >>= left + reg.start;
             value = data;
+            ESP_LOGD(TAG, "Read bit%d to bit%d on %d-byte register %02x, value = %d.", reg.start, reg.end, reg.size, reg.address, value);
             return true;
         }
+
+        ESP_LOGD(TAG, "Read bit%d to bit%d on %d-byte register %02x failed.", reg.start, reg.end, reg.size, reg.address);
         return false;
     }
 

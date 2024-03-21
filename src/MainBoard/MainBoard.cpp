@@ -530,7 +530,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE((percent >= 0 && percent <= 100), Result::InvalidArg); // TODO: clear alarm when 0
+        RET_IF_FALSE(percent <= 100, Result::InvalidArg); // TODO: clear alarm when 0
         RET_IF_FALSE(getFuelGauge().setLowRSOCAlarm(percent), Result::Failure);
         ESP_LOGD(TAG, "Low charge alarm set to: %d %%.", (int)percent);
         return Result::Ok;

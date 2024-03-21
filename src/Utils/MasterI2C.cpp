@@ -32,10 +32,14 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <esp_log.h>
+
 #include "MasterI2C.h"
 
 namespace PowerFeather
 {
+    static const char *TAG = "MasterI2C";
+
     bool MasterI2C::start()
     {
         i2c_config_t conf;
@@ -46,9 +50,8 @@ namespace PowerFeather
         conf.sda_pullup_en = GPIO_PULLUP_DISABLE;
         conf.scl_pullup_en = GPIO_PULLUP_DISABLE;
         conf.master.clk_speed = _freq;
-
         i2c_param_config(_port, &conf);
-
+        ESP_LOGD(TAG, "Start with port: %d, sda: %d, scl: %d, freq: %d.", _port, _sdaPin, _sclPin, _freq);
         return i2c_driver_install(_port, conf.mode, 0, 0, 0) == ESP_OK;
     }
 
@@ -57,16 +60,22 @@ namespace PowerFeather
         uint8_t buf2[len + sizeof(reg)];
         memcpy(buf2, &reg, sizeof(reg));
         memcpy(&(buf2[sizeof(reg)]), buf, len);
+        ESP_LOGV(TAG, "Write address: %02x, reg: %02x, buf: %p, len: %d.", address, reg, buf, len);
+        ESP_LOG_BUFFER_HEX_LEVEL(TAG, buf, len, ESP_LOG_VERBOSE);
         return i2c_master_write_to_device(_port, address, const_cast<uint8_t*>(buf2), sizeof(buf2), pdMS_TO_TICKS(1000)) == ESP_OK;
     }
 
     bool MasterI2C::read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len)
     {
-        return i2c_master_write_read_device(_port, address, &reg, sizeof(reg), buf, len, pdMS_TO_TICKS(1000)) == ESP_OK;
+        ESP_LOGV(TAG, "Read address: %02x, reg: %02x, buf: %p, len: %d.", address, reg, buf, len);
+        esp_err_t res = i2c_master_write_read_device(_port, address, &reg, sizeof(reg), buf, len, pdMS_TO_TICKS(1000));
+        ESP_LOG_BUFFER_HEX_LEVEL(TAG, buf, len, ESP_LOG_VERBOSE);
+        return res == ESP_OK;
     }
 
     bool MasterI2C::end()
     {
+        ESP_LOGD(TAG, "End");
         return i2c_driver_delete(_port) == ESP_OK;
     }
 }
