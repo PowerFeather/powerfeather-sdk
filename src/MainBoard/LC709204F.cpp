@@ -34,10 +34,14 @@
 
 #include <math.h>
 
+#include <esp_log.h>
+
 #include "LC709204F.h"
 
 namespace PowerFeather
 {
+    static const char *TAG = "LC709204F";
+
     bool LC709204F::_readReg(Registers reg, uint16_t &data)
     {
         uint8_t reply[6];
@@ -45,21 +49,25 @@ namespace PowerFeather
         reply[1] = static_cast<uint8_t>(reg); // register
         reply[2] = reply[0] | 0x1;            // read byte
 
-        if (!_i2c.read(_i2cAddress, reply[1], reply + 3, 3))
+        if (!_i2c.read(_i2cAddress, reply[1], &(reply[3]), 3))
         {
+            ESP_LOGE(TAG, "Read register %02x failed.", reply[1]);
             return false;
         }
 
         uint8_t crc = _computeCRC8(reply, 5);
 
-        // CRC failure?
-        if (crc != reply[5])
+        if (crc != reply[5]) // crc failed
+        {
+            ESP_LOGE(TAG, "CRC %02x different from expected %02x.", reply[5], crc);
             return false;
+        }
 
         data = reply[4];
         data <<= 8;
         data |= reply[3];
 
+        ESP_LOGD(TAG, "Read register %02x succeeded, crc: %02x  value: %04x", reply[1], crc, data);
         return true;
     }
 
@@ -71,8 +79,8 @@ namespace PowerFeather
         send[2] = data & 0xFF;
         send[3] = data >> 8;
         send[4] = _computeCRC8(send, 4);
-
-        return _i2c.write(_i2cAddress, send[1], send + 2, 4);
+        ESP_LOGE(TAG, "Write register %02x, crc: %02x  value: %04x", send[1], send[4], data);
+        return _i2c.write(_i2cAddress, send[1], &(send[2]), 3);
     }
 
     uint8_t LC709204F::_computeCRC8(uint8_t *data, int len)

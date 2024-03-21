@@ -54,7 +54,7 @@ namespace PowerFeather
             data <<= left;
             data >>= left + reg.start;
             value = data;
-            ESP_LOGD(TAG, "Read bit%d to bit%d on %d-byte register %02x, value = %d.", reg.start, reg.end, reg.size, reg.address, value);
+            ESP_LOGD(TAG, "Read bit%d to bit%d on %d-byte register %02x, value = %04x.", reg.start, reg.end, reg.size, reg.address, value);
             return true;
         }
 
@@ -81,7 +81,7 @@ namespace PowerFeather
             bool res = _i2c.write(_i2cAddress, reg.address, reinterpret_cast<uint8_t *>(&data), reg.size);
             if (res)
             {
-                ESP_LOGD(TAG, "Write bit%d to bit%d on %d-byte register %02x, value = %d.", reg.start, reg.end, reg.size, reg.address, data);
+                ESP_LOGD(TAG, "Write bit%d to bit%d on %d-byte register %02x, value = %04x.", reg.start, reg.end, reg.size, reg.address, data);
             }
             else
             {
