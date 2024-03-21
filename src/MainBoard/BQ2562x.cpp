@@ -156,7 +156,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool BQ2562x::enableBatteryCharging(bool state)
+    bool BQ2562x::enableCharging(bool state)
     {
         return writeReg(Charger_Control_0_EN_CHG, state);
     }

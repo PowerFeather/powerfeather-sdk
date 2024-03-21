@@ -167,7 +167,7 @@ namespace PowerFeather
 
             if (wdOn) // watchdog disabled means that the initiatialization was done previously
             {
-                RET_IF_FALSE(getCharger().enableBatteryCharging(false), Result::Failure);
+                RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
                 RET_IF_FALSE(getCharger().enableTS(false), Result::Failure);
                 RET_IF_FALSE(getCharger().setChargeCurrent(_defaultMaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
@@ -340,7 +340,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
-        RET_IF_FALSE(getCharger().enableBatteryCharging(enable), Result::Failure);
+        RET_IF_FALSE(getCharger().enableCharging(enable), Result::Failure);
         ESP_LOGD(TAG, "Charging set to: %d.", enable);
         return Result::Ok;
     }

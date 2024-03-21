@@ -132,7 +132,7 @@ namespace PowerFeather
 
         bool getTS_ADC(float& value);
         bool setChargeCurrent(uint16_t current);
-        bool enableBatteryCharging(bool state);
+        bool enableCharging(bool state);
         bool enableSTAT(bool enable);
         bool enableTS(bool enable);
         bool enableWD(bool enable);
