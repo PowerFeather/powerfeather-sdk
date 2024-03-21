@@ -49,7 +49,7 @@
 
 namespace PowerFeather
 {
-    class MainBoard
+    class Mainboard
     {
     public:
         enum class BatteryType
@@ -62,7 +62,7 @@ namespace PowerFeather
         class Pin
         {
         public:
-            friend MainBoard;
+            friend Mainboard;
 
             /**
              * Pin Definitions. There are three types:
@@ -336,10 +336,10 @@ namespace PowerFeather
         BQ2562x &getCharger() { return _charger; }
         LC709204F &getFuelGauge() { return _fuelGauge; }
 
-        static MainBoard &get();
+        static Mainboard &get();
 
     private:
-        MainBoard() {}
+        Mainboard() {}
 
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 100000;
@@ -378,5 +378,5 @@ namespace PowerFeather
         Result _udpateChargerADC();
     };
 
-    extern MainBoard &Board;
+    extern Mainboard &Board;
 }

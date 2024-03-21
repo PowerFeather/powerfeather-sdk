@@ -34,7 +34,7 @@
 
 #pragma once
 
-#include "MainBoard/MainBoard.h"
+#include "Mainboard/Mainboard.h"
 
 #ifdef ARDUINO
 #ifndef ARDUINO_ESP32S3_POWERFEATHER
