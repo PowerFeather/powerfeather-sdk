@@ -215,7 +215,8 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(!enable || _batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(_sqtOn, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState); // system is expected to have a battery
         RET_IF_FALSE(getFuelGauge().enableOperation(enable), Result::Failure);
         _fgOn = enable;
         return Result::Ok;
