@@ -373,16 +373,17 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
 
+        // Temperature sensing must be enabled using enableTempSense(true), only
+        // then can the battery temperature be measured.
         bool enabled = false;
         RET_IF_FALSE(getCharger().getTS(enabled) && enabled, Result::InvalidState);
 
-        RET_IF_ERR(_udpateChargerADC());
-
         float voltage = 0;
+        RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getTS_ADC(voltage), Result::Failure);
-        // Map percent to temperature given 103AT thermistor with fitted curve (see ts_calc.fods).
+        // Map percent to temperature given 103AT thermistor with fitted curve.
         celsius = (-1866.96172 * powf(voltage, 4)) + (3169.31754 * powf(voltage, 3)) - (1849.96775 * powf(voltage, 2)) + (276.6656 * voltage) + 81.98758;
-
+        ESP_LOGD(TAG, "Measured battery temperature: %f °C.", celsius);
         return Result::Ok;
     }
 
@@ -393,6 +394,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
+        ESP_LOGD(TAG, "Measured battery current: %d mA.", current);
         return Result::Ok;
     }
 
@@ -510,13 +512,14 @@ namespace PowerFeather
     {
         uint32_t now = 0;
         // Since updating ADC values take a long time, only update it again after _chargerADCWaitTime has elapsed.
-        if (_chargerADCTime == 0 || now - _chargerADCTime >= _chargerADCWaitTime)
+        if (_chargerADCTime == 0 || (now - _chargerADCTime) >= _chargerADCWaitTime)
         {
             bool done = false;
             RET_IF_FALSE(getCharger().setupADC(true, BQ2562x::ADCRate::Oneshot, BQ2562x::ADCSampling::Bits_10), Result::Failure);
             vTaskDelay(pdMS_TO_TICKS(_chargerADCWaitTime));
             RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
             _chargerADCTime = now;
+            ESP_LOGD(TAG, "Updated charger ADC.");
         }
         return Result::Ok;
     }
