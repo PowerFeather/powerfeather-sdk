@@ -350,6 +350,8 @@ namespace PowerFeather
         static constexpr uint32_t _batfetCtrlWaitTime = 30;
         static constexpr uint32_t _defaultMaxChargingCurrent = 100;
         static constexpr uint32_t _maxChargingCurrent = 2000;
+        static constexpr uint32_t _maxBatteryVoltageAlarm = 2500;
+        static constexpr uint32_t _minBatteryVoltageAlarm = 5000;
 
 #ifdef ARDUINO
         ArduinoMasterI2C _i2c{_i2cPort, Pin::SCL, Pin::SDA, _i2cFreq};
