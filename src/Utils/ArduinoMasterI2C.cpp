@@ -38,10 +38,16 @@
 
 namespace PowerFeather
 {
-    bool ArduinoMasterI2C::init(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq)
+    bool ArduinoMasterI2C::start()
     {
-        _wire = port == 0 ? &Wire : &Wire1;
-        return _wire->begin(sdaPin, sclPin, freq);
+        _wire = (_port == 0) ? &Wire : &Wire1;
+        return _wire->begin(_sdaPin, _sclPin, _freq);
+    }
+
+    bool ArduinoMasterI2C::end()
+    {
+        _wire->end();
+        return true;
     }
 
     bool ArduinoMasterI2C::write(uint8_t address, uint8_t reg, const uint8_t *buffer, size_t len)

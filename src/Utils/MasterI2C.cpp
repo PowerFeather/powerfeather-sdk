@@ -36,18 +36,16 @@
 
 namespace PowerFeather
 {
-    bool MasterI2C::init(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq)
+    bool MasterI2C::start()
     {
         i2c_config_t conf;
         memset(&conf, 0, sizeof(conf));
         conf.mode = I2C_MODE_MASTER;
-        conf.sda_io_num = sdaPin;
-        conf.scl_io_num = sclPin;
+        conf.sda_io_num = _sdaPin;
+        conf.scl_io_num = _sclPin;
         conf.sda_pullup_en = GPIO_PULLUP_DISABLE;
         conf.scl_pullup_en = GPIO_PULLUP_DISABLE;
-        conf.master.clk_speed = freq;
-
-        _port = static_cast<i2c_port_t>(port);
+        conf.master.clk_speed = _freq;
 
         i2c_param_config(_port, &conf);
 
@@ -65,5 +63,10 @@ namespace PowerFeather
     bool MasterI2C::read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len)
     {
         return i2c_master_write_read_device(_port, address, &reg, sizeof(reg), buf, len, pdMS_TO_TICKS(1000)) == ESP_OK;
+    }
+
+    bool MasterI2C::end()
+    {
+        return i2c_driver_delete(_port) == ESP_OK;
     }
 }

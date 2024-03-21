@@ -158,10 +158,10 @@ namespace PowerFeather
         RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, _sqtEnabled), Result::Failure)
         ESP_LOGD(TAG, "VSQT set to %d during initialization", _sqtEnabled);
 
-        RET_IF_FALSE(_i2c.init(_i2cPort, Pin::SDA0, Pin::SCL0, _i2cFreq), Result::Failure); // always initialize STEMMA QT, charger, fuel gauge I2C; TODO: check disabling
-
         if (_sqtEnabled)
         {
+            RET_IF_FALSE(_i2c.start(), Result::Failure);
+
             bool wdOn = true;
             RET_IF_FALSE(getCharger().getWD(wdOn), Result::Failure);
 
@@ -236,7 +236,8 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, enable), Result::Failure)
+        RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, enable), Result::Failure);
+        RET_IF_FALSE(enable ? _i2c.start() : _i2c.end(), Result::Failure);
         _sqtEnabled = enable;
         ESP_LOGD(TAG, "VSQT set to: %d.", _sqtEnabled);
         return Result::Ok;

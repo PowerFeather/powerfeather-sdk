@@ -355,7 +355,7 @@ namespace PowerFeather
 #ifdef ARDUINO
         ArduinoMasterI2C _i2c {};
 #else
-        MasterI2C _i2c {};
+        MasterI2C _i2c { _i2cPort, Pin::SCL, Pin::SDA, _i2cFreq };
 #endif
 
         BQ2562x _charger {_i2c};

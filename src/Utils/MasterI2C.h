@@ -42,10 +42,16 @@ namespace PowerFeather
     class MasterI2C
     {
     public:
-        virtual bool init(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq);
+        MasterI2C(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq) :
+                  _port(port), _sdaPin(sdaPin), _sclPin(sclPin), _freq(freq) {};
+        virtual bool start();
+        virtual bool end();
         virtual bool write(uint8_t address, uint8_t reg, const uint8_t *buf, size_t len);
         virtual bool read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len);
-    private:
+    protected:
         i2c_port_t _port;
+        uint8_t _sdaPin;
+        uint8_t _sclPin;
+        uint32_t _freq;
     };
 }
