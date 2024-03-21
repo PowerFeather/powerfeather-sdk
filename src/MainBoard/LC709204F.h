@@ -45,21 +45,20 @@ namespace PowerFeather
     public:
         enum class Registers
         {
-            Cell_Voltage = 0x09,
-            RSOC = 0x0d,
-            State_Of_Health = 0x32,
             TimeToEmpty = 0x03,
             TimeToFull = 0x05,
-
+            Cell_Voltage = 0x09,
             APA = 0x0b,
+            RSOC = 0x0d,
             Change_Of_The_Parameter = 0x12,
-            Status_Bit = 0x16,
             Alarm_Low_RSOC = 0x13,
             Alarm_Low_Cell_Voltage = 0x14,
             IC_Power_Mode = 0x15,
+            Status_Bit = 0x16,
             Cycle_Count = 0x17,
             BatteryStatus = 0x19,
-            Alarm_High_Cell_Voltage = 0x1f
+            Alarm_High_Cell_Voltage = 0x1f,
+            State_Of_Health = 0x32
         };
 
         enum class ChangeOfParameter
@@ -73,26 +72,38 @@ namespace PowerFeather
 
         LC709204F(MasterI2C &i2c) : _i2c(i2c) {}
 
+        bool getOperation(bool &enabled);
         bool getCellVoltage(uint16_t &mV);
         bool getRSOC(uint8_t &rsoc);
-        bool getSOH(uint8_t &rsoh);
         bool getTimeToEmpty(uint16_t &minutes);
         bool getTimeToFull(uint16_t &minutes);
         bool getCycles(uint16_t &cycles);
-        bool getOperation(bool &enabled);
-
-        bool setAPA(uint16_t mAh, ChangeOfParameter param);
-        bool setChangeOfParameter(ChangeOfParameter param);
-        bool setLowVoltageAlarm(uint16_t mV);
-        bool clearLowVoltageAlarm();
-        bool setHighVoltageAlarm(uint16_t mV);
-        bool clearHighVoltageAlarm();
-        bool setLowRSOCAlarm(uint16_t rsoc);
-        bool clearLowRSOCAlarm();
-        bool enableTSENSE(bool tsense1, bool tsense2);
+        bool getSOH(uint8_t &rsoh);
         bool enableOperation(bool enable);
+        bool setAPA(uint16_t capacity, ChangeOfParameter changeOfParam);
+        bool setChangeOfParameter(ChangeOfParameter changeOfParam);
+        bool enableTSENSE(bool enableTsense1, bool enableTsense2);
+        bool setLowVoltageAlarm(uint16_t voltage);
+        bool setHighVoltageAlarm(uint16_t voltage);
+        bool setLowRSOCAlarm(uint16_t percent);
+        bool clearLowVoltageAlarm();
+        bool clearHighVoltageAlarm();
+        bool clearLowRSOCAlarm();
 
     private:
+        enum class BatteryStatus : uint8_t
+        {
+            LowRSOC=9,
+            LowCellVoltage=11,
+            HighCellVoltage=15
+        };
+
+        enum class OperationMode : uint16_t
+        {
+            OperationalMode = 0x0001,
+            SleepMode = 0x0002
+        };
+
         const std::tuple<uint16_t, uint8_t> _apaTable[10] =
         {
             {50, 0x13},
@@ -111,11 +122,11 @@ namespace PowerFeather
 
         MasterI2C &_i2c;
 
-        bool setVoltageAlarm(Registers reg, uint16_t mV);
-        bool clearAlarm(uint8_t bit);
+        bool _readReg(Registers reg, uint16_t &data);
+        bool _writeReg(Registers reg, uint16_t data);
+        uint8_t _computeCRC8(uint8_t *data, int len);
 
-        bool readReg(Registers reg, uint16_t &data);
-        bool writeReg(Registers reg, uint16_t data);
-        uint8_t computeCRC8(uint8_t *data, int len);
+        bool _setVoltageAlarm(Registers reg, uint16_t voltage);
+        bool _clearAlarm(uint8_t bit);
     };
 }
