@@ -330,7 +330,10 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset), Result::Failure);
-        return Result::Ok;
+        // If this executes, then charger did not perform power cycle. TODO: verify
+        vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
+        ESP_LOGD(TAG, "Failed to do power cycle.");
+        return Result::Failure;
     }
 
     Result MainBoard::enableTempSense(bool enable)
