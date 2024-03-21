@@ -30,7 +30,7 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 #pragma once
 
@@ -45,12 +45,13 @@ namespace PowerFeather
         class Lock
         {
         public:
-            Lock(Mutex& mutex) : _mutex(mutex) { _locked = _mutex.lock(); }
+            Lock(Mutex &mutex) : _mutex(mutex) { _locked = _mutex.lock(); }
             ~Lock() { _mutex.unlock(); }
 
             bool isLocked() { return _locked; }
+
         private:
-            Mutex& _mutex;
+            Mutex &_mutex;
             bool _locked;
         };
 
@@ -59,6 +60,7 @@ namespace PowerFeather
         void init();
         bool lock();
         void unlock();
+
     private:
         SemaphoreHandle_t _sem;
         uint32_t _timeout;

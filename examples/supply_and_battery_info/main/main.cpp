@@ -6,7 +6,7 @@
 
 // Battery capacity in mAh; a value of 0 means there is no battery.
 // Replace with the actual capacity of the battery connected to the board.
-#define BATTERY_CAPACITY    500
+#define BATTERY_CAPACITY 500
 
 using namespace PowerFeather; // for PowerFeather::Board
 
