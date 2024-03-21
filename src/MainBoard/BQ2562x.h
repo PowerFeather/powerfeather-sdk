@@ -122,39 +122,33 @@ namespace PowerFeather
 
         BQ2562x(MasterI2C &i2c) : _i2c(i2c) {}
 
-        template <typename T>
-        bool writeReg(Register reg, T value);
-        template <typename T>
-        bool readReg(Register reg, T &value);
+        bool getWD(bool &enabled);
+        bool getVBUS(uint16_t &voltage);
+        bool getIBUS(int16_t &current);
+        bool getVBAT(uint16_t &voltage);
+        bool getIBAT(int16_t &current);
+        bool getADCDone(bool &done);
+        bool getTS(bool &enabled);
+        bool getTS_ADC(float &celsius);
+        bool getVBUSStat(VBUSStat &stat);
+        bool getChargeStat(ChargeStat &stat);
+        bool getPartInformation(uint8_t &info);
 
-        bool getTS_ADC(float &value);
-        bool setChargeCurrent(uint16_t current);
-        bool enableCharging(bool state);
-        bool enableSTAT(bool enable);
-        bool enableTS(bool enable);
         bool enableWD(bool enable);
+        bool enableCharging(bool enable);
+        bool enableTS(bool enable);
         bool enableHIZ(bool enable);
-        bool setBATFETControl(BATFETControl control);
-        bool setBATFETDelay(BATFETDelay delay);
         bool enableInterrupts(bool enable);
         bool enableInterrupt(Interrupt mask, bool en);
         bool enableWVBUS(bool enable);
         bool enableADC(Adc adc, bool enable);
+        bool setChargeCurrent(uint16_t current);
+        bool setBATFETControl(BATFETControl control);
+        bool setBATFETDelay(BATFETDelay delay);
+        bool setVINDPM(uint32_t voltage);
+        bool setIINDPM(uint32_t current);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
                       ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
-        bool setVINDPM(uint32_t mV);
-        bool setIINDPM(uint32_t mA);
-        bool getADCDone(bool &done);
-        bool getVBUSStat(VBUSStat &stat);
-        bool getPartInformation(uint8_t &value);
-        bool getBatteryVoltage(float &voltage);
-        bool getChargeStat(ChargeStat &stat);
-        bool getIBUS(int16_t &value);
-        bool getWD(bool &enabled);
-        bool getTS(bool &enabled);
-        bool getVBUS(uint16_t &value);
-        bool getIBAT(int16_t &value);
-        bool getVBAT(uint16_t &value);
 
     private:
         const Register Charge_Current_Limit_ICHG =            { 0x02, 2, 5, 11 };
@@ -200,6 +194,12 @@ namespace PowerFeather
         const Register Part_Information_DEV_REV =             { 0x38, 1, 0, 2 };
 
         static constexpr uint8_t _i2cAddress = 0x6a;
+
         MasterI2C &_i2c;
+
+        template <typename T>
+        bool _readReg(Register reg, T &value);
+        template <typename T>
+        bool _writeReg(Register reg, T value);
     };
 }
