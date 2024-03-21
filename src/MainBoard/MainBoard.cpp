@@ -46,7 +46,7 @@ namespace PowerFeather
 {
     static_assert(CHAR_BIT == 8, "Unsupported architecture.");
 
-    static const char *TAG = "MainBoard";
+    static const char *TAG = "PowerFeather::MainBoard";
 
     /*extern*/ MainBoard &Board = MainBoard::get();
 

@@ -38,7 +38,7 @@
 
 namespace PowerFeather
 {
-    static const char *TAG = "MasterI2C";
+    static const char *TAG = "PowerFeather::Utils::MasterI2C";
 
     bool MasterI2C::start()
     {

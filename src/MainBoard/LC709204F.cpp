@@ -40,7 +40,7 @@
 
 namespace PowerFeather
 {
-    static const char *TAG = "LC709204F";
+    static const char *TAG = "PowerFeather::MainBoard::LC709204F";
 
     bool LC709204F::_readReg(Registers reg, uint16_t &data)
     {

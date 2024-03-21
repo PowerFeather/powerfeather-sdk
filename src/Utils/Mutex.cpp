@@ -38,7 +38,7 @@
 
 namespace PowerFeather
 {
-    static const char *TAG = "Mutex";
+    static const char *TAG = "PowerFeather::Utils::Mutex";
 
     void Mutex::init()
     {

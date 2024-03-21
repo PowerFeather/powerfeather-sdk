@@ -38,6 +38,8 @@
 
 namespace PowerFeather
 {
+    static const char *TAG = "PowerFeather::Utils::ArduinoMasterI2C";
+
     bool ArduinoMasterI2C::start()
     {
         _wire = (_port == 0) ? &Wire : &Wire1;

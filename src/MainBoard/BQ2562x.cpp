@@ -38,7 +38,7 @@
 
 namespace PowerFeather
 {
-    static const char *TAG = "BQ2562x";
+    static const char *TAG = "PowerFeather::MainBoard::BQ2562x";
 
     template <typename T>
     bool BQ2562x::_readReg(Register reg, T &value)
