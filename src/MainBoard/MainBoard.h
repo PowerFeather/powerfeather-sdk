@@ -115,8 +115,8 @@ namespace PowerFeather
             static constexpr gpio_num_t EN_SQT =    GPIO_NUM_14; // VSQT enable/disable
             static constexpr gpio_num_t EN0 =       GPIO_NUM_13; // FeatherWings enable/disable (write)
 
-            static constexpr gpio_num_t SCL0 =      GPIO_NUM_48; // STEMMA QT I2C SCL
-            static constexpr gpio_num_t SDA0 =      GPIO_NUM_47; // STEMMA QT I2C SDA
+            static constexpr gpio_num_t SCL1 =      GPIO_NUM_48; // STEMMA QT I2C SCL
+            static constexpr gpio_num_t SDA1 =      GPIO_NUM_47; // STEMMA QT I2C SDA
 
             static constexpr gpio_num_t PG =        GPIO_NUM_38; // Charger Power Good
         };
@@ -354,9 +354,9 @@ namespace PowerFeather
         static constexpr uint32_t _minBatteryVoltageAlarm = 5000;
 
 #ifdef ARDUINO
-        ArduinoMasterI2C _i2c{_i2cPort, Pin::SDA, Pin::SCL, _i2cFreq};
+        ArduinoMasterI2C _i2c{_i2cPort, Pin::SDA1, Pin::SCL1, _i2cFreq};
 #else
-        MasterI2C _i2c{_i2cPort, Pin::SDA, Pin::SCL, _i2cFreq};
+        MasterI2C _i2c{_i2cPort, Pin::SDA1, Pin::SCL1, _i2cFreq};
 #endif
 
         BQ2562x _charger{_i2c};
