@@ -214,20 +214,6 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result MainBoard::enableFuelGauge(bool enable)
-    {
-        TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity, Result::InvalidState); // system is expected to have a battery
-        // Just set to operational mode, no need to do same initializations
-        // as _initFuelGauge(). TODO: verify
-        RET_IF_FALSE(getFuelGauge().enableOperation(enable), Result::Failure);
-        _fgEnabled = enable;
-        ESP_LOGD(TAG, "Fuel gauge set to: %d.", _fgEnabled);
-        return Result::Ok;
-    }
-
     Result MainBoard::setEN(bool value)
     {
         TRY_LOCK(_mutex);
@@ -395,6 +381,29 @@ namespace PowerFeather
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
         ESP_LOGD(TAG, "Measured battery current: %d mA.", current);
+        return Result::Ok;
+    }
+
+    Result MainBoard::enableFuelGauge(bool enable)
+    {
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+
+        if (enable)
+        {
+            // Do also reinitialization here, since it is possible that the system initialized
+            // with battery present, then battery is disconected, then battery is reconnected,
+            // the finally this function is called.
+            RET_IF_ERR(_initFuelGauge());
+        }
+        else
+        {
+            RET_IF_FALSE(getFuelGauge().enableOperation(false), Result::Failure);
+        }
+        _fgEnabled = enable;
+        ESP_LOGD(TAG, "Fuel gauge set to: %d.", _fgEnabled);
         return Result::Ok;
     }
 
