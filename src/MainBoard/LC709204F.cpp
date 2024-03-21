@@ -230,4 +230,30 @@ namespace PowerFeather
     {
         return writeReg(Registers::IC_Power_Mode, enable ? 0x0001 : 0x0002);
     }
+
+    bool LC709204F::clearLowVoltageAlarm()
+    {
+        return clearAlarm(11);
+    }
+
+    bool LC709204F::clearHighVoltageAlarm()
+    {
+        return clearAlarm(15);
+    }
+
+    bool LC709204F::clearLowRSOCAlarm()
+    {
+        return clearAlarm(9);
+    }
+
+    bool LC709204F::clearAlarm(uint8_t bit)
+    {
+        uint16_t value = 0;
+        if (readReg(Registers::BatteryStatus, value))
+        {
+            value &= ~(0b1 << bit);
+            return writeReg(Registers::BatteryStatus, value);
+        }
+        return false;
+    }
 }

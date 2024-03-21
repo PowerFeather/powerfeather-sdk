@@ -342,7 +342,7 @@ namespace PowerFeather
         MainBoard() {}
 
         static constexpr int _i2cPort = 1;
-        static constexpr uint32_t _i2cFreq = 100000; // TODO: use 400kHz, probably has something to do with clock stretching.
+        static constexpr uint32_t _i2cFreq = 100000;
         static constexpr uint32_t _i2cTimeout = 1000;
         static constexpr uint32_t _minBatteryCapacity = 100;
         static constexpr uint32_t _maxBatteryCapacity = 15000;

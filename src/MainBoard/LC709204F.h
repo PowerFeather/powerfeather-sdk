@@ -58,6 +58,7 @@ namespace PowerFeather
             Alarm_Low_Cell_Voltage = 0x14,
             IC_Power_Mode = 0x15,
             Cycle_Count = 0x17,
+            BatteryStatus = 0x19,
             Alarm_High_Cell_Voltage = 0x1f
         };
 
@@ -83,8 +84,11 @@ namespace PowerFeather
         bool setAPA(uint16_t mAh, ChangeOfParameter param);
         bool setChangeOfParameter(ChangeOfParameter param);
         bool setLowVoltageAlarm(uint16_t mV);
+        bool clearLowVoltageAlarm();
         bool setHighVoltageAlarm(uint16_t mV);
+        bool clearHighVoltageAlarm();
         bool setLowRSOCAlarm(uint16_t rsoc);
+        bool clearLowRSOCAlarm();
         bool enableTSENSE(bool tsense1, bool tsense2);
         bool enableOperation(bool enable);
 
@@ -108,6 +112,7 @@ namespace PowerFeather
         MasterI2C &_i2c;
 
         bool setVoltageAlarm(Registers reg, uint16_t mV);
+        bool clearAlarm(uint8_t bit);
 
         bool readReg(Registers reg, uint16_t &data);
         bool writeReg(Registers reg, uint16_t data);

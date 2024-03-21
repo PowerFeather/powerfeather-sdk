@@ -504,6 +504,10 @@ namespace PowerFeather
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE((voltage >= _minBatteryVoltageAlarm && voltage <= _maxBatteryVoltageAlarm) || voltage == 0, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setLowVoltageAlarm(voltage), Result::Failure);
+        if (voltage == 0)
+        {
+            RET_IF_FALSE(getFuelGauge().clearLowVoltageAlarm(), Result::Failure); // TODO: verify
+        }
         ESP_LOGD(TAG, "Low battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
     };
@@ -515,10 +519,12 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE((voltage >= _minBatteryVoltageAlarm && voltage <= _maxBatteryVoltageAlarm) || voltage == 0, Result::InvalidArg); // TODO: clear alarm when 0
-        bool oper = 0;
-        RET_IF_FALSE(getFuelGauge().getOperation(oper), Result::Failure);
+        RET_IF_FALSE((voltage >= _minBatteryVoltageAlarm && voltage <= _maxBatteryVoltageAlarm) || voltage == 0, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setHighVoltageAlarm(voltage), Result::Failure);
+        if (voltage == 0)
+        {
+            RET_IF_FALSE(getFuelGauge().clearHighVoltageAlarm(), Result::Failure); // TODO: verify
+        }
         ESP_LOGD(TAG, "High battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
     };
@@ -530,8 +536,12 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE(percent <= 100, Result::InvalidArg); // TODO: clear alarm when 0
+        RET_IF_FALSE(percent <= 100, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setLowRSOCAlarm(percent), Result::Failure);
+        if (percent == 0)
+        {
+            RET_IF_FALSE(getFuelGauge().clearLowRSOCAlarm(), Result::Failure); // TODO: verify
+        }
         ESP_LOGD(TAG, "Low charge alarm set to: %d %%.", (int)percent);
         return Result::Ok;
     };
