@@ -31,7 +31,7 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 
 #pragma once
 
@@ -39,12 +39,12 @@ namespace PowerFeather
 {
     enum class Result
     {
-        Ok = 0, // Operation suceeded without error
-        Failure = -1, // General Failure
-        InvalidState = -2,
-        Timeout = -3,
-        InvalidArg = -4, // Argument out of range or invalid value
-        NotReady = -5, // Unable to complete operation
-        Busy = -6, // TODO: merge with NotReady?
+        Ok = 0,            // Operation suceeded without error
+        Failure = -1,      // Operation general failure
+        InvalidState = -2, // Operation is not allowed given current internal state
+        Timeout = -3,      // Operation took longer than expected
+        InvalidArg = -4,   // Operation argument out of range or invalid
+        NotReady = -5,     // Unable to complete operation
+        LockFailed = -6,   // Exclusive resource lock acquisition by operation failed
     };
 }
