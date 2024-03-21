@@ -167,9 +167,9 @@ namespace PowerFeather
 
             if (wdOn) // watchdog disabled means that the initiatialization was done previously
             {
-                RET_IF_ERR(enableCharging(false));
-                RET_IF_ERR(enableTempSense(false));
-                RET_IF_ERR(setChargingMaxCurrent(MainBoard::_defaultChargingMaxCurrent));
+                RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
+                RET_IF_FALSE(getCharger().enableTS(false), Result::Failure);
+                RET_IF_FALSE(getCharger().setChargeCurrent(_defaultMaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
                 RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
                 RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
@@ -336,28 +336,31 @@ namespace PowerFeather
     Result MainBoard::enableTempSense(bool enable)
     {
         TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
+        ESP_LOGD(TAG, "Temperature sense set to: %d.", enable);
         return Result::Ok;
     }
 
     Result MainBoard::enableCharging(bool enable)
     {
         TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
         RET_IF_FALSE(getCharger().enableCharging(enable), Result::Failure);
+        ESP_LOGD(TAG, "Charging set to: %d.", enable);
         return Result::Ok;
     }
 
     Result MainBoard::setChargingMaxCurrent(uint16_t current)
     {
         TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone || _isFirst(), Result::InvalidState);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtOn, Result::InvalidState);
-        RET_IF_FALSE(current <= 2000, Result::InvalidArg);
+        RET_IF_FALSE(current <= _maxChargingCurrent, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setChargeCurrent(current), Result::Failure);
+        ESP_LOGD(TAG, "Max charging current set to: %d mA.", current);
         return Result::Ok;
     }
 
