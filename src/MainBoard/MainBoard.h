@@ -354,9 +354,9 @@ namespace PowerFeather
         static constexpr uint32_t _minBatteryVoltageAlarm = 5000;
 
 #ifdef ARDUINO
-        ArduinoMasterI2C _i2c{_i2cPort, Pin::SCL, Pin::SDA, _i2cFreq};
+        ArduinoMasterI2C _i2c{_i2cPort, Pin::SDA, Pin::SCL, _i2cFreq};
 #else
-        MasterI2C _i2c{_i2cPort, Pin::SCL, Pin::SDA, _i2cFreq};
+        MasterI2C _i2c{_i2cPort, Pin::SDA, Pin::SCL, _i2cFreq};
 #endif
 
         BQ2562x _charger{_i2c};
