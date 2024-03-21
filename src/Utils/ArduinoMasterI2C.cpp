@@ -43,26 +43,24 @@ namespace PowerFeather
     bool ArduinoMasterI2C::start()
     {
         _wire = (_port == 0) ? &Wire : &Wire1;
+        ESP_LOGD(TAG, "Start Wire%d with sda: %d, scl: %d and freq: %d.", _port, _sdaPin, _sclPin, _freq);
         return _wire->begin(_sdaPin, _sclPin, _freq);
     }
 
-    bool ArduinoMasterI2C::end()
-    {
-        _wire->end();
-        return true;
-    }
-
-    bool ArduinoMasterI2C::write(uint8_t address, uint8_t reg, const uint8_t *buffer, size_t len)
+    bool ArduinoMasterI2C::write(uint8_t address, uint8_t reg, const uint8_t *buf, size_t len)
     {
         _wire->beginTransmission(address);
         if (_wire->write(reg))
         {
-            if (_wire->write(buffer, len) != len)
+            ESP_LOGV(TAG, "Write address: %02x", address);
+            if (_wire->write(buf, len) != len)
             {
+                ESP_LOGE(TAG, "Write buf %p of len %d failed.", buf, len);
                 return false;
             }
+            ESP_LOGV(TAG, "Write buf %p of len %d succeeded.", buf, len);
+            ESP_LOG_BUFFER_HEX_LEVEL(TAG, buf, len, ESP_LOG_VERBOSE);
         }
-
         return (_wire->endTransmission(true) == 0);
     }
 
@@ -72,6 +70,7 @@ namespace PowerFeather
 
         if (recv != len)
         {
+            ESP_LOGE(TAG, "Read address %02x with len %d failed", address, len);
             return false;
         }
 
@@ -80,6 +79,8 @@ namespace PowerFeather
             buf[i] = _wire->read();
         }
 
+        ESP_LOGV(TAG, "Read buf %p of len %d succeeded.", buf, len);
+        ESP_LOG_BUFFER_HEX_LEVEL(TAG, buf, len, ESP_LOG_VERBOSE);
         return true;
     }
 
@@ -95,6 +96,13 @@ namespace PowerFeather
         }
 
         return false;
+    }
+
+    bool ArduinoMasterI2C::end()
+    {
+        _wire->end();
+        ESP_LOGD(TAG, "End");
+        return true;
     }
 }
 
