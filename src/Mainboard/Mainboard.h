@@ -100,8 +100,8 @@ namespace PowerFeather
             static constexpr gpio_num_t SDA =       GPIO_NUM_35;
 
             // User-Managed Fixed
-            static constexpr gpio_num_t ALARM =     GPIO_NUM_21; // FuelGauge ALARM
-            static constexpr gpio_num_t INT =       GPIO_NUM_5;  // Charger INT
+            static constexpr gpio_num_t ALARM =     GPIO_NUM_21; // Battery fuel gauge alarm
+            static constexpr gpio_num_t INT =       GPIO_NUM_5;  // Battery charge interrupt
 
             static constexpr gpio_num_t LED =       GPIO_NUM_46; // User LED
             static constexpr gpio_num_t BTN =       GPIO_NUM_0;  // User button
@@ -119,32 +119,31 @@ namespace PowerFeather
             static constexpr gpio_num_t SCL1 =      GPIO_NUM_48; // STEMMA QT I2C SCL
             static constexpr gpio_num_t SDA1 =      GPIO_NUM_47; // STEMMA QT I2C SDA
 
-            static constexpr gpio_num_t PG =        GPIO_NUM_38; // Charger Power Good
+            static constexpr gpio_num_t PG =        GPIO_NUM_38; // Battery charger power good indicator
         };
 
         /**
          * @brief Initialize the board power management and monitoring features.
          *
-         * Initializes the charger, fuel gauge and other hardware related to power management and monitoring.
+         * Initializes the battery charger, battery fuel gauge and other hardware related to power management and monitoring.
          *
          * Sets the following defaults:
          *  - \a EN: high
          *  - \a 3V3: enabled
          *  - \a VSQT: enabled
          *  - Charging: disabled
-         *  - Maximum battery charging current: 100 mA
+         *  - Maximum battery charging current: 50 mA
          *  - Maintain supply voltage: 4600 mV
-         *  - Fuel gauge: enabled, if \p capacity is not zero
+         *  - Fuel gauge: enabled if \p capacity is non-zero; disabled if \p capacity is zero
          *  - Battery temperature sense: disabled
          *  - Battery alarms (low charge, high/low voltage): disabled
          *
-         * This function should be called once, before all calls to other \c Mainboard functions.
+         * This function should be called once, before calls to all other \c Mainboard functions.
          *
          * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh), from 50 mAh to 6000 mAh.
-         * A zero indicates that no battery is connected, and therefore some of the other \c Mainboard functions
+         * A value of zero indicates that no battery is connected, and therefore some of the other \c Mainboard functions
          * will return \c Result::InvalidState. If using multiple batteries connected in parallel, specify
-         * only the capacity for one cell. Non-zero value is ignored when
-         * \p type is \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY.
+         * only the capacity for one cell. Non-zero value is ignored when \p type is \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY.
          * @param[in] type Type of Li-ion/LiPo battery; ignored when \p capacity is zero.
          * @return Result Returns \c Result::Ok if initialization succeeded; returns a value other than \c Result::Ok if not.
          */
@@ -164,8 +163,8 @@ namespace PowerFeather
         /**
          * @brief Enable or disable \a 3V3.
          *
-         * Enables or disables \a 3V3, which is the 3.3 V header pin power output. When disabled, current flow to the
-         * connected loads on \a 3V3 is cut-off, reducing power consumption.
+         * Enables or disables \a 3V3, the 3.3 V header pin power output. When disabled, power to the
+         * connected loads on \a 3V3 is cut, reducing power consumption.
          *
          * @param[in] enable If \c true, \a 3V3 is enabled; if \c false, \a 3V3 is disabled.
          * @return Result Returns \c Result::Ok if \a 3V3 was enabled or disabled successfully;
@@ -176,15 +175,15 @@ namespace PowerFeather
         /**
          * @brief Enable or disable \a VSQT.
          *
-         * Enables or disables \a VSQT, which is the 3.3 V STEMMA QT power output. When disabled, current flow to the
-         * connected STEMMA QT modules is cut-off, reducing power consumption.
+         * Enables or disables \a VSQT, the 3.3 V STEMMA QT power output. When disabled, power to the
+         * connected STEMMA QT modules is cut, reducing power consumption.
          *
-         * A side effect of disabling \a VSQT is that communications to the charger and fuel gauge is also disabled.
+         * A side effect of disabling \a VSQT is that communications to the battery charger and fuel gauge is also disabled.
          * This means that some of the other \c Mainboard functions will return \c Result::InvalidState when
          * \a VSQT is disabled. Make sure to enable \a VSQT prior to calling these functions.
          *
          * @param[in] enable If \c true, \a VSQT is enabled; if \c false, \a VSQT is disabled.
-         * @return Result Returns \c Result::Ok if \a 3V3 was enabled or disabled successfully;
+         * @return Result Returns \c Result::Ok if \a VSQT was enabled or disabled successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result enableVSQT(bool enable);
@@ -193,7 +192,7 @@ namespace PowerFeather
          * @brief Measure the supply voltage.
          *
          * Measures the \a VUSB or \a VDC voltage. \a VUSB is the power input from the USB-C connector,
-         * while \a VDC is the power input from the respective header pin.
+         * while \a VDC is the power input from the header pin.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
@@ -209,7 +208,7 @@ namespace PowerFeather
          * @brief Measure the supply current.
          *
          * Measures the current drawn from \a VUSB or \a VDC. \a VUSB is the power input from the USB-C connector,
-         * while \a VDC is the power input from the respective header pin.
+         * while \a VDC is the power input from the header pin.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
@@ -224,7 +223,7 @@ namespace PowerFeather
         /**
          * @brief Check if the supply is good.
          *
-         * Checks if the supply, whether \a VUSB or \a VDC is good as determined by the charger. A good supply
+         * Checks if the supply, whether \a VUSB or \a VDC is good as determined by the battery charger. A good supply
          * means that it powers the board and connected loads, not the battery.
          *
          * @param[out] good If \c true, the charger has determined the supply to be good; \c false if not.
@@ -234,16 +233,15 @@ namespace PowerFeather
         Result checkSupplyGood(bool &good);
 
         /**
-         * @brief Set the voltage at which the supply should be maintained at.
+         * @brief Set the supply voltage to maintain.
          *
-         * The charger dynamically regulates the current drawn from the supply to prevent it from collapsing under
-         * the set maintain voltage. This is useful for specifying the maximum power point (MPP) voltage if using a
-         * solar panel; allowing the charger to extract power from the panel more effectively at near-MPPT
-         * effectiveness.
+         * The battery charger dynamically regulates the current drawn from the supply to prevent it from collapsing under
+         * the set voltage to maintain. This is useful for specifying the maximum power point (MPP) voltage if using a
+         * solar panel; allowing the battery charger to extract power from the panel at near-MPPT effectiveness.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The supply voltage to maintain in millivolts (mV).
+         * @param[in] voltage The supply voltage to maintain, up to 16800 mV.
          * @return Result Returns \c Result::Ok if the supply voltage to maintain was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -252,15 +250,14 @@ namespace PowerFeather
         /**
          * @brief Enter ship mode.
          *
-         * Ship mode is a power state that only consumes around 1.5 μA. Only the charger and
-         * the fuel gauge is powered.
+         * Ship mode is a power state that only consumes around 1.5 μA. Only the battery charger and
+         * the battery fuel gauge is powered.
          *
          * This mode can only be entered into if the battery is powering the board and connected loads;
-         * that is, if \c checkSupplyGood output parameter \p good is \c false. This function returns
-         * a \c Result if it fails to enter ship mode.
+         * that is, if \c checkSupplyGood output parameter \p good is \c false.
          *
          * Ship mode can be exited by either (1) pulling \a QON header pin low for around 800 ms or
-         * (2) connecting a power supply which the charger determines to be good.
+         * (2) connecting a power supply which the battery charger determines to be good.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
@@ -274,14 +271,13 @@ namespace PowerFeather
         /**
          * @brief Enter shutdown mode.
          *
-         * Shutdown mode is a power state that only consumes around 1.4 μA. Only the charger and
-         * the fuel gauge is powered.
+         * Shutdown mode is a power state that only consumes around 1.4 μA. Only the battery charger and
+         * the battery fuel gauge is powered.
          *
          * This mode can only be entered into if the battery is powering the board and connected loads;
-         * that is, if \c checkSupplyGood output parameter \p good is \c false. This function returns
-         * a \c Result if it fails to enter shutdown mode.
+         * that is, if \c checkSupplyGood output parameter \p good is \c false.
          *
-         * Shutdown mode can only be exited by connecting a power supply which the charger determines to be good.
+         * Shutdown mode can only be exited by connecting a power supply which the battery charger determines to be good.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
@@ -295,13 +291,13 @@ namespace PowerFeather
         /**
          * @brief Perform a power cycle.
          *
-         * For all components on the board and connected loads, except the fuel gauge
+         * For all components on the board and connected loads, except the battery fuel gauge
          * and loads connected to \a VS (supply output header pin, whichever of \a VUSB and \a VDC),
-         * the power cycle removes power reconnects it again after a short delay.
+         * the power cycle provides complete reset by removing power and re-applying it after a short delay.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @return Result Does not return if a power cycle has been successfully performed;
+         * @return Result Does not return if a power cycle was performed successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result doPowerCycle();
@@ -309,16 +305,15 @@ namespace PowerFeather
         /**
          * @brief Enable or disable battery charging.
          *
-         * This is useful when opting to not fully charge a battery in order to reduce wear and prolong
-         * its lifespan.
+         * This is useful when opting to not fully charge a battery in order to prolong its lifespan.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
          * @param[in] enable If \c true, battery charging is enabled; if \c false, battery charging is disabled.
-         * @return Result Returns \c Result::Ok if battery charging has been enabled or disabled successfully;
+         * @return Result Returns \c Result::Ok if battery charging was enabled or disabled successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result enableBatteryCharging(bool enable);
@@ -326,18 +321,18 @@ namespace PowerFeather
         /**
          * @brief Set maximum battery charging current.
          *
-         * Ensures that the battery is not charged with a current more than the one specified using this function.
-         * This is useful for small capacity batteries, since it is not recommended charge a battery at
-         * more than 1 C. For example, when charging a 550 mAh battery, a current of no more than 550 mA is
-         * recommended.
+         * Ensures that the battery is not charged with a current more than the amount specified using this function.
+         * This is useful for batteries with small capacities, since it is not recommended to charge a battery at
+         * more than 1C. For example, when charging a 550 mAh battery, a current of no more than 550 mA is
+         * recommended. That current limit of 550 mA can be specified using this function.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
-         * @param[in] current The maximum charging current up to 2000 mA.
-         * @return Result Returns \c Result::Ok if battery charging current has been set successfully;
+         * @param[in] current The maximum charging current, up to 2000 mA.
+         * @return Result Returns \c Result::Ok if the maximum battery charging current was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result setBatteryChargingMaxCurrent(uint16_t current);
@@ -345,36 +340,37 @@ namespace PowerFeather
         /**
          * @brief Enable or disable battery temperature measurement.
          *
-         * Enables or disables battery temperature measurement using a 103AT thermistor connected to the \a TS pin.
-         * When enabled, the charger also implements temperature-based battery charging current reduction or cutoff.
+         * Enables or disables battery temperature measurement using the thermistor connected to the \a TS pin.
+         * If enabled, aside from measurement, the battery charger performs temperature-based battery charging current
+         * reduction or cutoff.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
          * @param[in] enable If \c true, battery temperature measurement is enabled; if \c false, battery
          * temperature measurement is disabled.
-         * @return Result Returns \c Result::Ok if battery temperature measurement current has been enabled or
+         * @return Result Returns \c Result::Ok if the battery temperature measurement was enabled or
          * disabled successfully; returns a value other than \c Result::Ok if not.
          */
         Result enableBatteryTempSense(bool enable);
 
         /**
-         * @brief Enable or disable the fuel guage.
+         * @brief Enable or disable the battery fuel guage.
          *
-         * Disabling the fuel guage can save around 0.5 μA. However, once disabled, the fuel gauge
+         * Disabling the battery fuel guage can save around 0.5 μA. However, once disabled, it
          * cannot keep track of battery information such as voltage, charge, health, cycle count, etc.
-         * This is useful when trying to reduce power as much as possible, such as when going
+         * Nonetheless, this is useful when trying to reduce power as much as possible, such as when going
          * into ship mode or shutdown mode for a long time.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
-         * @param[in] enable If \c true, fuel gauge enabled; if \c false, fuel gauge is disabled.
-         * @return Result Returns \c Result::Ok if fuel gauge has been enabled or disabled successfully;
+         * @param[in] enable If \c true, the battery fuel gauge is enabled; if \c false, the battery fuel gauge is disabled.
+         * @return Result Returns \c Result::Ok if the battery fuel gauge was enabled or disabled successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result enableBatteryFuelGauge(bool enable);
@@ -384,13 +380,13 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
          * This function can block for 100 ms.
          *
          * @param[out] voltage Measured battery voltage in millivolts (mV).
-         * @return Result Returns \c Result::Ok if battery voltage measurement was done successfully;
+         * @return Result Returns \c Result::Ok if the battery voltage was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result getBatteryVoltage(uint16_t &voltage);
@@ -398,18 +394,18 @@ namespace PowerFeather
         /**
          * @brief Measure battery current.
          *
-         * Measures the current to (when charging) or from (during discharge) the battery.
+         * Measures the current to or from the battery during charging and discharging, respectively.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
          * This function can block for 100 ms.
          *
          * @param[out] current Measured battery voltage in milliamps (mA). If battery is discharging,
          * this value is negative; positive if battery is charging.
-         * @return Result Returns \c Result::Ok if battery current measurement was done successfully;
+         * @return Result Returns \c Result::Ok if the battery current was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result getBatteryCurrent(int16_t &current);
@@ -417,15 +413,18 @@ namespace PowerFeather
         /**
          * @brief Estimate battery charge.
          *
-         * Gives an estimate of battery state-of-charge from 0 to 100 percent.
+         * Gives an estimate of battery state-of-charge from 0% to 100%. This is useful to get a sense
+         * if the battery still has much charge or is nearly empty.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called or when fuel gauge is disabled.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
-         * @param[out] percent Estimated battery charge, from 0 to 100 percent.
-         * @return Result Returns \c Result::Ok if battery charge estimation was done successfully;
+         * The battery The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * @param[out] percent Estimated battery charge, from 0% to 100%.
+         * @return Result Returns \c Result::Ok if the battery charge was estimated successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result getBatteryCharge(uint8_t &percent);
@@ -433,16 +432,18 @@ namespace PowerFeather
         /**
          * @brief Estimate battery health.
          *
-         * Gives an estimate of battery state-of-health from 0 to 100 percent. This is useful to get a
+         * Gives an estimate of battery state-of-health from 0% to 100%. This is useful to get a
          * sense of how much the battery has degraded over time.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called or when fuel gauge is disabled.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
-         * @param[out] percent Estimated battery health, from 0 to 100 percent.
-         * @return Result Returns \c Result::Ok if battery health estimation was done successfully;
+         * The battery The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * @param[out] percent Estimated battery health, from 0% to 100%.
+         * @return Result Returns \c Result::Ok if the battery health was estimated successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result getBatteryHealth(uint8_t &percent);
@@ -450,35 +451,39 @@ namespace PowerFeather
         /**
          * @brief Estimate battery cycle count.
          *
-         * Gives an estimate of the number of battery cycle count. This is useful to compare against the
-         * battery's rated cycle counts.
+         * Gives an estimate of the battery cycle count. This is useful to compare against the number of
+         * cycle counts the battery is rated for.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called or when fuel gauge is disabled.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
+         *
+         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
          * @param[out] cycles Estimated battery cycle count.
-         * @return Result Returns \c Result::Ok if battery cycle count estimation was done successfully;
+         * @return Result Returns \c Result::Ok if the battery cycle count was estimated successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result getBatteryCycles(uint16_t &cycles);
 
         /**
-         * @brief Estimate battery time left to charge or discharge.
+         * @brief Estimate time left for battery to charge or discharge.
          *
-         * Gives an estimate of the battery's time-to-empty or time-to-full in minutes. This function call
-         * only succeeds when the percent charge has previously dropped and/or risen by 10% for the time-to-empty or
-         * time-to-full estimate, respectively; else \c Result::NotReady is returned.
+         * Gives an estimate of the battery time-to-empty or time-to-full in minutes. The battery charge must have
+         * previously dropped and/or risen by 10% to be able to estimate time-to-empty or time-to-full, respectively;
+         * else \c Result::NotReady is returned.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called or when fuel gauge is disabled.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
-         * @param[out] minutes Estimated battery charge or discharge time left in minutes. If battery is discharging,
-         * this value is negative; positive if battery is charging.
-         * @return Result Returns \c Result::Ok if estimation of battery charge or discharge time left was done
+         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * @param[out] minutes Estimated time left for battery to charge or discharge in minutes. If battery is discharging,
+         * this value is negative; if battery is charging, this value is positive.
+         * @return Result Returns \c Result::Ok if the time left for battery to charge or discharge was estimated
          * successfully; returns a value other than \c Result::Ok if not.
          */
         Result getBatteryTimeLeft(int &minutes);
@@ -487,20 +492,20 @@ namespace PowerFeather
          * @brief Measure battery temperature.
          *
          * Requires a Semitec 103AT thermistor to be connected to the \a TS pin and attached to the battery
-         * for the measurement to be valid.
+         * for the measurement to be accurate.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * Battery temperature measurement must be enabled using \c Mainboard::enableBatteryTempSense prior to calling
-         * this function, else \c Result::InvalidState is returned.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called.
+         * Battery temperature measurement must be enabled prior calling this function, else \c Result::InvalidState
+         * is returned.
          *
          * This function can block for 100 ms.
          *
-         * @param[out] cycles Estimated battery cycle count.
-         * @return Result Returns \c Result::Ok if battery cycle count estimation was done successfully;
+         * @param[out] celsius Measured battery temperature in celsius.
+         * @return Result Returns \c Result::Ok if the battery temperature was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result getBatteryTemperature(float &celsius);
@@ -508,16 +513,18 @@ namespace PowerFeather
         /**
          * @brief Set an alarm for battery low voltage.
          *
-         * If battery voltage is less than the set voltage, \a ALARM pin is pulled low.
+         * If battery voltage is less than the set voltage, the \a ALARM pin is pulled low.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called or when fuel gauge is disabled.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The voltage at which the low voltage alarm will trigger, from 2500 mV to 5000 mV
-         * inclusive. If zero the alarm is disabled and existing low voltage alarms are cleared.
-         * @return Result Returns \c Result::Ok if battery low voltage alarm was set successfully;
+         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * @param[in] voltage The voltage at which the low voltage alarm will trigger, from 2500 mV to 5000 mV.
+         * If 0 mV, triggering of the alarm is disabled and any existing low voltage alarm is cleared.
+         * @return Result Returns \c Result::Ok if the battery low voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result setBatteryLowVoltageAlarm(uint16_t voltage);
@@ -525,16 +532,18 @@ namespace PowerFeather
         /**
          * @brief Set an alarm for battery high voltage.
          *
-         * If battery voltage is more than the set voltage, \a ALARM pin is pulled low.
+         * If battery voltage is more than the set voltage, the \a ALARM pin is pulled low.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called or when fuel gauge is disabled.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The voltage at which the high voltage alarm will trigger, from 2500 mV to 5000 mV
-         * inclusive. If zero the alarm is disabled and existing high voltage alarms are cleared.
-         * @return Result Returns \c Result::Ok if battery high voltage alarm was set successfully;
+         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * @param[in] voltage The voltage at which the high voltage alarm will trigger, from 2500 mV to 5000 mV.
+         * If 0 mV, triggering of the alarm is disabled and any existing high voltage alarm is cleared.
+         * @return Result Returns \c Result::Ok if the battery high voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result setBatteryHighVoltageAlarm(uint16_t voltage);
@@ -542,16 +551,18 @@ namespace PowerFeather
         /**
          * @brief Set an alarm for battery low charge.
          *
-         * If battery charge is less than the set percentage, \a ALARM pin is pulled low.
+         * If battery charge is less than the set percentage, the \a ALARM pin is pulled low.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This functions returns \c Result::InvalidState if \p capacity was set to zero when \c MainBoard::init
-         * was called or when fuel gauge is disabled.
+         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
+         *  \c Result::InvalidState is returned.
          *
-         * @param[in] percent The percentage at which the low charge alarm will trigger, from 1% to 100%
-         * inclusive. If zero the alarm is disabled and existing low charge alarms are cleared.
-         * @return Result Returns \c Result::Ok if battery low charge alarm was set successfully;
+         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * @param[in] percent The percentage at which the low charge alarm will trigger, from 1% to 100%.
+         * If 0%, triggering of the alarm is disabled and any existing low charge alarm is cleared.
+         * @return Result Returns \c Result::Ok if the battery low charge alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
         Result setBatteryLowChargeAlarm(uint8_t percent);
@@ -568,8 +579,8 @@ namespace PowerFeather
         static constexpr uint32_t _i2cFreq = 100000;
         static constexpr uint32_t _i2cTimeout = 1000;
 
-        static constexpr uint16_t _minBatteryCapacity = 50; // charger minimum charging current is 40 mA,
-                                                            // fuel guage minimum supported is 50 mAh.
+        static constexpr uint16_t _minBatteryCapacity = 50; // battery charger minimum charging current is 40 mA,
+                                                            // battery fuel guage minimum supported is 50 mAh.
         static constexpr uint16_t _defaultMaxChargingCurrent = _minBatteryCapacity; // minimum charge current at 1C
 
         static constexpr uint16_t _chargerADCWaitTime = 100; // 80 ms actual

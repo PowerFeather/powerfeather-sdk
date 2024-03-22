@@ -43,6 +43,7 @@ namespace PowerFeather
     public:
 
         static constexpr uint16_t MaxChargingCurrent = 2000;
+        static constexpr uint16_t MaxVINDPMVoltage = 16800;
 
         struct Register
         {

@@ -289,6 +289,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(voltage <= BQ2562x::MaxVINDPMVoltage, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
         ESP_LOGD(TAG, "Maintain supply voltage set to: %d mV.", voltage);
         return Result::Ok;

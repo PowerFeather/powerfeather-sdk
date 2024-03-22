@@ -359,12 +359,12 @@ namespace PowerFeather
 
     bool BQ2562x::setVINDPM(uint32_t mV)
     {
-        return _writeReg(Input_Current_Limit_VINDPM, static_cast<uint16_t>((mV) / 40));
+        return _writeReg(Input_Current_Limit_VINDPM, static_cast<uint16_t>((mV) / 40)); // TODO: check
     }
 
     bool BQ2562x::setIINDPM(uint32_t mA)
     {
-        return _writeReg(Input_Current_Limit_IINDPM, static_cast<uint16_t>((mA) / 40));
+        return _writeReg(Input_Current_Limit_IINDPM, static_cast<uint16_t>((mA) / 40)); // TODO: check
     }
 
     bool BQ2562x::setupADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)
