@@ -611,5 +611,5 @@ namespace PowerFeather
         Result _udpateChargerADC();
     };
 
-    extern Mainboard &Board;
+    extern Mainboard &Board; // singleton instance of Mainboard
 }
