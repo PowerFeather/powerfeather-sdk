@@ -54,7 +54,7 @@ namespace PowerFeather
         bool read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len) override;
 
     private:
-        bool read(uint8_t address, uint8_t *buffer, size_t len);
+        bool _read(uint8_t address, uint8_t *buffer, size_t len);
         TwoWire *_wire;
     };
 }

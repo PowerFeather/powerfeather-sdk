@@ -91,7 +91,7 @@ namespace PowerFeather
         {
             if (_wire->endTransmission(false) == 0)
             {
-                return read(address, buf, len);
+                return _read(address, buf, len);
             }
         }
 
