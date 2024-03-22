@@ -363,6 +363,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
+        //TODO: enable or disable tsense (using register)
         ESP_LOGD(TAG, "Temperature sense set to: %d.", enable);
         return Result::Ok;
     }
@@ -477,10 +478,11 @@ namespace PowerFeather
         if (mins != 0xFFFF) // check if already the required 10 % rise/drop in charge
         {
             minutes = mins * (discharging ? -1 : 1); // return negative amount of time for discharging
+            ESP_LOGD(TAG, "Estimated battery time left (%s): %d mins.", discharging ? "discharging" : "charging", abs(minutes));
             return Result::Ok;
         }
 
-        ESP_LOGD(TAG, "Estimated battery time left (%s): %d mins.", discharging ? "discharging" : "charging", abs(minutes));
+        ESP_LOGD(TAG, "No estimate for %s can be provided yet.", discharging ? "time-to-empty" : "time-to-full");
         return Result::NotReady;
     }
 
@@ -495,6 +497,8 @@ namespace PowerFeather
         // then can the battery temperature be measured.
         bool enabled = false;
         RET_IF_FALSE(getCharger().getTS(enabled) && enabled, Result::InvalidState);
+
+        //TODO: send measure temperature to fuel gauge.
 
         float voltage = 0;
         RET_IF_ERR(_udpateChargerADC());
