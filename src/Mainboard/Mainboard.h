@@ -140,10 +140,10 @@ namespace PowerFeather
          *
          * This function should be called once, before all calls to other \c Mainboard functions.
          *
-         * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh).
+         * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh), from 50 mAh to 6000 mAh.
          * A zero indicates that no battery is connected, and therefore some of the other \c Mainboard functions
          * will return \c Result::InvalidState. If using multiple batteries connected in parallel, specify
-         * only the capacity for one cell. Must be more than or equal to 100 mAh. Non-zero value is ignored when
+         * only the capacity for one cell. Non-zero value is ignored when
          * \p type is \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY.
          * @param[in] type Type of Li-ion/LiPo battery; ignored when \p capacity is zero.
          * @return Result Returns \c Result::Ok if initialization succeeded; returns a value other than \c Result::Ok if not.
@@ -567,14 +567,13 @@ namespace PowerFeather
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 100000;
         static constexpr uint32_t _i2cTimeout = 1000;
-        static constexpr uint32_t _minBatteryCapacity = 100;
-        static constexpr uint32_t _maxBatteryCapacity = 15000;
-        static constexpr uint32_t _chargerADCWaitTime = 100;
-        static constexpr uint32_t _batfetCtrlWaitTime = 30;
-        static constexpr uint32_t _defaultMaxChargingCurrent = 100;
-        static constexpr uint32_t _maxChargingCurrent = 2000;
-        static constexpr uint32_t _maxBatteryVoltageAlarm = 2500;
-        static constexpr uint32_t _minBatteryVoltageAlarm = 5000;
+
+        static constexpr uint16_t _minBatteryCapacity = 50; // charger minimum charging current is 40 mA,
+                                                            // fuel guage minimum supported is 50 mAh.
+        static constexpr uint16_t _defaultMaxChargingCurrent = _minBatteryCapacity; // minimum charge current at 1C
+
+        static constexpr uint16_t _chargerADCWaitTime = 100; // 80 ms actual
+        static constexpr uint16_t _batfetCtrlWaitTime = 30; // 20 ms actual
 
 #ifdef ARDUINO
         ArduinoMasterI2C _i2c{_i2cPort, Pin::SDA1, Pin::SCL1, _i2cFreq};

@@ -41,6 +41,9 @@ namespace PowerFeather
     class BQ2562x
     {
     public:
+
+        static constexpr uint16_t MaxChargingCurrent = 2000;
+
         struct Register
         {
             uint8_t address;

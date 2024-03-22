@@ -43,6 +43,11 @@ namespace PowerFeather
     class LC709204F
     {
     public:
+
+        static constexpr uint16_t MinVoltageAlarm = 2500;
+        static constexpr uint16_t MaxVoltageAlarm = 5000;
+        static constexpr uint16_t MaxBatteryCapacity = 6000;
+
         enum class Registers
         {
             TimeToEmpty = 0x03,

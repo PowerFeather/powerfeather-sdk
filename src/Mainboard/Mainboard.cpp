@@ -154,7 +154,7 @@ namespace PowerFeather
 
         // Capacity should either be 0, in which case it indicates to the SDK that there is no battery expected
         // to be connected to the system; or within _minBatteryCapacity and _maxBatteryCapacity inclusive.
-        RET_IF_FALSE(!capacity || (capacity >= _minBatteryCapacity && capacity <= _maxBatteryCapacity), Result::InvalidArg);
+        RET_IF_FALSE(!capacity || (capacity >= _minBatteryCapacity && capacity <= LC709204F::MaxBatteryCapacity), Result::InvalidArg);
 
         _initDone = false;
 
@@ -350,7 +350,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
-        RET_IF_FALSE(current <= _maxChargingCurrent, Result::InvalidArg);
+        RET_IF_FALSE(current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setChargeCurrent(current), Result::Failure);
         ESP_LOGD(TAG, "Max charging current set to: %d mA.", current);
         return Result::Ok;
@@ -516,7 +516,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE((voltage >= _minBatteryVoltageAlarm && voltage <= _maxBatteryVoltageAlarm) || voltage == 0, Result::InvalidArg);
+        RET_IF_FALSE((voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm) || voltage == 0, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setLowVoltageAlarm(voltage), Result::Failure);
         if (voltage == 0)
         {
@@ -533,7 +533,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE((voltage >= _minBatteryVoltageAlarm && voltage <= _maxBatteryVoltageAlarm) || voltage == 0, Result::InvalidArg);
+        RET_IF_FALSE((voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm) || voltage == 0, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setHighVoltageAlarm(voltage), Result::Failure);
         if (voltage == 0)
         {
