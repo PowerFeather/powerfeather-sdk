@@ -226,6 +226,17 @@ namespace PowerFeather
         Result enableBatteryCharging(bool enable);
 
         /**
+         * Set maximum charging current.
+         *
+         * Set value depending on preference between safety and speed. A charging
+         * current of 1C is usually a good value, i.e. if battery has capacity of 520 mAh, set charging
+         * current to 520 mA (520 * 1 = 520). Check datasheet for your battery for maximum charging current.
+         *
+         * @param[in] current Maximum charging current in mA.
+         */
+        Result setBatteryChargingMaxCurrent(uint16_t current);
+
+        /**
          * Enable temperature monitor.
          *
          * If enabled, the value of the 103AT thermistor connected on TS will be monitored.
@@ -246,22 +257,20 @@ namespace PowerFeather
         Result enableBatteryFuelGauge(bool enable);
 
         /**
-         * Set maximum charging current.
-         *
-         * Set value depending on preference between safety and speed. A charging
-         * current of 1C is usually a good value, i.e. if battery has capacity of 520 mAh, set charging
-         * current to 520 mA (520 * 1 = 520). Check datasheet for your battery for maximum charging current.
-         *
-         * @param[in] current Maximum charging current in mA.
-         */
-        Result setBatteryChargingMaxCurrent(uint16_t current);
-
-        /**
          * Measure battery voltage.
          *
          * @param[out] voltage Battery voltage current in mV.
          */
         Result getBatteryVoltage(uint16_t &voltage);
+
+        /**
+         * Measure the charge/discharge current to/from the battery.
+         *
+         * Returns a negative value when the battery is discharging, positive when charging.
+         *
+         * @param[out] current Battery current in mA.
+         */
+        Result getBatteryCurrent(int16_t &current);
 
         /**
          * Get an estimate of battery state-of-charge from 0 (empty) to 100 (full).
@@ -276,6 +285,13 @@ namespace PowerFeather
          * @param[out] percent Battery health percentage from 0 to 100.
          */
         Result getBatteryHealth(uint8_t &percent);
+
+        /**
+         * Get the number of charge/discharge cycles the battery has gone through.
+         *
+         * @param[out] cycles Number of battery cycles.
+         */
+        Result getBatteryCycles(uint16_t &cycles);
 
         /**
          * Get the time left before fully empty/fully charged.
@@ -295,22 +311,6 @@ namespace PowerFeather
          * @param[out] celsius Battery current in °C.
          */
         Result getBatteryTemperature(float &celsius);
-
-        /**
-         * Get the number of charge/discharge cycles the battery has gone through.
-         *
-         * @param[out] cycles Number of battery cycles.
-         */
-        Result getBatteryCycles(uint16_t &cycles);
-
-        /**
-         * Measure the charge/discharge current to/from the battery.
-         *
-         * Returns a negative value when the battery is discharging, positive when charging.
-         *
-         * @param[out] current Battery current in mA.
-         */
-        Result getBatteryCurrent(int16_t &current);
 
         /**
          * Set alarm for when battery voltage is below a certain treshold.
@@ -371,10 +371,10 @@ namespace PowerFeather
         Mutex _mutex{100};
 
         bool _isFirst();
-        bool _setRTCPin(gpio_num_t pin, bool value);
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
         Result _initFuelGauge();
+        bool _setRTCPin(gpio_num_t pin, bool value);
         Result _udpateChargerADC();
     };
 

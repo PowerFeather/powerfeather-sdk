@@ -59,22 +59,12 @@ namespace PowerFeather
     static RTC_NOINIT_ATTR uint32_t first;
     static const uint32_t firstMagic = 0xdeadbeef;
 
-    /*static*/ Mainboard &Mainboard::get()
+    bool Mainboard::_isFirst()
     {
-        static Mainboard board;
-        return board;
-    }
-
-    bool Mainboard::_initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode)
-    {
-        // Configure the RTC pin.
-        RET_IF_NOK(rtc_gpio_init(pin));
-        RET_IF_NOK(rtc_gpio_set_direction(pin, mode));
-        RET_IF_NOK(rtc_gpio_set_direction_in_sleep(pin, mode));
-        RET_IF_NOK(rtc_gpio_pullup_dis(pin));
-        RET_IF_NOK(rtc_gpio_pulldown_dis(pin));
-        ESP_LOGD(TAG, "Initialized RTC pin %d with mode %d.", pin, mode);
-        return true;
+        // If the RTC is domain is shutdown, consider next boot as first boot.
+        bool isFirst = (first != firstMagic);
+        ESP_LOGD(TAG, "Check if first boot: %d.", isFirst);
+        return isFirst;
     }
 
     bool Mainboard::_initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode)
@@ -92,22 +82,16 @@ namespace PowerFeather
         return true;
     }
 
-    bool Mainboard::_setRTCPin(gpio_num_t pin, bool value)
+    bool Mainboard::_initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode)
     {
-        // Disable pin hold, set the level, and re-enable pin hold.
-        rtc_gpio_hold_dis(pin);
-        rtc_gpio_set_level(pin, value);
-        rtc_gpio_hold_en(pin);
-        ESP_LOGD(TAG, "Set RTC pin %d to %d.", pin, value);
+        // Configure the RTC pin.
+        RET_IF_NOK(rtc_gpio_init(pin));
+        RET_IF_NOK(rtc_gpio_set_direction(pin, mode));
+        RET_IF_NOK(rtc_gpio_set_direction_in_sleep(pin, mode));
+        RET_IF_NOK(rtc_gpio_pullup_dis(pin));
+        RET_IF_NOK(rtc_gpio_pulldown_dis(pin));
+        ESP_LOGD(TAG, "Initialized RTC pin %d with mode %d.", pin, mode);
         return true;
-    }
-
-    bool Mainboard::_isFirst()
-    {
-        // If the RTC is domain is shutdown, consider next boot as first boot.
-        bool isFirst = (first != firstMagic);
-        ESP_LOGD(TAG, "Check if first boot: %d.", isFirst);
-        return isFirst;
     }
 
     Result Mainboard::_initFuelGauge()
@@ -133,6 +117,32 @@ namespace PowerFeather
             ESP_LOGD(TAG, "Fuel gauge already initialized.");
         }
 
+        return Result::Ok;
+    }
+
+    bool Mainboard::_setRTCPin(gpio_num_t pin, bool value)
+    {
+        // Disable pin hold, set the level, and re-enable pin hold.
+        rtc_gpio_hold_dis(pin);
+        rtc_gpio_set_level(pin, value);
+        rtc_gpio_hold_en(pin);
+        ESP_LOGD(TAG, "Set RTC pin %d to %d.", pin, value);
+        return true;
+    }
+
+    Result Mainboard::_udpateChargerADC()
+    {
+        uint32_t now = 0;
+        // Since updating ADC values take a long time, only update it again after _chargerADCWaitTime has elapsed.
+        if (_chargerADCTime == 0 || (now - _chargerADCTime) >= _chargerADCWaitTime)
+        {
+            bool done = false;
+            RET_IF_FALSE(getCharger().setupADC(true, BQ2562x::ADCRate::Oneshot, BQ2562x::ADCSampling::Bits_10), Result::Failure);
+            vTaskDelay(pdMS_TO_TICKS(_chargerADCWaitTime));
+            RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
+            _chargerADCTime = now;
+            ESP_LOGD(TAG, "Updated charger ADC.");
+        }
         return Result::Ok;
     }
 
@@ -243,13 +253,14 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::setSupplyMaintainVoltage(uint16_t voltage)
+    Result Mainboard::getSupplyVoltage(uint16_t &voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
-        ESP_LOGD(TAG, "Maintain supply voltage set to: %d mV.", voltage);
+        RET_IF_ERR(_udpateChargerADC());
+        RET_IF_FALSE(getCharger().getVBUS(voltage), Result::Failure);
+        ESP_LOGD(TAG, "Measured supply voltage: %d mV.", voltage);
         return Result::Ok;
     }
 
@@ -264,23 +275,22 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::getSupplyVoltage(uint16_t &voltage)
-    {
-        TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_ERR(_udpateChargerADC());
-        RET_IF_FALSE(getCharger().getVBUS(voltage), Result::Failure);
-        ESP_LOGD(TAG, "Measured supply voltage: %d mV.", voltage);
-        return Result::Ok;
-    }
-
     Result Mainboard::checkSupplyGood(bool &good)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         good = (gpio_get_level(Pin::PG) == 0);
         ESP_LOGD(TAG, "Check power supply good: %d.", good);
+        return Result::Ok;
+    }
+
+    Result Mainboard::setSupplyMaintainVoltage(uint16_t voltage)
+    {
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
+        ESP_LOGD(TAG, "Maintain supply voltage set to: %d mV.", voltage);
         return Result::Ok;
     }
 
@@ -323,17 +333,6 @@ namespace PowerFeather
         return Result::Failure;
     }
 
-    Result Mainboard::enableBatteryTempSense(bool enable)
-    {
-        TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
-        RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
-        ESP_LOGD(TAG, "Temperature sense set to: %d.", enable);
-        return Result::Ok;
-    }
-
     Result Mainboard::enableBatteryCharging(bool enable)
     {
         TRY_LOCK(_mutex);
@@ -357,36 +356,14 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::getBatteryTemperature(float &celsius)
+    Result Mainboard::enableBatteryTempSense(bool enable)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
-
-        // Temperature sensing must be enabled using enableBatteryTempSense(true), only
-        // then can the battery temperature be measured.
-        bool enabled = false;
-        RET_IF_FALSE(getCharger().getTS(enabled) && enabled, Result::InvalidState);
-
-        float voltage = 0;
-        RET_IF_ERR(_udpateChargerADC());
-        RET_IF_FALSE(getCharger().getTS_ADC(voltage), Result::Failure);
-        // Map percent to temperature given 103AT thermistor with fitted curve.
-        celsius = (-1866.96172 * powf(voltage, 4)) + (3169.31754 * powf(voltage, 3)) - (1849.96775 * powf(voltage, 2)) + (276.6656 * voltage) + 81.98758;
-        ESP_LOGD(TAG, "Measured battery temperature: %f °C.", celsius);
-        return Result::Ok;
-    }
-
-    Result Mainboard::getBatteryCurrent(int16_t &current)
-    {
-        TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
-        RET_IF_ERR(_udpateChargerADC());
-        RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
-        ESP_LOGD(TAG, "Measured battery current: %d mA.", current);
+        RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
+        ESP_LOGD(TAG, "Temperature sense set to: %d.", enable);
         return Result::Ok;
     }
 
@@ -425,6 +402,18 @@ namespace PowerFeather
             RET_IF_ERR(_udpateChargerADC());
             RET_IF_FALSE(getCharger().getVBAT(voltage), Result::Failure);
         }
+        return Result::Ok;
+    }
+
+    Result Mainboard::getBatteryCurrent(int16_t &current)
+    {
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_ERR(_udpateChargerADC());
+        RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
+        ESP_LOGD(TAG, "Measured battery current: %d mA.", current);
         return Result::Ok;
     }
 
@@ -495,6 +484,27 @@ namespace PowerFeather
         return Result::NotReady;
     }
 
+    Result Mainboard::getBatteryTemperature(float &celsius)
+    {
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+
+        // Temperature sensing must be enabled using enableBatteryTempSense(true), only
+        // then can the battery temperature be measured.
+        bool enabled = false;
+        RET_IF_FALSE(getCharger().getTS(enabled) && enabled, Result::InvalidState);
+
+        float voltage = 0;
+        RET_IF_ERR(_udpateChargerADC());
+        RET_IF_FALSE(getCharger().getTS_ADC(voltage), Result::Failure);
+        // Map percent to temperature given 103AT thermistor with fitted curve.
+        celsius = (-1866.96172 * powf(voltage, 4)) + (3169.31754 * powf(voltage, 3)) - (1849.96775 * powf(voltage, 2)) + (276.6656 * voltage) + 81.98758;
+        ESP_LOGD(TAG, "Measured battery temperature: %f °C.", celsius);
+        return Result::Ok;
+    }
+
     Result Mainboard::setBatteryLowVoltageAlarm(uint16_t voltage)
     {
         TRY_LOCK(_mutex);
@@ -546,19 +556,9 @@ namespace PowerFeather
         return Result::Ok;
     };
 
-    Result Mainboard::_udpateChargerADC()
+    /*static*/ Mainboard &Mainboard::get()
     {
-        uint32_t now = 0;
-        // Since updating ADC values take a long time, only update it again after _chargerADCWaitTime has elapsed.
-        if (_chargerADCTime == 0 || (now - _chargerADCTime) >= _chargerADCWaitTime)
-        {
-            bool done = false;
-            RET_IF_FALSE(getCharger().setupADC(true, BQ2562x::ADCRate::Oneshot, BQ2562x::ADCSampling::Bits_10), Result::Failure);
-            vTaskDelay(pdMS_TO_TICKS(_chargerADCWaitTime));
-            RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
-            _chargerADCTime = now;
-            ESP_LOGD(TAG, "Updated charger ADC.");
-        }
-        return Result::Ok;
+        static Mainboard board;
+        return board;
     }
 }
