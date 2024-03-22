@@ -261,7 +261,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This function can block for 20 ms if it fails to enter ship mode.
+         * This function can block for 30 ms if it fails to enter ship mode.
          *
          * @return Result Does not return if ship mode was successfully entered into;
          * returns a value other than \c Result::Ok if not.
@@ -281,7 +281,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * This function can block for 20 ms if it fails to enter shutdown mode.
+         * This function can block for 30 ms if it fails to enter shutdown mode.
          *
          * @return Result Does not return if shutdown mode was successfully entered into;
          * returns a value other than \c Result::Ok if not.
@@ -584,7 +584,7 @@ namespace PowerFeather
         static constexpr uint16_t _defaultMaxChargingCurrent = _minBatteryCapacity; // minimum charge current at 1C
 
         static constexpr uint16_t _chargerADCWaitTime = 100; // 80 ms actual
-        static constexpr uint16_t _batfetCtrlWaitTime = 30; // 20 ms actual
+        static constexpr uint16_t _batfetCtrlWaitTime = 30; // 30 ms actual
 
 #ifdef ARDUINO
         ArduinoMasterI2C _i2c{_i2cPort, Pin::SDA1, Pin::SCL1, _i2cFreq};
