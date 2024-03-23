@@ -56,7 +56,7 @@ namespace PowerFeather
         enum class BatteryType
         {
             Generic_3V7, // Generic Li-ion/LiPo, 3.7 V nominal and 4.2 V max
-            ICR18650, // Samsung IC18650
+            ICR18650, // Samsung ICR18650
             UR18650ZY // Sanyo UR18650ZY
         };
 
@@ -138,14 +138,16 @@ namespace PowerFeather
          *  - Battery temperature sense: disabled
          *  - Battery alarms (low charge, high/low voltage): disabled
          *
-         * This function should be called once, before calls to all other \c Mainboard functions.
+         * This function should be called once, before calling all other \c Mainboard functions.
          *
          * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh), from 50 mAh to 6000 mAh.
          * A value of zero indicates that no battery is connected, and therefore some of the other \c Mainboard functions
          * will return \c Result::InvalidState. If using multiple batteries connected in parallel, specify
-         * only the capacity for one cell. Non-zero value is ignored when \p type is \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY.
-         * @param[in] type Type of Li-ion/LiPo battery; ignored when \p capacity is zero.
-         * @return Result Returns \c Result::Ok if initialization succeeded; returns a value other than \c Result::Ok if not.
+         * only the capacity for one cell. Ignored when \p type is \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY. // TODO
+         * @param[in] type Type of Li-ion/LiPo battery; ignored when \p capacity is zero, except when value is
+         * \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY // TODO
+         *
+         * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.
          */
         Result init(uint16_t capacity = 0, BatteryType type = BatteryType::Generic_3V7);
 
@@ -155,6 +157,7 @@ namespace PowerFeather
          * This is useful for enabling or disabling connected Feather Wings to reduce power consumption.
          *
          * @param[in] high If \c true, EN is set high; if \c false, EN is set low.
+         *
          * @return Result Returns \c Result::Ok if \a EN was set high or low successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -167,6 +170,7 @@ namespace PowerFeather
          * connected loads on \a 3V3 is cut, reducing power consumption.
          *
          * @param[in] enable If \c true, \a 3V3 is enabled; if \c false, \a 3V3 is disabled.
+         *
          * @return Result Returns \c Result::Ok if \a 3V3 was enabled or disabled successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -183,6 +187,7 @@ namespace PowerFeather
          * \a VSQT is disabled. Make sure to enable \a VSQT prior to calling these functions.
          *
          * @param[in] enable If \c true, \a VSQT is enabled; if \c false, \a VSQT is disabled.
+         *
          * @return Result Returns \c Result::Ok if \a VSQT was enabled or disabled successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -199,6 +204,7 @@ namespace PowerFeather
          * This function can block for 100 ms.
          *
          * @param[out] voltage The measured voltage in millivolts (mV).
+         *
          * @return Result Returns \c Result::Ok if the supply voltage was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -215,6 +221,7 @@ namespace PowerFeather
          * This function can block for 100 ms.
          *
          * @param[out] voltage The measured current draw in milliamperes (mA).
+         *
          * @return Result Returns \c Result::Ok if the supply current was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -227,6 +234,7 @@ namespace PowerFeather
          * means that it powers the board and connected loads, not the battery.
          *
          * @param[out] good If \c true, the charger has determined the supply to be good; \c false if not.
+         *
          * @return Result Returns \c Result::Ok if the supply was checked successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -241,7 +249,8 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The supply voltage to maintain, up to 16800 mV.
+         * @param[in] voltage The supply voltage to maintain in millivolts (mV), up to 16800 mV.
+         *
          * @return Result Returns \c Result::Ok if the supply voltage to maintain was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -263,6 +272,7 @@ namespace PowerFeather
          *
          * This function can block for 30 ms if it fails to enter ship mode.
          *
+         *
          * @return Result Does not return if ship mode was successfully entered into;
          * returns a value other than \c Result::Ok if not.
          */
@@ -282,6 +292,7 @@ namespace PowerFeather
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
          * This function can block for 30 ms if it fails to enter shutdown mode.
+         *
          *
          * @return Result Does not return if shutdown mode was successfully entered into;
          * returns a value other than \c Result::Ok if not.
@@ -309,10 +320,11 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * @param[in] enable If \c true, battery charging is enabled; if \c false, battery charging is disabled.
+         *
          * @return Result Returns \c Result::Ok if battery charging was enabled or disabled successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -328,10 +340,11 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
-         * @param[in] current The maximum charging current, up to 2000 mA.
+         * @param[in] current The maximum charging current in milliamps (mA), up to 2000 mA.
+         *
          * @return Result Returns \c Result::Ok if the maximum battery charging current was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -346,11 +359,12 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * @param[in] enable If \c true, battery temperature measurement is enabled; if \c false, battery
          * temperature measurement is disabled.
+         *
          * @return Result Returns \c Result::Ok if the battery temperature measurement was enabled or
          * disabled successfully; returns a value other than \c Result::Ok if not.
          */
@@ -366,10 +380,11 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * @param[in] enable If \c true, the battery fuel gauge is enabled; if \c false, the battery fuel gauge is disabled.
+         *
          * @return Result Returns \c Result::Ok if the battery fuel gauge was enabled or disabled successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -380,12 +395,13 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * This function can block for 100 ms.
          *
          * @param[out] voltage Measured battery voltage in millivolts (mV).
+         *
          * @return Result Returns \c Result::Ok if the battery voltage was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -398,13 +414,14 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * This function can block for 100 ms.
          *
          * @param[out] current Measured battery voltage in milliamps (mA). If battery is discharging,
          * this value is negative; positive if battery is charging.
+         *
          * @return Result Returns \c Result::Ok if the battery current was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -418,12 +435,13 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
-         * The battery The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[out] percent Estimated battery charge, from 0% to 100%.
+         * @param[out] percent Estimated battery charge in percent, from 0% to 100%.
+         *
          * @return Result Returns \c Result::Ok if the battery charge was estimated successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -437,12 +455,13 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
-         * The battery The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[out] percent Estimated battery health, from 0% to 100%.
+         * @param[out] percent Estimated battery health in percent, from 0% to 100%.
+         *
          * @return Result Returns \c Result::Ok if the battery health was estimated successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -456,12 +475,13 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
          * @param[out] cycles Estimated battery cycle count.
+         *
          * @return Result Returns \c Result::Ok if the battery cycle count was estimated successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -476,13 +496,14 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
          * @param[out] minutes Estimated time left for battery to charge or discharge in minutes. If battery is discharging,
          * this value is negative; if battery is charging, this value is positive.
+         *
          * @return Result Returns \c Result::Ok if the time left for battery to charge or discharge was estimated
          * successfully; returns a value other than \c Result::Ok if not.
          */
@@ -496,8 +517,8 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * Battery temperature measurement must be enabled prior calling this function, else \c Result::InvalidState
          * is returned.
@@ -505,6 +526,7 @@ namespace PowerFeather
          * This function can block for 100 ms.
          *
          * @param[out] celsius Measured battery temperature in celsius.
+         *
          * @return Result Returns \c Result::Ok if the battery temperature was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -517,13 +539,14 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The voltage at which the low voltage alarm will trigger, from 2500 mV to 5000 mV.
-         * If 0 mV, triggering of the alarm is disabled and any existing low voltage alarm is cleared.
+         * @param[in] voltage The voltage at which the low voltage alarm will trigger in millivolts (mV), from 2500 mV to 5000 mV.
+         * If zero, triggering of the alarm is disabled and any existing low voltage alarm is cleared.
+         *
          * @return Result Returns \c Result::Ok if the battery low voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -536,13 +559,14 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The voltage at which the high voltage alarm will trigger, from 2500 mV to 5000 mV.
-         * If 0 mV, triggering of the alarm is disabled and any existing high voltage alarm is cleared.
+         * @param[in] voltage The voltage at which the high voltage alarm will trigger in millovolts (mV), from 2500 mV to 5000 mV.
+         * If zero, triggering of the alarm is disabled and any existing high voltage alarm is cleared.
+         *
          * @return Result Returns \c Result::Ok if the battery high voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -555,13 +579,14 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity should have been specified when \c MainBoard::init was called, else
-         *  \c Result::InvalidState is returned.
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] percent The percentage at which the low charge alarm will trigger, from 1% to 100%.
-         * If 0%, triggering of the alarm is disabled and any existing low charge alarm is cleared.
+         * @param[in] percent The percentage at which the low charge alarm will trigger in percent, from 1% to 100%.
+         * If zero, triggering of the alarm is disabled and any existing low charge alarm is cleared.
+         *
          * @return Result Returns \c Result::Ok if the battery low charge alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
