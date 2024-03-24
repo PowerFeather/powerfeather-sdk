@@ -152,9 +152,17 @@ namespace PowerFeather
 
         TRY_LOCK(_mutex);
 
-        // Capacity should either be 0, in which case it indicates to the SDK that there is no battery expected
-        // to be connected to the system; or within _minBatteryCapacity and _maxBatteryCapacity inclusive.
-        RET_IF_FALSE(!capacity || (capacity >= _minBatteryCapacity && capacity <= LC709204F::MaxBatteryCapacity), Result::InvalidArg);
+        if (type == BatteryType::ICR18650 || type == BatteryType::UR18650ZY)
+        {
+            // Ignore set capacity and set 2600 mAh for both ICR18650 and UR18650ZY.
+            capacity = 2600;
+        }
+        else
+        {
+            // Capacity should either be 0, in which case it indicates to the SDK that there is no battery expected
+            // to be connected to the system; or within _minBatteryCapacity and _maxBatteryCapacity inclusive.
+            RET_IF_FALSE(!capacity || (capacity >= _minBatteryCapacity && capacity <= LC709204F::MaxBatteryCapacity), Result::InvalidArg);
+        }
 
         _initDone = false;
 

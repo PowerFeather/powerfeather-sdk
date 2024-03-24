@@ -109,8 +109,8 @@ namespace PowerFeather
 
         private:
             // SDK-Managed Fixed
-            static constexpr gpio_num_t USBDP =    GPIO_NUM_20;  // USB D+
-            static constexpr gpio_num_t USBDM =    GPIO_NUM_19;  // USB D-
+            static constexpr gpio_num_t USBDP =     GPIO_NUM_20;  // USB D+
+            static constexpr gpio_num_t USBDM =     GPIO_NUM_19;  // USB D-
 
             static constexpr gpio_num_t EN_3V3 =    GPIO_NUM_4;  // 3V3 enable/disable
             static constexpr gpio_num_t EN_SQT =    GPIO_NUM_14; // VSQT enable/disable
