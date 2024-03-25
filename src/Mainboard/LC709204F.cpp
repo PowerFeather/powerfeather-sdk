@@ -79,7 +79,7 @@ namespace PowerFeather
         send[2] = data & 0xFF;
         send[3] = data >> 8;
         send[4] = _computeCRC8(send, 4);
-        ESP_LOGE(TAG, "Write register %02x, crc: %02x  value: %04x", send[1], send[4], data);
+        ESP_LOGD(TAG, "Write register %02x, crc: %02x  value: %04x", send[1], send[4], data);
         return _i2c.write(_i2cAddress, send[1], &(send[2]), 3);
     }
 
@@ -102,7 +102,7 @@ namespace PowerFeather
 
     bool LC709204F::_setVoltageAlarm(Registers reg, uint16_t voltage)
     {
-        if (voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm)
+        if (voltage == 0 || (voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm))
         {
             return _writeReg(reg, voltage);
         }
