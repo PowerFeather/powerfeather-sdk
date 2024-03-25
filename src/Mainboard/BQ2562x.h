@@ -134,6 +134,12 @@ namespace PowerFeather
             VPMID = 0
         };
 
+        enum class Interrupt : uint8_t
+        {
+            VBUS,
+            TS
+        };
+
         BQ2562x(MasterI2C &i2c) : _i2c(i2c) {}
 
         bool getWD(bool &enabled);
@@ -153,6 +159,7 @@ namespace PowerFeather
         bool enableTS(bool enable);
         bool enableHIZ(bool enable);
         bool enableInterrupts(bool enable);
+        bool enableInterrupt(Interrupt mask, bool enable);
         bool enableWVBUS(bool enable);
         bool enableADC(Adc adc, bool enable);
         bool setChargeCurrent(uint16_t current);

@@ -267,6 +267,23 @@ namespace PowerFeather
         return false;
     }
 
+    bool BQ2562x::enableInterrupt(Interrupt interrupt, bool enable)
+    {
+        if (interrupt == Interrupt::VBUS)
+        {
+            Register reg = Charger_Mask_1;
+            reg.start = reg.end = static_cast<uint8_t>(0);
+            return _writeReg(reg, !enable);
+        }
+        else if (interrupt == Interrupt::TS)
+        {
+            Register reg = FAULT_Mask_0;
+            reg.start = reg.end = static_cast<uint8_t>(0);
+            return _writeReg(reg, !enable);
+        } // supports only a few interrupts for now
+        return false;
+    }
+
     bool BQ2562x::enableWVBUS(bool enable)
     {
         return _writeReg(Charger_Control_2_WVBUS, enable);

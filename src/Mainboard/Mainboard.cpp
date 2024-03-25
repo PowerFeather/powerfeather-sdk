@@ -374,6 +374,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
+        RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, enable), Result::Failure);
         //TODO: enable or disable tsense (using register)
         ESP_LOGD(TAG, "Temperature sense set to: %d.", enable);
         return Result::Ok;
