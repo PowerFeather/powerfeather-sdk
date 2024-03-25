@@ -79,19 +79,19 @@ namespace PowerFeather
         LC709204F(MasterI2C &i2c) : _i2c(i2c) {}
 
         bool getOperation(bool &enabled);
-        bool getCellVoltage(uint16_t &mV);
-        bool getRSOC(uint8_t &rsoc);
+        bool getCellVoltage(uint16_t &voltage);
+        bool getRSOC(uint8_t &percent);
         bool getTimeToEmpty(uint16_t &minutes);
         bool getTimeToFull(uint16_t &minutes);
         bool getCycles(uint16_t &cycles);
-        bool getSOH(uint8_t &rsoh);
+        bool getSOH(uint8_t &percent);
         bool enableOperation(bool enable);
         bool setAPA(uint16_t capacity, ChangeOfParameter changeOfParam);
         bool setChangeOfParameter(ChangeOfParameter changeOfParam);
         bool enableTSENSE(bool enableTsense1, bool enableTsense2);
         bool setLowVoltageAlarm(uint16_t voltage);
         bool setHighVoltageAlarm(uint16_t voltage);
-        bool setLowRSOCAlarm(uint16_t percent);
+        bool setLowRSOCAlarm(uint8_t percent);
         bool clearLowVoltageAlarm();
         bool clearHighVoltageAlarm();
         bool clearLowRSOCAlarm();

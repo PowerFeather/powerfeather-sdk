@@ -102,8 +102,11 @@ namespace PowerFeather
 
     bool LC709204F::_setVoltageAlarm(Registers reg, uint16_t voltage)
     {
-        uint16_t val = 0x09c4 + (voltage - 2500);
-        return _writeReg(reg, val);
+        if (voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm)
+        {
+            return _writeReg(reg, voltage);
+        }
+        return false;
     }
 
     bool LC709204F::_clearAlarm(uint8_t bit)
@@ -119,9 +122,9 @@ namespace PowerFeather
 
     bool LC709204F::getOperation(bool &enabled)
     {
-        uint16_t val = 0;
-        bool res = _readReg(Registers::IC_Power_Mode, val);
-        enabled = (val == static_cast<uint16_t>(OperationMode::OperationalMode));
+        uint16_t value = 0;
+        bool res = _readReg(Registers::IC_Power_Mode, value);
+        enabled = (value == static_cast<uint16_t>(OperationMode::OperationalMode));
         return res;
     }
 
@@ -132,10 +135,10 @@ namespace PowerFeather
 
     bool LC709204F::getRSOC(uint8_t &percent)
     {
-        uint16_t val = 0;
-        if (_readReg(Registers::RSOC, val))
+        uint16_t value = 0;
+        if (_readReg(Registers::RSOC, value))
         {
-            percent = val;
+            percent = value;
             return true;
         }
         return false;
@@ -153,21 +156,15 @@ namespace PowerFeather
 
     bool LC709204F::getCycles(uint16_t &cycles)
     {
-        uint16_t val = 0;
-        if (_readReg(Registers::Cycle_Count, val))
-        {
-            cycles = val;
-            return true;
-        }
-        return false;
+        return _readReg(Registers::Cycle_Count, cycles);
     }
 
     bool LC709204F::getSOH(uint8_t &percent)
     {
-        uint16_t val = 0;
-        if (_readReg(Registers::State_Of_Health, val))
+        uint16_t value = 0;
+        if (_readReg(Registers::State_Of_Health, value))
         {
-            percent = val;
+            percent = value;
             return true;
         }
         return false;
@@ -175,8 +172,8 @@ namespace PowerFeather
 
     bool LC709204F::enableOperation(bool enable)
     {
-        uint16_t val = static_cast<uint16_t>(enable ? OperationMode::OperationalMode : OperationMode::SleepMode);
-        return _writeReg(Registers::IC_Power_Mode, val);
+        uint16_t value = static_cast<uint16_t>(enable ? OperationMode::OperationalMode : OperationMode::SleepMode);
+        return _writeReg(Registers::IC_Power_Mode, value);
     }
 
     bool LC709204F::setAPA(uint16_t capacity, ChangeOfParameter changeOfParam)
@@ -208,8 +205,8 @@ namespace PowerFeather
                     uint16_t prev_cap = std::get<0>(prev);
                     if (capacity < cap && (prev != cur && cap > prev_cap))
                     {
-                        float val = round(std::get<1>(prev) + (std::get<1>(cur) - std::get<1>(prev)) * ((static_cast<float>(capacity) - prev_cap) / (cap - prev_cap)));
-                        apa = (static_cast<uint8_t>(val) << 8) | static_cast<uint8_t>(val);
+                        float res = round(std::get<1>(prev) + (std::get<1>(cur) - std::get<1>(prev)) * ((static_cast<float>(capacity) - prev_cap) / (cap - prev_cap)));
+                        apa = (static_cast<uint8_t>(res) << 8) | static_cast<uint8_t>(res);
                     }
                 }
 
@@ -245,10 +242,9 @@ namespace PowerFeather
         return _setVoltageAlarm(Registers::Alarm_High_Cell_Voltage, voltage);
     }
 
-    bool LC709204F::setLowRSOCAlarm(uint16_t percent)
+    bool LC709204F::setLowRSOCAlarm(uint8_t percent)
     {
-        uint16_t val = 0x01 + (percent - 0x01);
-        return _writeReg(Registers::Alarm_Low_RSOC, val);
+        return _writeReg(Registers::Alarm_Low_RSOC, static_cast<uint16_t>(percent));
     }
 
     bool LC709204F::clearLowVoltageAlarm()
