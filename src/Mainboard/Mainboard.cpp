@@ -102,7 +102,7 @@ namespace PowerFeather
         if (!op) // if op is false, fuel gauge in sleep mode
         {
             // Reinitialize even if fuel gauge has been previously initialized, and was just
-            // put into sleep mode using enableBatteryFuelGauge(false). TODO: verify
+            // put into sleep mode using enableBatteryFuelGauge(false).
             LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650 ? LC709204F::ChangeOfParameter::ICR18650_26H :
                                                  _batteryType == BatteryType::UR18650ZY ? LC709204F::ChangeOfParameter::UR18650ZY :
                                                  LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
@@ -312,7 +312,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShipMode), Result::Failure);
         // If this executes, then charger did not enter ship mode. Return to normal operation
-        // and return failure status. TODO: verify
+        // and return failure status.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::Normal), Result::Failure);
         ESP_LOGE(TAG, "Failed to enter ship mode.");
@@ -326,7 +326,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShutdownMode), Result::Failure);
         // If this executes, then charger did not enter shutdown mode. According to the datasheet,
-        // charger automatically returns to normal mode, so just return failure. TODO: verify
+        // charger automatically returns to normal mode, so just return failure.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
         ESP_LOGE(TAG, "Failed to enter shutdown mode.");
         return Result::Failure;
@@ -338,7 +338,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset), Result::Failure);
-        // If this executes, then charger did not perform power cycle. TODO: verify
+        // If this executes, then charger did not perform power cycle.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
         ESP_LOGE(TAG, "Failed to do power cycle.");
         return Result::Failure;
@@ -375,7 +375,6 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
         RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, enable), Result::Failure);
-        //TODO: enable or disable tsense (using register)
         ESP_LOGD(TAG, "Temperature sense set to: %d.", enable);
         return Result::Ok;
     }
@@ -510,8 +509,6 @@ namespace PowerFeather
         bool enabled = false;
         RET_IF_FALSE(getCharger().getTSEnabled(enabled) && enabled, Result::InvalidState);
 
-        //TODO: send measure temperature to fuel gauge.
-
         float bias = 0;
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getTSBias(bias), Result::Failure);
@@ -532,7 +529,7 @@ namespace PowerFeather
         RET_IF_FALSE(getFuelGauge().setLowVoltageAlarm(voltage), Result::Failure);
         if (voltage == 0)
         {
-            RET_IF_FALSE(getFuelGauge().clearLowVoltageAlarm(), Result::Failure); // TODO: verify
+            RET_IF_FALSE(getFuelGauge().clearLowVoltageAlarm(), Result::Failure);
         }
         ESP_LOGD(TAG, "Low battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
@@ -549,7 +546,7 @@ namespace PowerFeather
         RET_IF_FALSE(getFuelGauge().setHighVoltageAlarm(voltage), Result::Failure);
         if (voltage == 0)
         {
-            RET_IF_FALSE(getFuelGauge().clearHighVoltageAlarm(), Result::Failure); // TODO: verify
+            RET_IF_FALSE(getFuelGauge().clearHighVoltageAlarm(), Result::Failure);
         }
         ESP_LOGD(TAG, "High battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
@@ -566,7 +563,7 @@ namespace PowerFeather
         RET_IF_FALSE(getFuelGauge().setLowRSOCAlarm(percent), Result::Failure);
         if (percent == 0)
         {
-            RET_IF_FALSE(getFuelGauge().clearLowRSOCAlarm(), Result::Failure); // TODO: verify
+            RET_IF_FALSE(getFuelGauge().clearLowRSOCAlarm(), Result::Failure);
         }
         ESP_LOGD(TAG, "Low charge alarm set to: %d %%.", (int)percent);
         return Result::Ok;

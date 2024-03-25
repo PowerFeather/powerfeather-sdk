@@ -143,9 +143,9 @@ namespace PowerFeather
          * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh), from 50 mAh to 6000 mAh.
          * A value of zero indicates that no battery is connected, and therefore some of the other \c Mainboard functions
          * will return \c Result::InvalidState. If using multiple batteries connected in parallel, specify
-         * only the capacity for one cell. Ignored when \p type is \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY. // TODO
+         * only the capacity for one cell. Ignored when \p type is \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY.
          * @param[in] type Type of Li-ion/LiPo battery; ignored when \p capacity is zero, except when value is
-         * \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY // TODO
+         * \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY
          *
          * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.
          */

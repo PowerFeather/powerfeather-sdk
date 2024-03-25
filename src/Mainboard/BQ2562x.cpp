@@ -182,7 +182,6 @@ namespace PowerFeather
 
     bool BQ2562x::getTSBias(float &bias)
     {
-        // TODO: double check
         uint16_t value = 0;
         if (_readReg(TS_ADC, value))
         {
@@ -333,7 +332,7 @@ namespace PowerFeather
         if (current >= BQ2562x::MinIINDPMCurrent && current <= BQ2562x::MaxIINDPMCurrent)
         {
             uint8_t value = round(_map(current, 1/20.0f));
-            return _writeReg(Input_Current_Limit_IINDPM, value); // TODO: check
+            return _writeReg(Input_Current_Limit_IINDPM, value);
         }
         return false;
     }
