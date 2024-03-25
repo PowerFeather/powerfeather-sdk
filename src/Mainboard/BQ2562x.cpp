@@ -322,7 +322,7 @@ namespace PowerFeather
         if (voltage >= BQ2562x::MinVINDPMVoltage && voltage <= BQ2562x::MaxVINDPMVoltage)
         {
             uint16_t value = round(_map(voltage, 1/40.0f));
-            return _writeReg(Input_Current_Limit_VINDPM, value); // TODO: check
+            return _writeReg(Input_Current_Limit_VINDPM, value);
         }
         return false;
     }
