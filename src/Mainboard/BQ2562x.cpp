@@ -283,7 +283,7 @@ namespace PowerFeather
     {
         if (current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent)
         {
-            uint8_t value = round(_map(current, 1/40.0f));
+            uint16_t value = round(_map(current, 1/40.0f));
             return _writeReg(Charge_Current_Limit_ICHG, value);
         }
         return false;
