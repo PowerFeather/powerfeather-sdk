@@ -174,7 +174,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
         _sqtEnabled = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT);
         RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, _sqtEnabled), Result::Failure)
-        ESP_LOGD(TAG, "VSQT set to %d during initialization", _sqtEnabled);
+        ESP_LOGD(TAG, "VSQT detected as %d during initialization", _sqtEnabled);
 
         if (_sqtEnabled)
         {
@@ -214,15 +214,17 @@ namespace PowerFeather
         }
 
         // Initialize the rest of the RTC/digital pins managed by the SDK.
-        RET_IF_FALSE(_initInternalRTCPin(Pin::EN0, RTC_GPIO_MODE_OUTPUT_OD), Result::Failure);
-        RET_IF_FALSE(_initInternalRTCPin(Pin::EN_3V3, RTC_GPIO_MODE_OUTPUT_ONLY), Result::Failure);
-        RET_IF_FALSE(_initInternalDigitalPin(Pin::PG, GPIO_MODE_INPUT), Result::Failure);
+        RET_IF_FALSE(_initInternalRTCPin(Pin::EN0, RTC_GPIO_MODE_INPUT_OUTPUT_OD), Result::Failure);
+        bool _enHigh = _isFirst() ? true : rtc_gpio_get_level(Pin::EN0);
+        RET_IF_FALSE(_setRTCPin(Pin::EN0, _enHigh), Result::Failure)
+        ESP_LOGD(TAG, "EN detected as %d during initialization", _enHigh);
 
-        if (_isFirst())
-        {
-            RET_IF_FALSE(_setRTCPin(Pin::EN0, true), Result::Failure);
-            RET_IF_FALSE(_setRTCPin(Pin::EN_3V3, true), Result::Failure);
-        }
+        RET_IF_FALSE(_initInternalRTCPin(Pin::EN_3V3, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
+        bool _3V3Enabled = _isFirst() ? true :  rtc_gpio_get_level(Pin::EN_3V3);
+        RET_IF_FALSE(_setRTCPin(Pin::EN_3V3, _3V3Enabled), Result::Failure)
+        ESP_LOGD(TAG, "3V3 detected as %d during initialization.", _3V3Enabled);
+
+        RET_IF_FALSE(_initInternalDigitalPin(Pin::PG, GPIO_MODE_INPUT), Result::Failure);
 
         first = firstMagic;
         _initDone = true;
