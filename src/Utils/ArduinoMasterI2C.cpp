@@ -64,7 +64,7 @@ namespace PowerFeather
         return (_wire->endTransmission(true) == 0);
     }
 
-    bool ArduinoMasterI2C::read(uint8_t address, uint8_t *buf, size_t len)
+    bool ArduinoMasterI2C::_read(uint8_t address, uint8_t *buf, size_t len)
     {
         size_t recv = _wire->requestFrom(address, static_cast<uint8_t>(len));
 
