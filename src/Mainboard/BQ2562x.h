@@ -42,8 +42,15 @@ namespace PowerFeather
     {
     public:
 
+        static constexpr uint16_t MinChargingCurrent = 40;
         static constexpr uint16_t MaxChargingCurrent = 2000;
+
+        static constexpr uint16_t MinVINDPMVoltage = 4600;
         static constexpr uint16_t MaxVINDPMVoltage = 16800;
+        static constexpr uint16_t ResetVINDPMVoltage = 4600;
+
+        static constexpr uint16_t MinIINDPMCurrent = 100;
+        static constexpr uint16_t MaxIINDPMCurrent = 3200;
 
         struct Register
         {
@@ -53,63 +60,66 @@ namespace PowerFeather
             uint8_t end;
         };
 
-        enum class VBUSStat
+        enum class VBUSStat : uint8_t
         {
-            None,
-            Adapter
+            None = 0b000,
+            Adapter = 0b100
         };
 
-        enum class ChargeStat
+        enum class ChargeStat : uint8_t
         {
-            Terminated,
-            Trickle,
-            Taper,
-            TopOff
+            Terminated = 0x00,
+            Trickle = 0x01,
+            Taper = 0x02,
+            TopOff = 0x03
         };
 
-        enum class ADCRate
+        enum class WatchdogTimer : uint8_t
         {
-            Oneshot,
-            Continuous,
+            Disabled = 0x00,
+            Timer_50s = 0x01,
+            Timer_100s = 0x02,
+            Timer_200s = 0x03
         };
 
-        enum class ADCSampling
+        enum class ADCRate : uint8_t
         {
-            Bits_12,
-            Bits_11,
-            Bits_10,
-            Bits_9,
+            Continuous = 0x00,
+            Oneshot = 0x01,
         };
 
-        enum class ADCAverage
+        enum class ADCSampling : uint8_t
         {
-            Single,
-            Running,
+            Bits_12 = 0x00,
+            Bits_11 = 0x01,
+            Bits_10 = 0x02,
+            Bits_9 = 0x03,
         };
 
-        enum class ADCAverageInit
+        enum class ADCAverage : uint8_t
         {
-            Existing,
-            New,
+            Single = 0x00,
+            Running = 0x01,
         };
 
-        enum class BATFETControl
+        enum class ADCAverageInit : uint8_t
         {
-            Normal,
-            ShutdownMode,
-            ShipMode,
-            SystemPowerReset
+            Existing = 0x00,
+            New = 0x01,
         };
 
-        enum class BATFETDelay
+        enum class BATFETControl : uint8_t
         {
-            Delay20ms,
-            Delay10s,
+            Normal = 0x00,
+            ShutdownMode = 0x01,
+            ShipMode = 0x02,
+            SystemPowerReset = 0x03
         };
 
-        enum class Interrupt : uint8_t
+        enum class BATFETDelay : uint8_t
         {
-            VBUS
+            Delay20ms = 0x00,
+            Delay10s = 0x01,
         };
 
         enum class Adc : uint8_t
@@ -132,18 +142,17 @@ namespace PowerFeather
         bool getVBAT(uint16_t &voltage);
         bool getIBAT(int16_t &current);
         bool getADCDone(bool &done);
-        bool getTS(bool &enabled);
-        bool getTS_ADC(float &celsius);
+        bool getTSEnabled(bool &enabled);
+        bool getTSBias(float &voltage);
         bool getVBUSStat(VBUSStat &stat);
         bool getChargeStat(ChargeStat &stat);
         bool getPartInformation(uint8_t &info);
 
-        bool enableWD(bool enable);
+        bool setWD(WatchdogTimer timer);
         bool enableCharging(bool enable);
         bool enableTS(bool enable);
         bool enableHIZ(bool enable);
         bool enableInterrupts(bool enable);
-        bool enableInterrupt(Interrupt mask, bool en);
         bool enableWVBUS(bool enable);
         bool enableADC(Adc adc, bool enable);
         bool setChargeCurrent(uint16_t current);
@@ -155,7 +164,7 @@ namespace PowerFeather
                       ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
 
     private:
-        const Register Charge_Current_Limit_ICHG =            { 0x02, 2, 5, 11 };
+        const Register Charge_Current_Limit_ICHG =            { 0x02, 2, 5, 10 };
 
         const Register Input_Current_Limit_IINDPM =           { 0x06, 2, 4, 11 };
         const Register Input_Current_Limit_VINDPM =           { 0x08, 2, 5, 13 };
@@ -169,21 +178,30 @@ namespace PowerFeather
         const Register Charger_Control_2_BATFET_DLY =         { 0x18, 1, 2, 2 };
         const Register Charger_Control_2_WVBUS =              { 0x18, 1, 3, 3 };
 
+        const Register NTC_Control_0_ =                       { 0x1a, 1, 0, 7 };
         const Register NTC_Control_0_TS_IGNORE =              { 0x1a, 1, 7, 7 };
 
         const Register Charger_Status_0 =                     { 0x1d, 1, 0, 7 };
+        const Register Charger_Status_0_ADC_DONE =            { 0x1d, 1, 6, 6 };
+
         const Register Charger_Status_1 =                     { 0x1e, 1, 0, 7 };
         const Register Charger_Status_1_VBUS_STAT =           { 0x1e, 1, 0, 2 };
         const Register Charger_Status_1_CHG_STAT =            { 0x1e, 1, 3, 4 };
+
         const Register FAULT_Status_0 =                       { 0x1f, 1, 0, 7 };
         const Register Charger_Flag_0 =                       { 0x20, 1, 0, 7 };
         const Register Charger_Flag_1 =                       { 0x21, 1, 0, 7 };
         const Register FAULT_Flag_0 =                         { 0x22, 1, 0, 7 };
         const Register Charger_Mask_0 =                       { 0x23, 1, 0, 7 };
         const Register Charger_Mask_1 =                       { 0x24, 1, 0, 7 };
-        const Register FAULT_Mask_0 =                         { 0x25, 1, 2, 2 };
+        const Register FAULT_Mask_0 =                         { 0x25, 1, 0, 7 };
 
         const Register ADC_Control =                          { 0x26, 1, 0, 7 };
+        const Register ADC_Control_ADC_AVG_INIT =             { 0x26, 1, 2, 2 };
+        const Register ADC_Control_ADC_AVG =                  { 0x26, 1, 3, 3 };
+        const Register ADC_Control_ADC_SAMPLE =               { 0x26, 1, 4, 5 };
+        const Register ADC_Control_ADC_RATE =                 { 0x26, 1, 6, 6 };
+        const Register ADC_Control_ADC_EN =                   { 0x26, 1, 7, 7 };
 
         const Register ADC_Function_Disable_0 =               { 0x27, 1, 0, 7 };
 
@@ -205,5 +223,7 @@ namespace PowerFeather
         bool _readReg(Register reg, T &value);
         template <typename T>
         bool _writeReg(Register reg, T value);
+
+        float _map(uint16_t raw, float step, uint16_t min = 0, uint16_t max = 0);
     };
 }

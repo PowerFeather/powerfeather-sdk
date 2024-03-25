@@ -183,7 +183,7 @@ namespace PowerFeather
             bool wdOn = true;
             RET_IF_FALSE(getCharger().getWD(wdOn), Result::Failure);
 
-            if (wdOn) // watchdog disabled means that the initiatialization was done previously
+            if (wdOn) // watchdog enabled means that the initiatialization was not done previously
             {
                 RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
                 RET_IF_FALSE(getCharger().enableTS(false), Result::Failure);
@@ -193,7 +193,7 @@ namespace PowerFeather
                 RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
                 // Disable the charger watchdog to keep the charger in host mode and to
                 // keep some registers from resetting to their POR values.
-                RET_IF_FALSE(getCharger().enableWD(false), Result::Failure);
+                RET_IF_FALSE(getCharger().setWD(BQ2562x::WatchdogTimer::Disabled), Result::Failure);
                 ESP_LOGD(TAG, "Charger IC initialized.");
             }
             else
@@ -297,7 +297,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(voltage <= BQ2562x::MaxVINDPMVoltage, Result::InvalidArg);
+        RET_IF_FALSE(voltage >= _minSupplyMaintainVoltage && voltage <= BQ2562x::MaxVINDPMVoltage, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
         ESP_LOGD(TAG, "Maintain supply voltage set to: %d mV.", voltage);
         return Result::Ok;
@@ -359,7 +359,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
-        RET_IF_FALSE(current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
+        RET_IF_FALSE(current >= _minBatteryCapacity && current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setChargeCurrent(current), Result::Failure);
         ESP_LOGD(TAG, "Max charging current set to: %d mA.", current);
         return Result::Ok;
@@ -505,15 +505,15 @@ namespace PowerFeather
         // Temperature sensing must be enabled using enableBatteryTempSense(true), only
         // then can the battery temperature be measured.
         bool enabled = false;
-        RET_IF_FALSE(getCharger().getTS(enabled) && enabled, Result::InvalidState);
+        RET_IF_FALSE(getCharger().getTSEnabled(enabled) && enabled, Result::InvalidState);
 
         //TODO: send measure temperature to fuel gauge.
 
-        float voltage = 0;
+        float bias = 0;
         RET_IF_ERR(_udpateChargerADC());
-        RET_IF_FALSE(getCharger().getTS_ADC(voltage), Result::Failure);
-        // Map percent to temperature given 103AT thermistor with fitted curve.
-        celsius = (-1866.96172 * powf(voltage, 4)) + (3169.31754 * powf(voltage, 3)) - (1849.96775 * powf(voltage, 2)) + (276.6656 * voltage) + 81.98758;
+        RET_IF_FALSE(getCharger().getTSBias(bias), Result::Failure);
+        // Map bias to temperature given 103AT thermistor with fitted curve.
+        celsius = (-1866.96172 * powf(bias, 4)) + (3169.31754 * powf(bias, 3)) - (1849.96775 * powf(bias, 2)) + (276.6656 * bias) + 81.98758;
         ESP_LOGD(TAG, "Measured battery temperature: %f °C.", celsius);
         return Result::Ok;
     }

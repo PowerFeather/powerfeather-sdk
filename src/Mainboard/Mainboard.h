@@ -604,9 +604,13 @@ namespace PowerFeather
         static constexpr uint32_t _i2cFreq = 100000;
         static constexpr uint32_t _i2cTimeout = 1000;
 
-        static constexpr uint16_t _minBatteryCapacity = 50; // battery charger minimum charging current is 40 mA,
-                                                            // battery fuel guage minimum supported is 50 mAh.
+        static constexpr uint16_t _minBatteryCapacity = LC709204F::MinBatteryCapacity; // higher of charger and fuel gauge limit
         static constexpr uint16_t _defaultMaxChargingCurrent = _minBatteryCapacity; // minimum charge current at 1C
+        static constexpr uint16_t _minSupplyMaintainVoltage = BQ2562x::ResetVINDPMVoltage;
+
+        static_assert(_minSupplyMaintainVoltage >= BQ2562x::MinVINDPMVoltage);
+        static_assert(_minBatteryCapacity >= BQ2562x::MinChargingCurrent);
+        static_assert(_minBatteryCapacity >= BQ2562x::MinChargingCurrent);
 
         static constexpr uint16_t _chargerADCWaitTime = 100; // 80 ms actual
         static constexpr uint16_t _batfetCtrlWaitTime = 30; // 30 ms actual

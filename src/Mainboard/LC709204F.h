@@ -47,6 +47,7 @@ namespace PowerFeather
         static constexpr uint16_t MinVoltageAlarm = 2500;
         static constexpr uint16_t MaxVoltageAlarm = 5000;
         static constexpr uint16_t MaxBatteryCapacity = 6000;
+        static constexpr uint16_t MinBatteryCapacity = 50;
 
         enum class Registers
         {
