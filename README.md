@@ -17,7 +17,7 @@ Setup for supported platforms is documented on [docs.powerfeather.dev/sdk/setup]
 
 ## Links
 
-- [Discussions](https://forum.powerfeather.dev/t/firmware-sdk)
+- [Discussions](https://forum.powerfeather.dev/tag/sdk)
 - [Issue Tracker](https://github.com/PowerFeather/powerfeather-sdk/issues)
 - [Repository](https://github.com/PowerFeather/powerfeather-sdk.git)
 - [Documentation](https://docs.powerfeather.dev/category/sdk)
