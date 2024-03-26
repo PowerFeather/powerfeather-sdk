@@ -87,7 +87,7 @@ namespace PowerFeather
             }
             else
             {
-                ESP_LOGE(TAG, "Write bit%d to bit%d on %d-byte register %02x failed.", reg.start, reg.end, reg.size, reg.address);
+                ESP_LOGD(TAG, "Write bit%d to bit%d on %d-byte register %02x failed.", reg.start, reg.end, reg.size, reg.address);
             }
             return res;
         }

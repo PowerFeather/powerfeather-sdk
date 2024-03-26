@@ -50,7 +50,7 @@ namespace PowerFeather
 
     /*extern*/ Mainboard &Board = Mainboard::get();
 
-    #define LOG_FAIL(r)                 ESP_LOGE(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
+    #define LOG_FAIL(r)                 ESP_LOGD(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
     #define RET_IF_ERR(f)               { Result r = (f); if (r != Result::Ok) { LOG_FAIL(1); return r; } }
     #define RET_IF_NOK(f)               { esp_err_t r = (f); if (r != ESP_OK) { LOG_FAIL(r); return false; } }
     #define RET_IF_FALSE(f, r)          { if ((f) == false) { LOG_FAIL(false); return (r); } }
@@ -315,7 +315,7 @@ namespace PowerFeather
         // and return failure status.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::Normal), Result::Failure);
-        ESP_LOGE(TAG, "Failed to enter ship mode.");
+        ESP_LOGD(TAG, "Failed to enter ship mode.");
         return Result::Failure;
     }
 
@@ -328,7 +328,7 @@ namespace PowerFeather
         // If this executes, then charger did not enter shutdown mode. According to the datasheet,
         // charger automatically returns to normal mode, so just return failure.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
-        ESP_LOGE(TAG, "Failed to enter shutdown mode.");
+        ESP_LOGD(TAG, "Failed to enter shutdown mode.");
         return Result::Failure;
     }
 
@@ -340,7 +340,7 @@ namespace PowerFeather
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset), Result::Failure);
         // If this executes, then charger did not perform power cycle.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
-        ESP_LOGE(TAG, "Failed to do power cycle.");
+        ESP_LOGD(TAG, "Failed to do power cycle.");
         return Result::Failure;
     }
 

@@ -51,7 +51,7 @@ namespace PowerFeather
 
         if (!_i2c.read(_i2cAddress, reply[1], &(reply[3]), 3))
         {
-            ESP_LOGE(TAG, "Read register %02x failed.", reply[1]);
+            ESP_LOGD(TAG, "Read register %02x failed.", reply[1]);
             return false;
         }
 
@@ -59,7 +59,7 @@ namespace PowerFeather
 
         if (crc != reply[5]) // crc failed
         {
-            ESP_LOGE(TAG, "CRC %02x different from expected %02x.", reply[5], crc);
+            ESP_LOGD(TAG, "CRC %02x different from expected %02x.", reply[5], crc);
             return false;
         }
 

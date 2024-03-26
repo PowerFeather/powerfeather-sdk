@@ -55,7 +55,7 @@ namespace PowerFeather
             ESP_LOGV(TAG, "Write address: %02x", address);
             if (_wire->write(buf, len) != len)
             {
-                ESP_LOGE(TAG, "Write buf %p of len %d failed.", buf, len);
+                ESP_LOGD(TAG, "Write buf %p of len %d failed.", buf, len);
                 return false;
             }
             ESP_LOGV(TAG, "Write buf %p of len %d succeeded.", buf, len);
@@ -70,7 +70,7 @@ namespace PowerFeather
 
         if (recv != len)
         {
-            ESP_LOGE(TAG, "Read address %02x with len %d failed", address, len);
+            ESP_LOGD(TAG, "Read address %02x with len %d failed", address, len);
             return false;
         }
 

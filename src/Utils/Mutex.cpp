@@ -53,7 +53,7 @@ namespace PowerFeather
             ESP_LOGD(TAG, "Mutex %p take succeeded.", this);
             return true;
         }
-        ESP_LOGE(TAG, "Failed to take mutex %p.", this);
+        ESP_LOGD(TAG, "Failed to take mutex %p.", this);
         return false;
     }
 
