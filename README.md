@@ -8,12 +8,12 @@ The following boards are supported:
 
 ## Setup
 
-Setup for supported platforms is documented on [docs.powerfeather.dev/sdk/setup](docs.powerfeather.dev/sdk/setup).
+Setup for supported platforms is documented on [docs.powerfeather.dev/sdk/setup](https://docs.powerfeather.dev/sdk/setup).
 
 ## Examples
 
-- [supply_and_battery_info](examples/supply_and_battery_info/) - Demonstrates how to retrieve basic information about the external supply and battery for ESP-IDF.
-- [SupplyAndBatteryInfo](examples/SupplyAndBatteryInfo/) - Demonstrates how to retrieve basic information about the external supply and battery for Arduino.
+- [supply_and_battery_info](https://github.com/PowerFeather/powerfeather-sdk/tree/main/examples/supply_and_battery_info) - Demonstrates how to retrieve basic information about the external supply and battery for ESP-IDF.
+- [SupplyAndBatteryInfo](https://github.com/PowerFeather/powerfeather-sdk/tree/main/examples/SupplyAndBatteryInfo) - Demonstrates how to retrieve basic information about the external supply and battery for Arduino.
 
 ## Links
 
