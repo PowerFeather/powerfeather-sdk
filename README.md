@@ -13,7 +13,7 @@ Setup for supported platforms is documented on [docs.powerfeather.dev/sdk/setup]
 ## Examples
 
 - [supply_and_battery_info](examples/supply_and_battery_info/) - Demonstrates how to retrieve basic information about the external supply and battery for ESP-IDF.
-- [Supply_and_Battery_Info](examples/Supply_and_Battery_Info/) - Demonstrates how to retrieve basic information about the external supply and battery for Arduino.
+- [SupplyAndBatteryInfo](examples/SupplyAndBatteryInfo/) - Demonstrates how to retrieve basic information about the external supply and battery for Arduino.
 
 ## Links
 
