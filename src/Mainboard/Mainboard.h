@@ -57,7 +57,7 @@ namespace PowerFeather
         {
             Generic_3V7, // Generic Li-ion/LiPo, 3.7 V nominal and 4.2 V max
             ICR18650, // Samsung ICR18650
-            UR18650ZY // Sanyo UR18650ZY
+            UR18650ZY // Panasonic UR18650ZY
         };
 
         class Pin
