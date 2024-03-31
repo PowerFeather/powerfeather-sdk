@@ -97,7 +97,7 @@ namespace PowerFeather
 
     float BQ2562x::_map(uint16_t raw, float step, uint16_t min, uint16_t max)
     {
-        return (raw >= min && raw <= max) ? (max - raw + 1) * (-1) * step : raw * step;
+        return ((min && max) && (raw >= min && raw <= max)) ? ((max - raw + 1) * (-1) * step) : (raw * step);
     }
 
     bool BQ2562x::getWD(bool &enabled)
