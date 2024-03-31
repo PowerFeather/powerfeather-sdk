@@ -341,7 +341,7 @@ namespace PowerFeather
     {
         if (current >= BQ2562x::MinITERMCurrent && current <= BQ2562x::MaxITERMCurrent)
         {
-            uint8_t value = round(_map(current, 1/5.0f));
+            uint16_t value = round(_map(current, 1/5.0f));
             return _writeReg(Termination_Control_0_ITERM, value);
         }
         return false;
