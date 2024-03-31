@@ -143,6 +143,14 @@ namespace PowerFeather
             TS
         };
 
+        enum class TopOffTimer : uint8_t
+        {
+            Disabled = 0x00,
+            Timer17Min = 0x01,
+            Timer35Min = 0x02,
+            Timer52Min = 0x03
+        };
+
         BQ2562x(MasterI2C &i2c) : _i2c(i2c) {}
 
         bool getWD(bool &enabled);
@@ -171,6 +179,7 @@ namespace PowerFeather
         bool setVINDPM(uint16_t voltage);
         bool setIINDPM(uint16_t current);
         bool setITERM(uint16_t current);
+        bool setTopOff(TopOffTimer timer);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
                       ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
 
@@ -181,6 +190,8 @@ namespace PowerFeather
         const Register Input_Current_Limit_VINDPM =           { 0x08, 2, 5, 13 };
 
         const Register Termination_Control_0_ITERM =          { 0x12, 2, 2, 7 };
+
+        const Register Charger_Control_TOPOFF_TMR =           { 0x14, 1, 3, 4 };
 
         const Register Charger_Control_0_EN_CHG =             { 0x16, 1, 5, 5 };
         const Register Charger_Control_0_WATCHDOG =           { 0x16, 1, 0, 1 };

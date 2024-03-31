@@ -190,6 +190,7 @@ namespace PowerFeather
                 RET_IF_FALSE(getCharger().setChargeCurrent(_defaultMaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
                 RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
+                RET_IF_FALSE(getCharger().setTopOff(BQ2562x::TopOffTimer::Timer17Min), Result::Failure);
                 RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
                 if (_batteryCapacity)
                 {

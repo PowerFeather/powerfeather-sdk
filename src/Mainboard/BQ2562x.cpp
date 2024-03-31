@@ -347,6 +347,12 @@ namespace PowerFeather
         return false;
     }
 
+    bool BQ2562x::setTopOff(TopOffTimer timer)
+    {
+        uint8_t value = static_cast<uint8_t>(timer);
+        return _writeReg(Charger_Control_TOPOFF_TMR, value);
+    }
+
     bool BQ2562x::setupADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)
     {
         uint8_t value = enable << ADC_Control_ADC_EN.start;
