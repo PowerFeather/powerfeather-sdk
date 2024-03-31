@@ -168,8 +168,8 @@ namespace PowerFeather
         bool setChargeCurrent(uint16_t current);
         bool setBATFETControl(BATFETControl control);
         bool setBATFETDelay(BATFETDelay delay);
-        bool setVINDPM(uint32_t voltage);
-        bool setIINDPM(uint32_t current);
+        bool setVINDPM(uint16_t voltage);
+        bool setIINDPM(uint16_t current);
         bool setITERM(uint16_t current);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
                       ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);

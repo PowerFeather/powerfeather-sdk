@@ -317,7 +317,7 @@ namespace PowerFeather
         return _writeReg(Charger_Control_2_BATFET_DLY, value);
     }
 
-    bool BQ2562x::setVINDPM(uint32_t voltage)
+    bool BQ2562x::setVINDPM(uint16_t voltage)
     {
         if (voltage >= BQ2562x::MinVINDPMVoltage && voltage <= BQ2562x::MaxVINDPMVoltage)
         {
@@ -327,7 +327,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool BQ2562x::setIINDPM(uint32_t current)
+    bool BQ2562x::setIINDPM(uint16_t current)
     {
         if (current >= BQ2562x::MinIINDPMCurrent && current <= BQ2562x::MaxIINDPMCurrent)
         {
