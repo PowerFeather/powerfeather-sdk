@@ -52,6 +52,9 @@ namespace PowerFeather
         static constexpr uint16_t MinIINDPMCurrent = 100;
         static constexpr uint16_t MaxIINDPMCurrent = 3200;
 
+        static constexpr uint16_t MaxITERMCurrent = 310;
+        static constexpr uint16_t MinITERMCurrent = 5;
+
         struct Register
         {
             uint8_t address;
@@ -167,6 +170,7 @@ namespace PowerFeather
         bool setBATFETDelay(BATFETDelay delay);
         bool setVINDPM(uint32_t voltage);
         bool setIINDPM(uint32_t current);
+        bool setITERM(uint16_t current);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
                       ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
 
@@ -175,6 +179,8 @@ namespace PowerFeather
 
         const Register Input_Current_Limit_IINDPM =           { 0x06, 2, 4, 11 };
         const Register Input_Current_Limit_VINDPM =           { 0x08, 2, 5, 13 };
+
+        const Register Termination_Control_0_ITERM =          { 0x12, 2, 2, 7 };
 
         const Register Charger_Control_0_EN_CHG =             { 0x16, 1, 5, 5 };
         const Register Charger_Control_0_WATCHDOG =           { 0x16, 1, 0, 1 };

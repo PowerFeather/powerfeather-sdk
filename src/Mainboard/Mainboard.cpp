@@ -191,6 +191,16 @@ namespace PowerFeather
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
                 RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
                 RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
+                if (_batteryCapacity)
+                {
+                    // Set termination current to C / 10, or the max supported by IC. The minimum termination
+                    // current is statically checked against the minimum supported capacity.
+                    static constexpr uint16_t div = 10;
+                    static_assert((_minBatteryCapacity / div) >= BQ2562x::MinITERMCurrent);
+                    uint16_t maxTermCurrent = BQ2562x::MaxITERMCurrent;
+                    uint16_t termCurrent = std::min(static_cast<uint16_t>(_batteryCapacity / div), maxTermCurrent);
+                    RET_IF_FALSE(getCharger().setITERM(termCurrent), Result::Failure);
+                }
                 // Disable the charger watchdog to keep the charger in host mode and to
                 // keep some registers from resetting to their POR values.
                 RET_IF_FALSE(getCharger().setWD(BQ2562x::WatchdogTimer::Disabled), Result::Failure);

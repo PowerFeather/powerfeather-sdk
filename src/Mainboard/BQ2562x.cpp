@@ -337,6 +337,16 @@ namespace PowerFeather
         return false;
     }
 
+    bool BQ2562x::setITERM(uint16_t current)
+    {
+        if (current >= BQ2562x::MinITERMCurrent && current <= BQ2562x::MaxITERMCurrent)
+        {
+            uint8_t value = round(_map(current, 1/5.0f));
+            return _writeReg(Termination_Control_0_ITERM, value);
+        }
+        return false;
+    }
+
     bool BQ2562x::setupADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)
     {
         uint8_t value = enable << ADC_Control_ADC_EN.start;
