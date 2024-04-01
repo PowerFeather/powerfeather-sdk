@@ -19,7 +19,7 @@ Setup for supported platforms is documented on [docs.powerfeather.dev/sdk/setup]
 
 ### ESP-IDF
 
-- [enter_ship_mode](https://github.com/PowerFeather/powerfeather-sdk/tree/main/examples/enter_enter_ship_mode) - Demonstrates how to enter ship mode for ESP-IDF.
+- [enter_ship_mode](https://github.com/PowerFeather/powerfeather-sdk/tree/main/examples/enter_ship_mode) - Demonstrates how to enter ship mode for ESP-IDF.
 - [supply_and_battery_info](https://github.com/PowerFeather/powerfeather-sdk/tree/main/examples/supply_and_battery_info) - Demonstrates how to retrieve basic information about the external supply and battery for ESP-IDF.
 
 
