@@ -12,6 +12,8 @@ Setup for supported platforms is documented on [docs.powerfeather.dev/sdk/setup]
 
 ## Examples
 
+- [enter_ship_mode](https://github.com/PowerFeather/powerfeather-sdk/tree/main/examples/supply_and_battery_info) - Demonstrates how to enter ship mode for ESP-IDF.
+- [EnterShipMode](https://github.com/PowerFeather/powerfeather-sdk/tree/main/examples/SupplyAndBatteryInfo) - Demonstrates how to enter ship mode for Arduino.
 - [supply_and_battery_info](https://github.com/PowerFeather/powerfeather-sdk/tree/main/examples/supply_and_battery_info) - Demonstrates how to retrieve basic information about the external supply and battery for ESP-IDF.
 - [SupplyAndBatteryInfo](https://github.com/PowerFeather/powerfeather-sdk/tree/main/examples/SupplyAndBatteryInfo) - Demonstrates how to retrieve basic information about the external supply and battery for Arduino.
 
