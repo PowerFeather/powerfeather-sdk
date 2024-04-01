@@ -56,7 +56,7 @@ namespace PowerFeather
         enum class BatteryType
         {
             Generic_3V7, // Generic Li-ion/LiPo, 3.7 V nominal and 4.2 V max
-            ICR18650, // Samsung ICR18650
+            ICR18650_26H, // Samsung ICR18650-26H
             UR18650ZY // Panasonic UR18650ZY
         };
 
@@ -143,9 +143,9 @@ namespace PowerFeather
          * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh), from 50 mAh to 6000 mAh.
          * A value of zero indicates that no battery is connected, and therefore some of the other \c Mainboard functions
          * will return \c Result::InvalidState. If using multiple batteries connected in parallel, specify
-         * only the capacity for one cell. Ignored when \p type is \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY.
+         * only the capacity for one cell. Ignored when \p type is \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY.
          * @param[in] type Type of Li-ion/LiPo battery; ignored when \p capacity is zero, except when value is
-         * \c BatteryType::ICR18650 or \c BatteryType::UR18650ZY
+         * \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY
          *
          * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.
          */
@@ -197,7 +197,7 @@ namespace PowerFeather
          * @brief Measure the supply voltage.
          *
          * Measures the \a VUSB or \a VDC voltage. \a VUSB is the power input from the USB-C connector,
-         * while \a VDC is the power input from the header pin.
+         * while \a VDC is the power input from the header pin. Resolution is 4 mV
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
@@ -214,7 +214,7 @@ namespace PowerFeather
          * @brief Measure the supply current.
          *
          * Measures the current drawn from \a VUSB or \a VDC. \a VUSB is the power input from the USB-C connector,
-         * while \a VDC is the power input from the header pin.
+         * while \a VDC is the power input from the header pin. Resolution is 2 mA.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
@@ -320,7 +320,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * @param[in] enable If \c true, battery charging is enabled; if \c false, battery charging is disabled.
@@ -340,7 +340,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * @param[in] current The maximum charging current in milliamps (mA), up to 2000 mA.
@@ -359,7 +359,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * @param[in] enable If \c true, battery temperature measurement is enabled; if \c false, battery
@@ -380,7 +380,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * @param[in] enable If \c true, the battery fuel gauge is enabled; if \c false, the battery fuel gauge is disabled.
@@ -393,9 +393,11 @@ namespace PowerFeather
         /**
          * @brief Measure battery voltage.
          *
+         * Resolution is 2 mV.
+         *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * This function can block for 100 ms.
@@ -411,10 +413,11 @@ namespace PowerFeather
          * @brief Measure battery current.
          *
          * Measures the current to or from the battery during charging and discharging, respectively.
+         * Resolution is 4 mA.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * This function can block for 100 ms.
@@ -435,7 +438,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
@@ -455,7 +458,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
@@ -475,7 +478,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
@@ -496,7 +499,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
@@ -517,7 +520,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * Battery temperature measurement must be enabled prior calling this function, else \c Result::InvalidState
@@ -539,7 +542,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
@@ -559,7 +562,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
@@ -579,7 +582,7 @@ namespace PowerFeather
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650 / \c BatteryType::UR18650ZY
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.

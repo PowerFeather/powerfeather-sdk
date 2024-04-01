@@ -103,7 +103,7 @@ namespace PowerFeather
         {
             // Reinitialize even if fuel gauge has been previously initialized, and was just
             // put into sleep mode using enableBatteryFuelGauge(false).
-            LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650 ? LC709204F::ChangeOfParameter::ICR18650_26H :
+            LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650_26H ? LC709204F::ChangeOfParameter::ICR18650_26H :
                                                  _batteryType == BatteryType::UR18650ZY ? LC709204F::ChangeOfParameter::UR18650ZY :
                                                  LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
             RET_IF_FALSE(getFuelGauge().setAPA(_batteryCapacity, param), Result::Failure);
@@ -152,9 +152,9 @@ namespace PowerFeather
 
         TRY_LOCK(_mutex);
 
-        if (type == BatteryType::ICR18650 || type == BatteryType::UR18650ZY)
+        if (type == BatteryType::ICR18650_26H || type == BatteryType::UR18650ZY)
         {
-            // Ignore set capacity and set 2600 mAh for both ICR18650 and UR18650ZY.
+            // Ignore set capacity and set 2600 mAh for both ICR18650_26H and UR18650ZY.
             capacity = 2600;
         }
         else
