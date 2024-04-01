@@ -151,6 +151,14 @@ namespace PowerFeather
             Timer52Min = 0x03
         };
 
+        enum class IbatPkLimit : uint8_t
+        {
+            Limit1_5A = 0x00,
+            Limit3A = 0x01,
+            Limit6A = 0x02,
+            Limit12A = 0x03
+        };
+
         BQ2562x(MasterI2C &i2c) : _i2c(i2c) {}
 
         bool getWD(bool &enabled);
@@ -180,6 +188,7 @@ namespace PowerFeather
         bool setIINDPM(uint16_t current);
         bool setITERM(uint16_t current);
         bool setTopOff(TopOffTimer timer);
+        bool setIbatPk(IbatPkLimit limit);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
                       ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
 
@@ -201,6 +210,8 @@ namespace PowerFeather
         const Register Charger_Control_2_BATFET_CTRL =        { 0x18, 1, 0, 1 };
         const Register Charger_Control_2_BATFET_DLY =         { 0x18, 1, 2, 2 };
         const Register Charger_Control_2_WVBUS =              { 0x18, 1, 3, 3 };
+
+        const Register Charger_Control_3_IBAT_PK =            { 0x19, 1, 6, 7 };
 
         const Register NTC_Control_0_ =                       { 0x1a, 1, 0, 7 };
         const Register NTC_Control_0_TS_IGNORE =              { 0x1a, 1, 7, 7 };

@@ -353,6 +353,12 @@ namespace PowerFeather
         return _writeReg(Charger_Control_TOPOFF_TMR, value);
     }
 
+    bool BQ2562x::setIbatPk(IbatPkLimit limit)
+    {
+        uint8_t value = static_cast<uint8_t>(limit);
+        return _writeReg(Charger_Control_3_IBAT_PK, value);
+    }
+
     bool BQ2562x::setupADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)
     {
         uint8_t value = enable << ADC_Control_ADC_EN.start;
