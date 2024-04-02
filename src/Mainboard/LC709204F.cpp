@@ -178,44 +178,47 @@ namespace PowerFeather
 
     bool LC709204F::setAPA(uint16_t capacity, ChangeOfParameter changeOfParam)
     {
-        if (changeOfParam == ChangeOfParameter::ICR18650_26H)
+        if (capacity >= MinBatteryCapacity && capacity <= MaxBatteryCapacity)
         {
-            return _writeReg(Registers::APA, 0x0606);
-        }
-        else if (changeOfParam == ChangeOfParameter::UR18650ZY)
-        {
-            return _writeReg(Registers::APA, 0x1010);
-        }
-        else
-        {
-            auto prev = _apaTable[0];
-            for (int i = 0; i < sizeof(_apaTable) / sizeof(prev); i++)
+            if (changeOfParam == ChangeOfParameter::ICR18650_26H)
             {
-                auto cur = _apaTable[i];
-                uint16_t cap = std::get<0>(cur);
-                uint16_t apa = 0;
+                return _writeReg(Registers::APA, 0x0606);
+            }
+            else if (changeOfParam == ChangeOfParameter::UR18650ZY)
+            {
+                return _writeReg(Registers::APA, 0x1010);
+            }
+            else
+            {
+                auto prev = _apaTable[0];
+                for (int i = 0; i < sizeof(_apaTable) / sizeof(prev); i++)
+                {
+                    auto cur = _apaTable[i];
+                    uint16_t cap = std::get<0>(cur);
+                    uint16_t apa = 0;
 
-                if (capacity == cap)
-                {
-                    apa = (std::get<1>(cur) << 8) | std::get<1>(cur);
-                }
-                else
-                {
-                    auto prev = _apaTable[i - 1];
-                    uint16_t prev_cap = std::get<0>(prev);
-                    if (capacity < cap && (prev != cur && cap > prev_cap))
+                    if (capacity == cap)
                     {
-                        float res = round(std::get<1>(prev) + (std::get<1>(cur) - std::get<1>(prev)) * ((static_cast<float>(capacity) - prev_cap) / (cap - prev_cap)));
-                        apa = (static_cast<uint8_t>(res) << 8) | static_cast<uint8_t>(res);
+                        apa = (std::get<1>(cur) << 8) | std::get<1>(cur);
                     }
-                }
+                    else
+                    {
+                        auto prev = _apaTable[i - 1];
+                        uint16_t prev_cap = std::get<0>(prev);
+                        if (capacity < cap && (prev != cur && cap > prev_cap))
+                        {
+                            float res = round(std::get<1>(prev) + (std::get<1>(cur) - std::get<1>(prev)) * ((static_cast<float>(capacity) - prev_cap) / (cap - prev_cap)));
+                            apa = (static_cast<uint8_t>(res) << 8) | static_cast<uint8_t>(res);
+                        }
+                    }
 
-                if (apa)
-                {
-                    return _writeReg(Registers::APA, apa);
-                }
+                    if (apa)
+                    {
+                        return _writeReg(Registers::APA, apa);
+                    }
 
-                prev = cur;
+                    prev = cur;
+                }
             }
         }
         return false;
@@ -244,7 +247,12 @@ namespace PowerFeather
 
     bool LC709204F::setLowRSOCAlarm(uint8_t percent)
     {
-        return _writeReg(Registers::Alarm_Low_RSOC, static_cast<uint16_t>(percent));
+        if (percent <= 100)
+        {
+            return _writeReg(Registers::Alarm_Low_RSOC, static_cast<uint16_t>(percent));
+        }
+        return 0;
+    }
 
     bool LC709204F::setTerminationFactor(float factor)
     {
