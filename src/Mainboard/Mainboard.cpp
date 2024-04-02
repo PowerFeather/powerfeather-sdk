@@ -108,6 +108,13 @@ namespace PowerFeather
                                                  LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
             RET_IF_FALSE(getFuelGauge().setAPA(_batteryCapacity, param), Result::Failure);
             RET_IF_FALSE(getFuelGauge().setChangeOfParameter(param), Result::Failure);
+
+            const float minFactor = LC709204F::MinTerminationFactor;
+            const float maxFactor = LC709204F::MaxTerminationFactor;
+            float terminationFactor = _terminationCurrent/static_cast<float>(_batteryCapacity);
+            terminationFactor = std::min(std::max(terminationFactor, minFactor), maxFactor);
+            RET_IF_FALSE(getFuelGauge().setTerminationFactor(terminationFactor), Result::Failure);
+
             RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
             RET_IF_FALSE(getFuelGauge().enableOperation(true), Result::Failure);
             ESP_LOGD(TAG, "Fuel gauge initialized.");
@@ -195,13 +202,12 @@ namespace PowerFeather
                 RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
                 if (_batteryCapacity)
                 {
-                    // Set termination current to C / 10, or the max supported by IC. The minimum termination
-                    // current is statically checked against the minimum supported capacity.
-                    static constexpr uint16_t div = 10;
-                    static_assert((_minBatteryCapacity / div) >= BQ2562x::MinITERMCurrent);
-                    uint16_t maxTermCurrent = BQ2562x::MaxITERMCurrent;
-                    uint16_t termCurrent = std::min(static_cast<uint16_t>(_batteryCapacity / div), maxTermCurrent);
-                    RET_IF_FALSE(getCharger().setITERM(termCurrent), Result::Failure);
+                    // Set termination current to C / 10, or within limits of the IC.
+                    uint16_t minCurrent = BQ2562x::MinITERMCurrent;
+                    uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
+                    _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
+                    _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
+                    RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
                 }
                 // Disable the charger watchdog to keep the charger in host mode and to
                 // keep some registers from resetting to their POR values.

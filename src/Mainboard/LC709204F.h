@@ -48,6 +48,8 @@ namespace PowerFeather
         static constexpr uint16_t MaxVoltageAlarm = 5000;
         static constexpr uint16_t MaxBatteryCapacity = 6000;
         static constexpr uint16_t MinBatteryCapacity = 50;
+        static constexpr float MaxTerminationFactor = 0.3f;
+        static constexpr float MinTerminationFactor = 0.02f;
 
         enum class Registers
         {
@@ -63,6 +65,7 @@ namespace PowerFeather
             Status_Bit = 0x16,
             Cycle_Count = 0x17,
             BatteryStatus = 0x19,
+            Termination_Current_Rate = 0x1c,
             Alarm_High_Cell_Voltage = 0x1f,
             State_Of_Health = 0x32
         };
@@ -92,6 +95,7 @@ namespace PowerFeather
         bool setLowVoltageAlarm(uint16_t voltage);
         bool setHighVoltageAlarm(uint16_t voltage);
         bool setLowRSOCAlarm(uint8_t percent);
+        bool setTerminationFactor(float factor);
         bool clearLowVoltageAlarm();
         bool clearHighVoltageAlarm();
         bool clearLowRSOCAlarm();

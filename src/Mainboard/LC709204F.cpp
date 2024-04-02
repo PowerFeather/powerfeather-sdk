@@ -245,6 +245,14 @@ namespace PowerFeather
     bool LC709204F::setLowRSOCAlarm(uint8_t percent)
     {
         return _writeReg(Registers::Alarm_Low_RSOC, static_cast<uint16_t>(percent));
+
+    bool LC709204F::setTerminationFactor(float factor)
+    {
+        if (factor >= LC709204F::MinTerminationFactor && factor <= LC709204F::MaxTerminationFactor)
+        {
+            return _writeReg(Registers::Termination_Current_Rate, static_cast<uint16_t>(factor * 100));
+        }
+        return false;
     }
 
     bool LC709204F::clearLowVoltageAlarm()
