@@ -99,6 +99,7 @@ namespace PowerFeather
         bool op = false;
         RET_IF_FALSE(getFuelGauge().getOperation(op), Result::Failure); // check first mode of operation
 
+
         if (!op) // if op is false, fuel gauge in sleep mode
         {
             // Reinitialize even if fuel gauge has been previously initialized, and was just
@@ -176,6 +177,12 @@ namespace PowerFeather
         _batteryCapacity = capacity;
         _batteryType = type;
         ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
+        // Set termination current to C / 10, or within limits of the IC.
+        uint16_t minCurrent = BQ2562x::MinITERMCurrent;
+        uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
+        _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
+        _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
+        ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
         // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
@@ -202,11 +209,6 @@ namespace PowerFeather
                 RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
                 if (_batteryCapacity)
                 {
-                    // Set termination current to C / 10, or within limits of the IC.
-                    uint16_t minCurrent = BQ2562x::MinITERMCurrent;
-                    uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
-                    _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
-                    _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
                     RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
                 }
                 // Disable the charger watchdog to keep the charger in host mode and to
