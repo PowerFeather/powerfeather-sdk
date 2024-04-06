@@ -117,7 +117,7 @@ namespace PowerFeather
             RET_IF_FALSE(getFuelGauge().setTerminationFactor(terminationFactor), Result::Failure);
 
             RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
-            RET_IF_FALSE(getFuelGauge().enableOperation(true), Result::Failure);
+            RET_IF_FALSE(getFuelGauge().setOperationMode(true), Result::Failure);
             ESP_LOGD(TAG, "Fuel gauge initialized.");
         }
         else
