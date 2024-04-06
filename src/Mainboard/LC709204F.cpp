@@ -109,12 +109,12 @@ namespace PowerFeather
         return false;
     }
 
-    bool LC709204F::_clearAlarm(uint8_t bit)
+    bool LC709204F::_clearAlarm(BatteryStatus alarm)
     {
         uint16_t value = 0;
         if (_readReg(Registers::BatteryStatus, value))
         {
-            value &= ~(0b1 << bit);
+            value &= ~(0b1 << static_cast<uint8_t>(alarm));
             return _writeReg(Registers::BatteryStatus, value);
         }
         return false;
@@ -265,16 +265,16 @@ namespace PowerFeather
 
     bool LC709204F::clearLowVoltageAlarm()
     {
-        return _clearAlarm(static_cast<uint8_t>(BatteryStatus::LowCellVoltage));
+        return _clearAlarm(BatteryStatus::LowCellVoltage);
     }
 
     bool LC709204F::clearHighVoltageAlarm()
     {
-        return _clearAlarm(static_cast<uint8_t>(BatteryStatus::HighCellVoltage));
+        return _clearAlarm(BatteryStatus::HighCellVoltage);
     }
 
     bool LC709204F::clearLowRSOCAlarm()
     {
-        return _clearAlarm(static_cast<uint8_t>(BatteryStatus::LowRSOC));
+        return _clearAlarm(BatteryStatus::LowRSOC);
     }
 }

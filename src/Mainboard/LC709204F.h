@@ -137,6 +137,6 @@ namespace PowerFeather
         uint8_t _computeCRC8(uint8_t *data, int len);
 
         bool _setVoltageAlarm(Registers reg, uint16_t voltage);
-        bool _clearAlarm(uint8_t bit);
+        bool _clearAlarm(BatteryStatus alarm);
     };
 }
