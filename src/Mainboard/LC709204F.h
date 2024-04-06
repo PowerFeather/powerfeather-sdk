@@ -88,6 +88,7 @@ namespace PowerFeather
         bool getTimeToFull(uint16_t &minutes);
         bool getCycles(uint16_t &cycles);
         bool getSOH(uint8_t &percent);
+        bool getInitialized(bool& state);
         bool setOperationMode(bool enable);
         bool setAPA(uint16_t capacity, ChangeOfParameter changeOfParam);
         bool setChangeOfParameter(ChangeOfParameter changeOfParam);
@@ -96,6 +97,7 @@ namespace PowerFeather
         bool setHighVoltageAlarm(uint16_t voltage);
         bool setLowRSOCAlarm(uint8_t percent);
         bool setTerminationFactor(float factor);
+        bool setInitialized();
         bool clearLowVoltageAlarm();
         bool clearHighVoltageAlarm();
         bool clearLowRSOCAlarm();
@@ -105,7 +107,8 @@ namespace PowerFeather
         {
             LowRSOC=9,
             LowCellVoltage=11,
-            HighCellVoltage=15
+            HighCellVoltage=15,
+            Initialized=7
         };
 
         enum class OperationMode : uint16_t

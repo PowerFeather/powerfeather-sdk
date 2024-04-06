@@ -94,16 +94,20 @@ namespace PowerFeather
         return true;
     }
 
+    bool Mainboard::_isFuelGaugeEnabled()
+    {
+        bool enabled = false;
+        getFuelGauge().getOperationMode(enabled); // failure here means false is returned
+        return enabled;
+    }
+
     Result Mainboard::_initFuelGauge()
     {
-        bool op = false;
-        RET_IF_FALSE(getFuelGauge().getOperation(op), Result::Failure); // check first mode of operation
+        bool inited = false;
+        RET_IF_FALSE(getFuelGauge().getInitialized(inited), Result::Failure); // check if already initialized
 
-
-        if (!op) // if op is false, fuel gauge in sleep mode
+        if (!inited)
         {
-            // Reinitialize even if fuel gauge has been previously initialized, and was just
-            // put into sleep mode using enableBatteryFuelGauge(false).
             LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650_26H ? LC709204F::ChangeOfParameter::ICR18650_26H :
                                                  _batteryType == BatteryType::UR18650ZY ? LC709204F::ChangeOfParameter::UR18650ZY :
                                                  LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
@@ -118,6 +122,7 @@ namespace PowerFeather
 
             RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
             RET_IF_FALSE(getFuelGauge().setOperationMode(true), Result::Failure);
+            RET_IF_FALSE(getFuelGauge().setInitialized(), Result::Failure);
             ESP_LOGD(TAG, "Fuel gauge initialized.");
         }
         else
@@ -225,11 +230,9 @@ namespace PowerFeather
             // startup no battery is connected, therefore failures are not checked here. Fuel guage
             // initialization attempts will be made later, during calls to member functions that
             // talk to the fuel gauge.
-            _fgEnabled = false;
             if (_batteryCapacity)
             {
                 _initFuelGauge();
-                _fgEnabled = true;
             }
         }
 
@@ -405,20 +408,15 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
-
         if (enable)
         {
-            // Do also reinitialization here, since it is possible that the system initialized
+            // Do also initialization here, since it is possible that the system initialized
             // with battery present, then battery is disconected, then battery is reconnected,
             // the finally this function is called.
             RET_IF_ERR(_initFuelGauge());
         }
-        else
-        {
-            RET_IF_FALSE(getFuelGauge().enableOperation(false), Result::Failure);
-        }
-        _fgEnabled = enable;
-        ESP_LOGD(TAG, "Fuel gauge set to: %d.", _fgEnabled);
+        RET_IF_FALSE(getFuelGauge().setOperationMode(enable), Result::Failure);
+        ESP_LOGD(TAG, "Fuel gauge set to: %d.", enable);
         return Result::Ok;
     }
 
@@ -429,7 +427,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         // If fuel gauge is available, use the reading from it.
-        if (!(_fgEnabled && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(voltage)))
+        if (!(_isFuelGaugeEnabled() && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(voltage)))
         {
             RET_IF_ERR(_udpateChargerADC());
             RET_IF_FALSE(getCharger().getVBAT(voltage), Result::Failure);
@@ -454,7 +452,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getRSOC(percent), Result::Failure);
         ESP_LOGD(TAG, "Estimated battery charge: %d %%.", percent);
@@ -466,7 +464,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getSOH(percent), Result::Failure);
         ESP_LOGD(TAG, "Estimated battery health: %d %%.", percent);
@@ -478,7 +476,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getCycles(cycles), Result::Failure);
         ESP_LOGD(TAG, "Estimated battery cycles: %d.", cycles);
@@ -491,7 +489,7 @@ namespace PowerFeather
 
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
 
         // Check first the current direction, whether to or from the battery.
@@ -543,7 +541,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE((voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm) || voltage == 0, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setLowVoltageAlarm(voltage), Result::Failure);
@@ -560,7 +558,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE((voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm) || voltage == 0, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setHighVoltageAlarm(voltage), Result::Failure);
@@ -577,7 +575,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _fgEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(percent <= 100, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setLowRSOCAlarm(percent), Result::Failure);
