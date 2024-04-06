@@ -170,6 +170,17 @@ namespace PowerFeather
         return false;
     }
 
+    bool LC709204F::getInitialized(bool& state)
+    {
+        uint16_t value = 0;
+        if (_readReg(Registers::BatteryStatus, value))
+        {
+            state = !(value & (0b1 << static_cast<uint8_t>(BatteryStatus::Initialized)));
+            return true;
+        }
+        return false;
+    }
+
     bool LC709204F::setOperationMode(bool enable)
     {
         uint16_t value = static_cast<uint16_t>(enable ? OperationMode::OperationalMode : OperationMode::SleepMode);
@@ -259,6 +270,17 @@ namespace PowerFeather
         if (factor >= LC709204F::MinTerminationFactor && factor <= LC709204F::MaxTerminationFactor)
         {
             return _writeReg(Registers::Termination_Current_Rate, static_cast<uint16_t>(factor * 100));
+        }
+        return false;
+    }
+
+    bool LC709204F::setInitialized()
+    {
+        uint16_t value = 0;
+        if (_readReg(Registers::BatteryStatus, value))
+        {
+            value &= ~(0b1 << static_cast<uint8_t>(BatteryStatus::Initialized));
+            return _writeReg(Registers::BatteryStatus, value);
         }
         return false;
     }
