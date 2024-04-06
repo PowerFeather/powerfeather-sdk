@@ -626,9 +626,7 @@ namespace PowerFeather
 
         BQ2562x _charger{_i2c};
         LC709204F _fuelGauge{_i2c};
-
         bool _sqtEnabled{false};
-        bool _fgEnabled{false};
         bool _initDone{false};
         uint32_t _chargerADCTime{0};
         uint16_t _batteryCapacity{0};
@@ -639,8 +637,9 @@ namespace PowerFeather
         bool _isFirst();
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
-        Result _initFuelGauge();
+        bool _isFuelGaugeEnabled();
         bool _setRTCPin(gpio_num_t pin, bool value);
+        Result _initFuelGauge();
         Result _udpateChargerADC();
     };
 
