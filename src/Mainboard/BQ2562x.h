@@ -159,6 +159,30 @@ namespace PowerFeather
             Limit12A = 0x03
         };
 
+        enum class TH456Setting : uint8_t
+        {
+            TH4_35_TH5_40_TH6_50 = 0x04,
+        };
+
+        enum class TempPoint : uint8_t
+        {
+            Cold,
+            Cool,
+            Precool,
+            Normal,
+            Prewarm,
+            Warm,
+            Hot
+        };
+
+        enum class TempIset : uint8_t
+        {
+            Suspend = 0x00,
+            Ichg20 = 0x01,
+            Ichg40 = 0x02,
+            NoChange = 0x03
+        };
+
         BQ2562x(MasterI2C &i2c) : _i2c(i2c) {}
 
         bool getWD(bool &enabled);
@@ -189,6 +213,8 @@ namespace PowerFeather
         bool setITERM(uint16_t current);
         bool setTopOff(TopOffTimer timer);
         bool setIbatPk(IbatPkLimit limit);
+        bool setTH456(TH456Setting setting);
+        bool setTempIset(TempPoint point, TempIset iset);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
                       ADCAverage average = ADCAverage::Single, ADCAverageInit averageInit = ADCAverageInit::Existing);
 
@@ -213,8 +239,15 @@ namespace PowerFeather
 
         const Register Charger_Control_3_IBAT_PK =            { 0x19, 1, 6, 7 };
 
-        const Register NTC_Control_0_ =                       { 0x1a, 1, 0, 7 };
+        const Register NTC_Control_0 =                        { 0x1a, 1, 0, 7 };
         const Register NTC_Control_0_TS_IGNORE =              { 0x1a, 1, 7, 7 };
+        const Register NTC_Control_0_TS_ISET_WARM =           { 0x1a, 1, 2, 3 };
+        const Register NTC_Control_0_TS_ISET_COOL =           { 0x1a, 1, 0, 1 };
+
+        const Register NTC_Control_1_TS_TH4_TH5_TH6 =         { 0x1b, 1, 2, 4 };
+
+        const Register NTC_Control_2_TS_ISET_PREWARM =        { 0x1c, 1, 2, 3 };
+        const Register NTC_Control_2_TS_ISET_PRECOOL =        { 0x1c, 1, 0, 1 };
 
         const Register Charger_Status_0 =                     { 0x1d, 1, 0, 7 };
         const Register Charger_Status_0_ADC_DONE =            { 0x1d, 1, 6, 6 };
