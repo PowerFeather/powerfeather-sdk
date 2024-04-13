@@ -159,6 +159,11 @@ namespace PowerFeather
             Limit12A = 0x03
         };
 
+        enum class TH123Setting : uint8_t
+        {
+            TH1_0_TH2_5_TH3_15 = 0x00,
+        };
+
         enum class TH456Setting : uint8_t
         {
             TH4_35_TH5_40_TH6_50 = 0x04,
@@ -213,6 +218,7 @@ namespace PowerFeather
         bool setITERM(uint16_t current);
         bool setTopOff(TopOffTimer timer);
         bool setIbatPk(IbatPkLimit limit);
+        bool setTH123(TH123Setting setting);
         bool setTH456(TH456Setting setting);
         bool setTempIset(TempPoint point, TempIset iset);
         bool setupADC(bool enable, ADCRate rate = ADCRate::Continuous, ADCSampling sampling = ADCSampling::Bits_9,
@@ -244,6 +250,7 @@ namespace PowerFeather
         const Register NTC_Control_0_TS_ISET_WARM =           { 0x1a, 1, 2, 3 };
         const Register NTC_Control_0_TS_ISET_COOL =           { 0x1a, 1, 0, 1 };
 
+        const Register NTC_Control_1_TS_TH1_TH2_TH3 =         { 0x1b, 1, 5, 7 };
         const Register NTC_Control_1_TS_TH4_TH5_TH6 =         { 0x1b, 1, 2, 4 };
 
         const Register NTC_Control_2_TS_ISET_PREWARM =        { 0x1c, 1, 2, 3 };

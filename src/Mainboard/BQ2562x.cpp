@@ -359,6 +359,11 @@ namespace PowerFeather
         return _writeReg(Charger_Control_3_IBAT_PK, value);
     }
 
+    bool BQ2562x::setTH123(TH123Setting setting)
+    {
+        return _writeReg(NTC_Control_1_TS_TH1_TH2_TH3, static_cast<uint8_t>(setting));
+    }
+
     bool BQ2562x::setTH456(TH456Setting setting)
     {
         return _writeReg(NTC_Control_1_TS_TH4_TH5_TH6, static_cast<uint8_t>(setting));
