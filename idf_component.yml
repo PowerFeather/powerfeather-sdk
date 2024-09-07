@@ -1,4 +1,4 @@
-version: "1.0.6"
+version: "1.0.7"
 description: "Software development kit for PowerFeather boards"
 url: "https://github.com/PowerFeather/powerfeather-sdk"
 documentation: "https://docs.powerfeather.dev/category/sdk"
