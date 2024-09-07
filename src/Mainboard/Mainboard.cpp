@@ -205,6 +205,7 @@ namespace PowerFeather
             if (wdOn) // watchdog enabled means that the initiatialization was not done previously
             {
                 RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
+                RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().enableTS(false), Result::Failure);
                 RET_IF_FALSE(getCharger().setChargeCurrent(_defaultMaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);

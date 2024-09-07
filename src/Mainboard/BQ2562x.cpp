@@ -331,7 +331,7 @@ namespace PowerFeather
     {
         if (current >= BQ2562x::MinIINDPMCurrent && current <= BQ2562x::MaxIINDPMCurrent)
         {
-            uint8_t value = round(_map(current, 1/20.0f));
+            uint16_t value = round(_map(current, 1/20.0f));
             return _writeReg(Input_Current_Limit_IINDPM, value);
         }
         return false;
