@@ -51,7 +51,7 @@ namespace PowerFeather
         conf.scl_pullup_en = GPIO_PULLUP_DISABLE;
         conf.master.clk_speed = _freq;
         i2c_param_config(_port, &conf);
-        ESP_LOGD(TAG, "Start with port: %d, sda: %d, scl: %d, freq: %d.", _port, _sdaPin, _sclPin, _freq);
+        ESP_LOGD(TAG, "Start with port: %d, sda: %d, scl: %d, freq: %d.", _port, _sdaPin, _sclPin, static_cast<int>(_freq));
         return i2c_driver_install(_port, conf.mode, 0, 0, 0) == ESP_OK;
     }
 

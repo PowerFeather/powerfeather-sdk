@@ -43,7 +43,7 @@ namespace PowerFeather
     {
     public:
         MasterI2C(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq) :
-                  _port(port), _sdaPin(sdaPin), _sclPin(sclPin), _freq(freq) {};
+                  _port(static_cast<i2c_port_t>(port)), _sdaPin(sdaPin), _sclPin(sclPin), _freq(freq) {};
 
         virtual bool start();
         virtual bool end();

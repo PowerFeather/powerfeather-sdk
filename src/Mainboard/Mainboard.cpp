@@ -205,12 +205,18 @@ namespace PowerFeather
             if (wdOn) // watchdog enabled means that the initiatialization was not done previously
             {
                 RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
+                RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().enableTS(false), Result::Failure);
                 RET_IF_FALSE(getCharger().setChargeCurrent(_defaultMaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
                 RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
                 RET_IF_FALSE(getCharger().setTopOff(BQ2562x::TopOffTimer::Timer17Min), Result::Failure);
                 RET_IF_FALSE(getCharger().setIbatPk(BQ2562x::IbatPkLimit::Limit3A), Result::Failure);
+                RET_IF_FALSE(getCharger().setTH456(BQ2562x::TH456Setting::TH4_35_TH5_40_TH6_50), Result::Failure);
+                RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Precool, BQ2562x::TempIset::Ichg40), Result::Failure);
+                RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Prewarm, BQ2562x::TempIset::Ichg40), Result::Failure);
+                RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Cool, BQ2562x::TempIset::Ichg20), Result::Failure);
+                RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Warm, BQ2562x::TempIset::Ichg20), Result::Failure);
                 RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
                 if (_batteryCapacity)
                 {

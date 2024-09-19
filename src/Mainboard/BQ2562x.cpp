@@ -331,7 +331,7 @@ namespace PowerFeather
     {
         if (current >= BQ2562x::MinIINDPMCurrent && current <= BQ2562x::MaxIINDPMCurrent)
         {
-            uint8_t value = round(_map(current, 1/20.0f));
+            uint16_t value = round(_map(current, 1/20.0f));
             return _writeReg(Input_Current_Limit_IINDPM, value);
         }
         return false;
@@ -357,6 +357,37 @@ namespace PowerFeather
     {
         uint8_t value = static_cast<uint8_t>(limit);
         return _writeReg(Charger_Control_3_IBAT_PK, value);
+    }
+
+    bool BQ2562x::setTH456(TH456Setting setting)
+    {
+        return _writeReg(NTC_Control_1_TS_TH4_TH5_TH6, static_cast<uint8_t>(setting));
+    }
+
+    bool BQ2562x::setTempIset(TempPoint point, TempIset iset)
+    {
+        Register reg;
+
+        switch (point)
+        {
+        case TempPoint::Prewarm:
+            reg = NTC_Control_2_TS_ISET_PREWARM;
+            break;
+        case TempPoint::Precool:
+            reg = NTC_Control_2_TS_ISET_PRECOOL;
+            break;
+        case TempPoint::Warm:
+            reg = NTC_Control_0_TS_ISET_WARM;
+            break;
+        case TempPoint::Cool:
+            reg = NTC_Control_0_TS_ISET_COOL;
+            break;
+        default:
+            return false;
+            break;
+        }
+
+        return _writeReg(reg, static_cast<uint8_t>(iset));
     }
 
     bool BQ2562x::setupADC(bool enable, ADCRate rate, ADCSampling sampling, ADCAverage average, ADCAverageInit averageInit)
