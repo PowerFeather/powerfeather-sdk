@@ -34,7 +34,7 @@
 
 #include <math.h>
 
-#include <esp_log.h>
+#include <Utils/Logging.h>
 
 #include "LC709204F.h"
 
@@ -51,7 +51,7 @@ namespace PowerFeather
 
         if (!_i2c.read(_i2cAddress, reply[1], &(reply[3]), 3))
         {
-            ESP_LOGD(TAG, "Read register %02x failed.", reply[1]);
+            Log.Debug(TAG, "Read register %02x failed.", reply[1]);
             return false;
         }
 
@@ -59,7 +59,7 @@ namespace PowerFeather
 
         if (crc != reply[5]) // crc failed
         {
-            ESP_LOGD(TAG, "CRC %02x different from expected %02x.", reply[5], crc);
+            Log.Debug(TAG, "CRC %02x different from expected %02x.", reply[5], crc);
             return false;
         }
 
@@ -67,7 +67,7 @@ namespace PowerFeather
         data <<= 8;
         data |= reply[3];
 
-        ESP_LOGD(TAG, "Read register %02x succeeded, crc: %02x  value: %04x", reply[1], crc, data);
+        Log.Debug(TAG, "Read register %02x succeeded, crc: %02x  value: %04x", reply[1], crc, data);
         return true;
     }
 
@@ -79,7 +79,7 @@ namespace PowerFeather
         send[2] = data & 0xFF;
         send[3] = data >> 8;
         send[4] = _computeCRC8(send, 4);
-        ESP_LOGD(TAG, "Write register %02x, crc: %02x  value: %04x", send[1], send[4], data);
+        Log.Debug(TAG, "Write register %02x, crc: %02x  value: %04x", send[1], send[4], data);
         return _i2c.write(_i2cAddress, send[1], &(send[2]), 3);
     }
 

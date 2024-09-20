@@ -34,7 +34,7 @@
 
 #include <math.h>
 
-#include <esp_log.h>
+#include <Utils/Logging.h>
 
 #include "BQ2562x.h"
 
@@ -56,11 +56,11 @@ namespace PowerFeather
             data <<= left;
             data >>= left + reg.start;
             value = data;
-            ESP_LOGD(TAG, "Read bit%d to bit%d on %d-byte register %02x, value = %04x.", reg.start, reg.end, reg.size, reg.address, value);
+            Log.Debug(TAG, "Read bit%d to bit%d on %d-byte register %02x, value = %04x.", reg.start, reg.end, reg.size, reg.address, value);
             return true;
         }
 
-        ESP_LOGD(TAG, "Read bit%d to bit%d on %d-byte register %02x failed.", reg.start, reg.end, reg.size, reg.address);
+        Log.Debug(TAG, "Read bit%d to bit%d on %d-byte register %02x failed.", reg.start, reg.end, reg.size, reg.address);
         return false;
     }
 
@@ -83,11 +83,11 @@ namespace PowerFeather
             bool res = _i2c.write(_i2cAddress, reg.address, reinterpret_cast<uint8_t *>(&data), reg.size);
             if (res)
             {
-                ESP_LOGD(TAG, "Write bit%d to bit%d on %d-byte register %02x, value = %04x.", reg.start, reg.end, reg.size, reg.address, data);
+                Log.Debug(TAG, "Write bit%d to bit%d on %d-byte register %02x, value = %04x.", reg.start, reg.end, reg.size, reg.address, data);
             }
             else
             {
-                ESP_LOGD(TAG, "Write bit%d to bit%d on %d-byte register %02x failed.", reg.start, reg.end, reg.size, reg.address);
+                Log.Debug(TAG, "Write bit%d to bit%d on %d-byte register %02x failed.", reg.start, reg.end, reg.size, reg.address);
             }
             return res;
         }

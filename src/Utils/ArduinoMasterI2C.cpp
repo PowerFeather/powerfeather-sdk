@@ -43,7 +43,7 @@ namespace PowerFeather
     bool ArduinoMasterI2C::start()
     {
         _wire = (_port == 0) ? &Wire : &Wire1;
-        ESP_LOGD(TAG, "Start Wire%d with sda: %d, scl: %d and freq: %d.", _port, _sdaPin, _sclPin, _freq);
+        Log.Debug(TAG, "Start Wire%d with sda: %d, scl: %d and freq: %d.", _port, _sdaPin, _sclPin, _freq);
         return _wire->begin(_sdaPin, _sclPin, _freq);
     }
 
@@ -52,14 +52,14 @@ namespace PowerFeather
         _wire->beginTransmission(address);
         if (_wire->write(reg))
         {
-            ESP_LOGV(TAG, "Write address: %02x", address);
+            Log.Verbose(TAG, "Write address: %02x", address);
             if (_wire->write(buf, len) != len)
             {
-                ESP_LOGD(TAG, "Write buf %p of len %d failed.", buf, len);
+                Log.Debug(TAG, "Write buf %p of len %d failed.", buf, len);
                 return false;
             }
-            ESP_LOGV(TAG, "Write buf %p of len %d succeeded.", buf, len);
-            ESP_LOG_BUFFER_HEX_LEVEL(TAG, buf, len, ESP_LOG_VERBOSE);
+            Log.Verbose(TAG, "Write buf %p of len %d succeeded.", buf, len);
+            Log.Buffer(TAG, buf, len, Logging::Level::Verbose);
         }
         return (_wire->endTransmission(true) == 0);
     }
@@ -70,7 +70,7 @@ namespace PowerFeather
 
         if (recv != len)
         {
-            ESP_LOGD(TAG, "Read address %02x with len %d failed", address, len);
+            Log.Debug(TAG, "Read address %02x with len %d failed", address, len);
             return false;
         }
 
@@ -79,7 +79,7 @@ namespace PowerFeather
             buf[i] = _wire->read();
         }
 
-        ESP_LOGV(TAG, "Read buf %p of len %d succeeded.", buf, len);
+        Log.Verbose(TAG, "Read buf %p of len %d succeeded.", buf, len);
         ESP_LOG_BUFFER_HEX_LEVEL(TAG, buf, len, ESP_LOG_VERBOSE);
         return true;
     }
@@ -101,7 +101,7 @@ namespace PowerFeather
     bool ArduinoMasterI2C::end()
     {
         _wire->end();
-        ESP_LOGD(TAG, "End");
+        Log.Debug(TAG, "End");
         return true;
     }
 }

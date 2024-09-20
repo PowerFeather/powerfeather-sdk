@@ -32,8 +32,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <esp_log.h>
-
+#include "Logging.h"
 #include "Mutex.h"
 
 namespace PowerFeather
@@ -43,23 +42,23 @@ namespace PowerFeather
     void Mutex::init()
     {
         _sem = xSemaphoreCreateRecursiveMutex();
-        ESP_LOGD(TAG, "Mutex %p created.", this);
+        Log.Debug(TAG, "Mutex %p created.", this);
     }
 
     bool Mutex::lock()
     {
         if (xSemaphoreTakeRecursive(_sem, pdMS_TO_TICKS(_timeout)) == pdTRUE)
         {
-            ESP_LOGD(TAG, "Mutex %p take succeeded.", this);
+            Log.Debug(TAG, "Mutex %p take succeeded.", this);
             return true;
         }
-        ESP_LOGD(TAG, "Failed to take mutex %p.", this);
+        Log.Debug(TAG, "Failed to take mutex %p.", this);
         return false;
     }
 
     void Mutex::unlock()
     {
         xSemaphoreGiveRecursive(_sem);
-        ESP_LOGD(TAG, "Mutex %p released.", this);
+        Log.Debug(TAG, "Mutex %p released.", this);
     }
 }

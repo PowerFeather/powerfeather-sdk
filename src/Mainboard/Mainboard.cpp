@@ -38,7 +38,7 @@
 #include <math.h>
 
 #include <soc/reset_reasons.h>
-#include <esp_log.h>
+#include <Utils/Logging.h>
 
 #include "Mainboard.h"
 
@@ -50,7 +50,7 @@ namespace PowerFeather
 
     /*extern*/ Mainboard &Board = Mainboard::get();
 
-    #define LOG_FAIL(r)                 ESP_LOGD(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
+    #define LOG_FAIL(r)                 Log.Debug(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
     #define RET_IF_ERR(f)               { Result r = (f); if (r != Result::Ok) { LOG_FAIL(1); return r; } }
     #define RET_IF_NOK(f)               { esp_err_t r = (f); if (r != ESP_OK) { LOG_FAIL(r); return false; } }
     #define RET_IF_FALSE(f, r)          { if ((f) == false) { LOG_FAIL(false); return (r); } }
@@ -63,7 +63,7 @@ namespace PowerFeather
     {
         // If the RTC is domain is shutdown, consider next boot as first boot.
         bool isFirst = (first != firstMagic);
-        ESP_LOGD(TAG, "Check if first boot: %d.", isFirst);
+        Log.Debug(TAG, "Check if first boot: %d.", isFirst);
         return isFirst;
     }
 
@@ -78,7 +78,7 @@ namespace PowerFeather
         io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
         io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
         RET_IF_NOK(gpio_config(&io_conf));
-        ESP_LOGD(TAG, "Initialized digital pin %d with mode %d.", pin, mode);
+        Log.Debug(TAG, "Initialized digital pin %d with mode %d.", pin, mode);
         return true;
     }
 
@@ -90,7 +90,7 @@ namespace PowerFeather
         RET_IF_NOK(rtc_gpio_set_direction_in_sleep(pin, mode));
         RET_IF_NOK(rtc_gpio_pullup_dis(pin));
         RET_IF_NOK(rtc_gpio_pulldown_dis(pin));
-        ESP_LOGD(TAG, "Initialized RTC pin %d with mode %d.", pin, mode);
+        Log.Debug(TAG, "Initialized RTC pin %d with mode %d.", pin, mode);
         return true;
     }
 
@@ -123,11 +123,11 @@ namespace PowerFeather
             RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
             RET_IF_FALSE(getFuelGauge().setOperationMode(true), Result::Failure);
             RET_IF_FALSE(getFuelGauge().setInitialized(), Result::Failure);
-            ESP_LOGD(TAG, "Fuel gauge initialized.");
+            Log.Debug(TAG, "Fuel gauge initialized.");
         }
         else
         {
-            ESP_LOGD(TAG, "Fuel gauge already initialized.");
+            Log.Debug(TAG, "Fuel gauge already initialized.");
         }
 
         return Result::Ok;
@@ -139,7 +139,7 @@ namespace PowerFeather
         rtc_gpio_hold_dis(pin);
         rtc_gpio_set_level(pin, value);
         rtc_gpio_hold_en(pin);
-        ESP_LOGD(TAG, "Set RTC pin %d to %d.", pin, value);
+        Log.Debug(TAG, "Set RTC pin %d to %d.", pin, value);
         return true;
     }
 
@@ -154,7 +154,7 @@ namespace PowerFeather
             vTaskDelay(pdMS_TO_TICKS(_chargerADCWaitTime));
             RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
             _chargerADCTime = now;
-            ESP_LOGD(TAG, "Updated charger ADC.");
+            Log.Debug(TAG, "Updated charger ADC.");
         }
         return Result::Ok;
     }
@@ -181,19 +181,19 @@ namespace PowerFeather
 
         _batteryCapacity = capacity;
         _batteryType = type;
-        ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
+        Log.Debug(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
         // Set termination current to C / 10, or within limits of the IC.
         uint16_t minCurrent = BQ2562x::MinITERMCurrent;
         uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
         _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
         _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
-        ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
+        Log.Info(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
         // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
         _sqtEnabled = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT);
         RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, _sqtEnabled), Result::Failure)
-        ESP_LOGD(TAG, "VSQT detected as %d during initialization", _sqtEnabled);
+        Log.Debug(TAG, "VSQT detected as %d during initialization", _sqtEnabled);
 
         if (_sqtEnabled)
         {
@@ -225,11 +225,11 @@ namespace PowerFeather
                 // Disable the charger watchdog to keep the charger in host mode and to
                 // keep some registers from resetting to their POR values.
                 RET_IF_FALSE(getCharger().setWD(BQ2562x::WatchdogTimer::Disabled), Result::Failure);
-                ESP_LOGD(TAG, "Charger IC initialized.");
+                Log.Debug(TAG, "Charger IC initialized.");
             }
             else
             {
-                ESP_LOGD(TAG, "Charger IC already initialized.");
+                Log.Debug(TAG, "Charger IC already initialized.");
             }
 
             // If battery capacity is not 0, initialize the fuel gauge. This can fail if during
@@ -246,19 +246,19 @@ namespace PowerFeather
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN0, RTC_GPIO_MODE_INPUT_OUTPUT_OD), Result::Failure);
         bool _enHigh = _isFirst() ? true : rtc_gpio_get_level(Pin::EN0);
         RET_IF_FALSE(_setRTCPin(Pin::EN0, _enHigh), Result::Failure)
-        ESP_LOGD(TAG, "EN detected as %d during initialization", _enHigh);
+        Log.Debug(TAG, "EN detected as %d during initialization", _enHigh);
 
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_3V3, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
         bool _3V3Enabled = _isFirst() ? true :  rtc_gpio_get_level(Pin::EN_3V3);
         RET_IF_FALSE(_setRTCPin(Pin::EN_3V3, _3V3Enabled), Result::Failure)
-        ESP_LOGD(TAG, "3V3 detected as %d during initialization.", _3V3Enabled);
+        Log.Debug(TAG, "3V3 detected as %d during initialization.", _3V3Enabled);
 
         RET_IF_FALSE(_initInternalDigitalPin(Pin::PG, GPIO_MODE_INPUT), Result::Failure);
 
         first = firstMagic;
         _initDone = true;
 
-        ESP_LOGD(TAG, "Initialization done.");
+        Log.Debug(TAG, "Initialization done.");
 
         return Result::Ok;
     }
@@ -268,7 +268,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_setRTCPin(Pin::EN0, value), Result::Failure);
-        ESP_LOGD(TAG, "EN set to: %d.", value);
+        Log.Debug(TAG, "EN set to: %d.", value);
         return Result::Ok;
     }
 
@@ -277,7 +277,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_setRTCPin(Pin::EN_3V3, enable), Result::Failure);
-        ESP_LOGD(TAG, "3V3 set to: %d.", enable);
+        Log.Debug(TAG, "3V3 set to: %d.", enable);
         return Result::Ok;
     }
 
@@ -288,7 +288,7 @@ namespace PowerFeather
         RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, enable), Result::Failure);
         RET_IF_FALSE(enable ? (_sqtEnabled || _i2c.start()) : !_sqtEnabled || _i2c.end(), Result::Failure);
         _sqtEnabled = enable;
-        ESP_LOGD(TAG, "VSQT set to: %d.", _sqtEnabled);
+        Log.Debug(TAG, "VSQT set to: %d.", _sqtEnabled);
         return Result::Ok;
     }
 
@@ -299,7 +299,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getVBUS(voltage), Result::Failure);
-        ESP_LOGD(TAG, "Measured supply voltage: %d mV.", voltage);
+        Log.Debug(TAG, "Measured supply voltage: %d mV.", voltage);
         return Result::Ok;
     }
 
@@ -310,7 +310,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBUS(current), Result::Failure);
-        ESP_LOGD(TAG, "Measured supply current: %d mA.", current);
+        Log.Debug(TAG, "Measured supply current: %d mA.", current);
         return Result::Ok;
     }
 
@@ -319,7 +319,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         good = (gpio_get_level(Pin::PG) == 0);
-        ESP_LOGD(TAG, "Check power supply good: %d.", good);
+        Log.Debug(TAG, "Check power supply good: %d.", good);
         return Result::Ok;
     }
 
@@ -330,7 +330,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(voltage >= _minSupplyMaintainVoltage && voltage <= BQ2562x::MaxVINDPMVoltage, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
-        ESP_LOGD(TAG, "Maintain supply voltage set to: %d mV.", voltage);
+        Log.Debug(TAG, "Maintain supply voltage set to: %d mV.", voltage);
         return Result::Ok;
     }
 
@@ -344,7 +344,7 @@ namespace PowerFeather
         // and return failure status.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::Normal), Result::Failure);
-        ESP_LOGD(TAG, "Failed to enter ship mode.");
+        Log.Debug(TAG, "Failed to enter ship mode.");
         return Result::Failure;
     }
 
@@ -357,7 +357,7 @@ namespace PowerFeather
         // If this executes, then charger did not enter shutdown mode. According to the datasheet,
         // charger automatically returns to normal mode, so just return failure.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
-        ESP_LOGD(TAG, "Failed to enter shutdown mode.");
+        Log.Debug(TAG, "Failed to enter shutdown mode.");
         return Result::Failure;
     }
 
@@ -369,7 +369,7 @@ namespace PowerFeather
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset), Result::Failure);
         // If this executes, then charger did not perform power cycle.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
-        ESP_LOGD(TAG, "Failed to do power cycle.");
+        Log.Debug(TAG, "Failed to do power cycle.");
         return Result::Failure;
     }
 
@@ -380,7 +380,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(getCharger().enableCharging(enable), Result::Failure);
-        ESP_LOGD(TAG, "Charging set to: %d.", enable);
+        Log.Debug(TAG, "Charging set to: %d.", enable);
         return Result::Ok;
     }
 
@@ -392,7 +392,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(current >= _minBatteryCapacity && current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setChargeCurrent(current), Result::Failure);
-        ESP_LOGD(TAG, "Max charging current set to: %d mA.", current);
+        Log.Debug(TAG, "Max charging current set to: %d mA.", current);
         return Result::Ok;
     }
 
@@ -404,7 +404,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
         RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, enable), Result::Failure);
-        ESP_LOGD(TAG, "Temperature sense set to: %d.", enable);
+        Log.Debug(TAG, "Temperature sense set to: %d.", enable);
         return Result::Ok;
     }
 
@@ -422,7 +422,7 @@ namespace PowerFeather
             RET_IF_ERR(_initFuelGauge());
         }
         RET_IF_FALSE(getFuelGauge().setOperationMode(enable), Result::Failure);
-        ESP_LOGD(TAG, "Fuel gauge set to: %d.", enable);
+        Log.Debug(TAG, "Fuel gauge set to: %d.", enable);
         return Result::Ok;
     }
 
@@ -449,7 +449,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
-        ESP_LOGD(TAG, "Measured battery current: %d mA.", current);
+        Log.Debug(TAG, "Measured battery current: %d mA.", current);
         return Result::Ok;
     }
 
@@ -461,7 +461,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getRSOC(percent), Result::Failure);
-        ESP_LOGD(TAG, "Estimated battery charge: %d %%.", percent);
+        Log.Debug(TAG, "Estimated battery charge: %d %%.", percent);
         return Result::Ok;
     }
 
@@ -473,7 +473,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getSOH(percent), Result::Failure);
-        ESP_LOGD(TAG, "Estimated battery health: %d %%.", percent);
+        Log.Debug(TAG, "Estimated battery health: %d %%.", percent);
         return Result::Ok;
     }
 
@@ -485,7 +485,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getCycles(cycles), Result::Failure);
-        ESP_LOGD(TAG, "Estimated battery cycles: %d.", cycles);
+        Log.Debug(TAG, "Estimated battery cycles: %d.", cycles);
         return Result::Ok;
     }
 
@@ -513,11 +513,11 @@ namespace PowerFeather
         if (mins != 0xFFFF) // check if already the required 10 % rise/drop in charge
         {
             minutes = mins * (discharging ? -1 : 1); // return negative amount of time for discharging
-            ESP_LOGD(TAG, "Estimated battery time left (%s): %d mins.", discharging ? "discharging" : "charging", abs(minutes));
+            Log.Debug(TAG, "Estimated battery time left (%s): %d mins.", discharging ? "discharging" : "charging", abs(minutes));
             return Result::Ok;
         }
 
-        ESP_LOGD(TAG, "No estimate for %s can be provided yet.", discharging ? "time-to-empty" : "time-to-full");
+        Log.Debug(TAG, "No estimate for %s can be provided yet.", discharging ? "time-to-empty" : "time-to-full");
         return Result::NotReady;
     }
 
@@ -538,7 +538,7 @@ namespace PowerFeather
         RET_IF_FALSE(getCharger().getTSBias(bias), Result::Failure);
         // Map bias to temperature given 103AT thermistor with fitted curve.
         celsius = (-1866.96172 * powf(bias, 4)) + (3169.31754 * powf(bias, 3)) - (1849.96775 * powf(bias, 2)) + (276.6656 * bias) + 81.98758;
-        ESP_LOGD(TAG, "Measured battery temperature: %f °C.", celsius);
+        Log.Debug(TAG, "Measured battery temperature: %f °C.", celsius);
         return Result::Ok;
     }
 
@@ -555,7 +555,7 @@ namespace PowerFeather
         {
             RET_IF_FALSE(getFuelGauge().clearLowVoltageAlarm(), Result::Failure);
         }
-        ESP_LOGD(TAG, "Low battery voltage alarm set to: %d mV.", voltage);
+        Log.Debug(TAG, "Low battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
     };
 
@@ -572,7 +572,7 @@ namespace PowerFeather
         {
             RET_IF_FALSE(getFuelGauge().clearHighVoltageAlarm(), Result::Failure);
         }
-        ESP_LOGD(TAG, "High battery voltage alarm set to: %d mV.", voltage);
+        Log.Debug(TAG, "High battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
     };
 
@@ -589,7 +589,7 @@ namespace PowerFeather
         {
             RET_IF_FALSE(getFuelGauge().clearLowRSOCAlarm(), Result::Failure);
         }
-        ESP_LOGD(TAG, "Low charge alarm set to: %d %%.", (int)percent);
+        Log.Debug(TAG, "Low charge alarm set to: %d %%.", (int)percent);
         return Result::Ok;
     };
 
