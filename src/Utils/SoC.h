@@ -4,33 +4,36 @@
 #include <driver/gpio.h>
 #endif
 
-class SoC
+namespace PowerFeather
 {
-public:
-#if ESP_PLATFORM
-    typedef gpio_num_t Pin;
-#else
-    typedef uint8_t Pin;
-#endif
-
-    enum class PinMode
+    class SoC
     {
-        Input,
-        Output,
-        InputOutput,
-        InputOutputOpenDrain
+    public:
+    #if ESP_PLATFORM
+        typedef gpio_num_t Pin;
+    #else
+        typedef uint8_t Pin;
+    #endif
+
+        enum class PinMode
+        {
+            Input,
+            Output,
+            InputOutput,
+            InputOutputOpenDrain
+        };
+
+        void init();
+        bool configureDigitalPin(Pin pin, PinMode mode);
+        bool configureRTCPin(Pin pin, PinMode mode);
+        bool setRTCPin(Pin pin, bool value);
+        bool setDigitalPin(Pin pin, bool value);
+        bool readDigitalPin(Pin pin);
+        bool readRTCPin(Pin pin);
+        bool isFirstBoot();
+
+        static SoC &get();
     };
 
-    void init();
-    bool configureDigitalPin(Pin pin, PinMode mode);
-    bool configureRTCPin(Pin pin, PinMode mode);
-    bool setRTCPin(Pin pin, bool value);
-    bool setDigitalPin(Pin pin, bool value);
-    bool readDigitalPin(Pin pin);
-    bool readRTCPin(Pin pin);
-    bool isFirstBoot();
-
-    static SoC &get();
-};
-
-extern SoC &Chip;
+    extern SoC &Chip;
+}
