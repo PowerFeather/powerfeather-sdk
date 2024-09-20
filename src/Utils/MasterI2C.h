@@ -34,7 +34,7 @@
 
 #pragma once
 
-#include <cstring>
+#include <string.h>
 #include <driver/i2c.h>
 
 namespace PowerFeather

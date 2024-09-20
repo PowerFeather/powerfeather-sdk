@@ -32,9 +32,9 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <climits>
-#include <cstdint>
-#include <cstring>
+#include <limits.h>
+#include <stdint.h>
+#include <string.h>
 #include <math.h>
 
 #include <soc/reset_reasons.h>
