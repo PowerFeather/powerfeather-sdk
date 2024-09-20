@@ -1,11 +1,17 @@
 #pragma once
 
+#if ESP_PLATFORM
 #include <driver/gpio.h>
+#endif
 
 class SoC
 {
 public:
+#if ESP_PLATFORM
     typedef gpio_num_t Pin;
+#else
+    typedef uint8_t Pin;
+#endif
 
     enum class PinMode
     {
@@ -15,14 +21,14 @@ public:
         InputOutputOpenDrain
     };
 
-    void Init();
-    bool ConfigureDigitalPin(Pin pin, PinMode mode);
-    bool ConfigureRTCPin(Pin pin, PinMode mode);
-    bool SetRTCPin(Pin pin, bool value);
-    bool SetDigitalPin(Pin pin, bool value);
-    bool ReadDigitalPin(Pin pin);
-    bool ReadRTCPin(Pin pin);
-    bool IsFirstBoot();
+    void init();
+    bool configureDigitalPin(Pin pin, PinMode mode);
+    bool configureRTCPin(Pin pin, PinMode mode);
+    bool setRTCPin(Pin pin, bool value);
+    bool setDigitalPin(Pin pin, bool value);
+    bool readDigitalPin(Pin pin);
+    bool readRTCPin(Pin pin);
+    bool isFirstBoot();
 
     static SoC &get();
 };

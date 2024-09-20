@@ -35,15 +35,27 @@
 #pragma once
 
 #include <string.h>
+
+#include "SoC.h"
+
+#if ESP_PLATFORM
 #include <driver/i2c.h>
+#endif
 
 namespace PowerFeather
 {
     class MasterI2C
     {
     public:
-        MasterI2C(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq) :
-                  _port(static_cast<i2c_port_t>(port)), _sdaPin(sdaPin), _sclPin(sclPin), _freq(freq) {};
+
+#if ESP_PLATFORM
+        typedef i2c_port_t Port;
+#else
+        typedef uint8_t Port;
+#endif
+
+        MasterI2C(Port port, SoC::Pin sda, SoC::Pin scl, uint32_t freq) :
+                  _port(static_cast<Port>(port)), _sdaPin(sda), _sclPin(scl), _freq(freq) {};
 
         virtual bool start();
         virtual bool end();
@@ -51,9 +63,9 @@ namespace PowerFeather
         virtual bool read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len);
 
     protected:
-        i2c_port_t _port;
-        uint8_t _sdaPin;
-        uint8_t _sclPin;
+        Port _port;
+        SoC::Pin _sdaPin;
+        SoC::Pin _sclPin;
         uint32_t _freq;
     };
 }

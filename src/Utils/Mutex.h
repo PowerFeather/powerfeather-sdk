@@ -34,14 +34,23 @@
 
 #pragma once
 
+
+#if ESP_PLATFORM
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+#endif
 
 namespace PowerFeather
 {
     class Mutex
     {
     public:
+
+#if ESP_PLATFORM
+        typedef SemaphoreHandle_t Handle;
+#else
+        typedef uint8_t Handle;
+#endif
         class Lock
         {
         public:
@@ -62,7 +71,7 @@ namespace PowerFeather
         void unlock();
 
     private:
-        SemaphoreHandle_t _sem;
+        Handle _sem;
         uint32_t _timeout;
     };
 }

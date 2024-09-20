@@ -16,12 +16,12 @@ static const char *TAG = "PowerFeather::Chip";
 
 SoC &Chip;
 
-void SoC::Init()
+void SoC::init()
 {
     first = firstMagic;
 }
 
-bool SoC::IsFirstBoot()
+bool SoC::isFirstBoot()
 {
     // If the RTC is domain is shutdown, consider next boot as first boot.
     bool isFirst = (first != firstMagic);
@@ -29,7 +29,7 @@ bool SoC::IsFirstBoot()
     return isFirst;
 }   
 
-bool SoC::ConfigureDigitalPin(Pin pin, PinMode mode)
+bool SoC::configureDigitalPin(Pin pin, PinMode mode)
 {
     gpio_mode_t _mode = GPIO_MODE_INPUT;
     switch (mode)
@@ -64,7 +64,7 @@ bool SoC::ConfigureDigitalPin(Pin pin, PinMode mode)
     return true;
 }
 
-bool SoC::ConfigureRTCPin(Pin pin, PinMode mode)
+bool SoC::configureRTCPin(Pin pin, PinMode mode)
 {
     rtc_gpio_mode_t _mode = RTC_GPIO_MODE_INPUT_ONLY;
     switch (mode)
@@ -96,7 +96,7 @@ bool SoC::ConfigureRTCPin(Pin pin, PinMode mode)
     return true;
 }
 
-bool SoC::SetDigitalPin(Pin pin, bool value)
+bool SoC::setDigitalPin(Pin pin, bool value)
 {
     // Disable pin hold, set the level, and re-enable pin hold.
     rtc_gpio_hold_dis(pin);
@@ -106,7 +106,7 @@ bool SoC::SetDigitalPin(Pin pin, bool value)
     return true;
 }
 
-bool SoC::SetRTCPin(Pin pin, bool value)
+bool SoC::setRTCPin(Pin pin, bool value)
 {
     // Disable pin hold, set the level, and re-enable pin hold.
     rtc_gpio_hold_dis(pin);
@@ -116,12 +116,12 @@ bool SoC::SetRTCPin(Pin pin, bool value)
     return true;
 }
 
-bool SoC::ReadDigitalPin(Pin pin)
+bool SoC::readDigitalPin(Pin pin)
 {
     return gpio_get_level(pin);
 }
 
-bool SoC::ReadRTCPin(Pin pin)
+bool SoC::readRTCPin(Pin pin)
 {
     return rtc_gpio_get_level(pin);
 }

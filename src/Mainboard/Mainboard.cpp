@@ -141,9 +141,9 @@ namespace PowerFeather
         Log.Info(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
         // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
-        RET_IF_FALSE(Chip.ConfigureRTCPin(Pins::EN_SQT, SoC::PinMode::InputOutput), Result::Failure);
-        _sqtEnabled = Chip.IsFirstBoot() ? true : Chip.ReadRTCPin(Pins::EN_SQT);
-        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN_SQT, _sqtEnabled), Result::Failure)
+        RET_IF_FALSE(Chip.configureRTCPin(Pins::EN_SQT, SoC::PinMode::InputOutput), Result::Failure);
+        _sqtEnabled = Chip.isFirstBoot() ? true : Chip.readRTCPin(Pins::EN_SQT);
+        RET_IF_FALSE(Chip.setRTCPin(Pins::EN_SQT, _sqtEnabled), Result::Failure)
         Log.Debug(TAG, "VSQT detected as %d during initialization", _sqtEnabled);
 
         if (_sqtEnabled)
@@ -194,19 +194,19 @@ namespace PowerFeather
         }
 
         // Initialize the rest of the RTC/digital pins managed by the SDK.
-        RET_IF_FALSE(Chip.ConfigureRTCPin(Pins::EN0, SoC::PinMode::InputOutputOpenDrain), Result::Failure);
-        bool _enHigh = Chip.IsFirstBoot() ? true : Chip.ReadRTCPin(Pins::EN0);
-        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN0, _enHigh), Result::Failure)
+        RET_IF_FALSE(Chip.configureRTCPin(Pins::EN0, SoC::PinMode::InputOutputOpenDrain), Result::Failure);
+        bool _enHigh = Chip.isFirstBoot() ? true : Chip.readRTCPin(Pins::EN0);
+        RET_IF_FALSE(Chip.setRTCPin(Pins::EN0, _enHigh), Result::Failure)
         Log.Debug(TAG, "EN detected as %d during initialization", _enHigh);
 
-        RET_IF_FALSE(Chip.ConfigureRTCPin(Pins::EN_3V3, SoC::PinMode::InputOutput), Result::Failure);
-        bool _3V3Enabled = Chip.IsFirstBoot() ? true :  Chip.ReadRTCPin(Pins::EN_3V3);
-        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN_3V3, _3V3Enabled), Result::Failure)
+        RET_IF_FALSE(Chip.configureRTCPin(Pins::EN_3V3, SoC::PinMode::InputOutput), Result::Failure);
+        bool _3V3Enabled = Chip.isFirstBoot() ? true :  Chip.readRTCPin(Pins::EN_3V3);
+        RET_IF_FALSE(Chip.setRTCPin(Pins::EN_3V3, _3V3Enabled), Result::Failure)
         Log.Debug(TAG, "3V3 detected as %d during initialization.", _3V3Enabled);
 
-        RET_IF_FALSE(Chip.ConfigureDigitalPin(Pins::PG, SoC::PinMode::Input), Result::Failure);
+        RET_IF_FALSE(Chip.configureDigitalPin(Pins::PG, SoC::PinMode::Input), Result::Failure);
 
-        Chip.Init();
+        Chip.init();
 
         _initDone = true;
 
@@ -219,7 +219,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN0, value), Result::Failure);
+        RET_IF_FALSE(Chip.setRTCPin(Pins::EN0, value), Result::Failure);
         Log.Debug(TAG, "EN set to: %d.", value);
         return Result::Ok;
     }
@@ -228,7 +228,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN_3V3, enable), Result::Failure);
+        RET_IF_FALSE(Chip.setRTCPin(Pins::EN_3V3, enable), Result::Failure);
         Log.Debug(TAG, "3V3 set to: %d.", enable);
         return Result::Ok;
     }
@@ -237,7 +237,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN_SQT, enable), Result::Failure);
+        RET_IF_FALSE(Chip.setRTCPin(Pins::EN_SQT, enable), Result::Failure);
         RET_IF_FALSE(enable ? (_sqtEnabled || _i2c.start()) : !_sqtEnabled || _i2c.end(), Result::Failure);
         _sqtEnabled = enable;
         Log.Debug(TAG, "VSQT set to: %d.", _sqtEnabled);
@@ -270,7 +270,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        good = (Chip.ReadDigitalPin(Pins::PG) == 0);
+        good = (Chip.readDigitalPin(Pins::PG) == 0);
         Log.Debug(TAG, "Check power supply good: %d.", good);
         return Result::Ok;
     }
