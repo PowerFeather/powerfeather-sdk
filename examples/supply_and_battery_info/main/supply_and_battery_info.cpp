@@ -14,11 +14,11 @@ bool inited = false;
 
 extern "C" void app_main()
 {
-    gpio_reset_pin(Mainboard::Pin::BTN);
-    gpio_set_direction(Mainboard::Pin::BTN, GPIO_MODE_INPUT);
+    gpio_reset_pin(Mainboard::Pins::BTN);
+    gpio_set_direction(Mainboard::Pins::BTN, GPIO_MODE_INPUT);
 
-    gpio_reset_pin(Mainboard::Pin::LED);
-    gpio_set_direction(Mainboard::Pin::LED, GPIO_MODE_INPUT_OUTPUT);
+    gpio_reset_pin(Mainboard::Pins::LED);
+    gpio_set_direction(Mainboard::Pins::LED, GPIO_MODE_INPUT_OUTPUT);
 
     vTaskDelay(pdMS_TO_TICKS(1000));
 
@@ -39,11 +39,11 @@ extern "C" void app_main()
         if (inited)
         {
             // Toggle green user LED
-            gpio_set_level(Mainboard::Pin::LED, !gpio_get_level(Mainboard::Pin::LED));
+            gpio_set_level(Mainboard::Pins::LED, !gpio_get_level(Mainboard::Pins::LED));
 
             // Only enable charging when button is pressed.
             // When charging is enabled, red CHG LED turns on.
-            Board.enableBatteryCharging(gpio_get_level(Mainboard::Pin::BTN) == 0); // BTN is LOW when pressed
+            Board.enableBatteryCharging(gpio_get_level(Mainboard::Pins::BTN) == 0); // BTN is LOW when pressed
 
             // Get information about supply and battery
             uint16_t supplyVoltage = 0, batteryVoltage = 0;

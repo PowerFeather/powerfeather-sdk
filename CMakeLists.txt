@@ -5,6 +5,8 @@ idf_component_register(SRCS "${CMAKE_CURRENT_LIST_DIR}/src/Mainboard/Mainboard.c
                             "${CMAKE_CURRENT_LIST_DIR}/src/Utils/ArduinoMasterI2C.cpp"
                             "${CMAKE_CURRENT_LIST_DIR}/src/Utils/Mutex.cpp"
                             "${CMAKE_CURRENT_LIST_DIR}/src/Utils/Logging.cpp"
+                            "${CMAKE_CURRENT_LIST_DIR}/src/Utils/SoC.cpp"
                        INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src" 
                        PRIV_REQUIRES spi_flash nvs_flash
                        REQUIRES driver esp_timer)
+

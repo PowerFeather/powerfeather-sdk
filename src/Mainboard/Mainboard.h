@@ -33,7 +33,6 @@
  */
 #pragma once
 
-#include <driver/rtc_io.h>
 
 #ifdef ARDUINO
 #include "Utils/ArduinoMasterI2C.h"
@@ -43,6 +42,7 @@
 
 #include "Utils/Result.h"
 #include "Utils/Mutex.h"
+#include "Utils/SoC.h"
 
 #include "BQ2562x.h"
 #include "LC709204F.h"
@@ -60,7 +60,7 @@ namespace PowerFeather
             UR18650ZY // Panasonic UR18650ZY
         };
 
-        class Pin
+        class Pins
         {
         public:
             friend Mainboard;
@@ -73,53 +73,52 @@ namespace PowerFeather
              */
 
             // Free IO
-            static constexpr gpio_num_t A0 =        GPIO_NUM_10;
-            static constexpr gpio_num_t A1 =        GPIO_NUM_9;
-            static constexpr gpio_num_t A2 =        GPIO_NUM_8;
-            static constexpr gpio_num_t A3 =        GPIO_NUM_3;
-            static constexpr gpio_num_t A4 =        GPIO_NUM_2;
-            static constexpr gpio_num_t A5 =        GPIO_NUM_1;
+            static constexpr SoC::Pin A0 =        GPIO_NUM_10;
+            static constexpr SoC::Pin A1 =        GPIO_NUM_9;
+            static constexpr SoC::Pin A2 =        GPIO_NUM_8;
+            static constexpr SoC::Pin A3 =        GPIO_NUM_3;
+            static constexpr SoC::Pin A4 =        GPIO_NUM_2;
+            static constexpr SoC::Pin A5 =        GPIO_NUM_1;
 
-            static constexpr gpio_num_t D5 =        GPIO_NUM_15;
-            static constexpr gpio_num_t D6 =        GPIO_NUM_16;
-            static constexpr gpio_num_t D7 =        GPIO_NUM_37;
-            static constexpr gpio_num_t D8 =        GPIO_NUM_6;
-            static constexpr gpio_num_t D9 =        GPIO_NUM_17;
-            static constexpr gpio_num_t D10 =       GPIO_NUM_18;
-            static constexpr gpio_num_t D11 =       GPIO_NUM_45;
-            static constexpr gpio_num_t D12 =       GPIO_NUM_12;
-            static constexpr gpio_num_t D13 =       GPIO_NUM_11;
+            static constexpr SoC::Pin D5 =        GPIO_NUM_15;
+            static constexpr SoC::Pin D6 =        GPIO_NUM_16;
+            static constexpr SoC::Pin D7 =        GPIO_NUM_37;
+            static constexpr SoC::Pin D8 =        GPIO_NUM_6;
+            static constexpr SoC::Pin D9 =        GPIO_NUM_17;
+            static constexpr SoC::Pin D10 =       GPIO_NUM_18;
+            static constexpr SoC::Pin D11 =       GPIO_NUM_45;
+            static constexpr SoC::Pin D12 =       GPIO_NUM_12;
+            static constexpr SoC::Pin D13 =       GPIO_NUM_11;
 
-            static constexpr gpio_num_t TX =        GPIO_NUM_44;
-            static constexpr gpio_num_t RX =        GPIO_NUM_42;
-            static constexpr gpio_num_t MISO =      GPIO_NUM_41;
-            static constexpr gpio_num_t MOSI =      GPIO_NUM_40;
-            static constexpr gpio_num_t SCK =       GPIO_NUM_39;
-            static constexpr gpio_num_t TX0 =       GPIO_NUM_43;
-            static constexpr gpio_num_t SCL =       GPIO_NUM_36;
-            static constexpr gpio_num_t SDA =       GPIO_NUM_35;
+            static constexpr SoC::Pin TX =        GPIO_NUM_44;
+            static constexpr SoC::Pin RX =        GPIO_NUM_42;
+            static constexpr SoC::Pin MISO =      GPIO_NUM_41;
+            static constexpr SoC::Pin MOSI =      GPIO_NUM_40;
+            static constexpr SoC::Pin SCK =       GPIO_NUM_39;
+            static constexpr SoC::Pin TX0 =       GPIO_NUM_43;
+            static constexpr SoC::Pin SCL =       GPIO_NUM_36;
+            static constexpr SoC::Pin SDA =       GPIO_NUM_35;
 
             // User-Managed Fixed
-            static constexpr gpio_num_t ALARM =     GPIO_NUM_21; // Battery fuel gauge alarm
-            static constexpr gpio_num_t INT =       GPIO_NUM_5;  // Battery charge interrupt
+            static constexpr SoC::Pin ALARM =     GPIO_NUM_21; // Battery fuel gauge alarm
+            static constexpr SoC::Pin INT =       GPIO_NUM_5;  // Battery charge interrupt
 
-            static constexpr gpio_num_t LED =       GPIO_NUM_46; // User LED
-            static constexpr gpio_num_t BTN =       GPIO_NUM_0;  // User button
-            static constexpr gpio_num_t EN =        GPIO_NUM_7;  // FeatherWings enable/disable (read)
+            static constexpr SoC::Pin LED =       GPIO_NUM_46; // User LED
+            static constexpr SoC::Pin BTN =       GPIO_NUM_0;  // User button
+            static constexpr SoC::Pin EN =        GPIO_NUM_7;  // FeatherWings enable/disable (read)
 
-        private:
             // SDK-Managed Fixed
-            static constexpr gpio_num_t USBDP =     GPIO_NUM_20;  // USB D+
-            static constexpr gpio_num_t USBDM =     GPIO_NUM_19;  // USB D-
+            static constexpr SoC::Pin USBDP =     GPIO_NUM_20;  // USB D+
+            static constexpr SoC::Pin USBDM =     GPIO_NUM_19;  // USB D-
 
-            static constexpr gpio_num_t EN_3V3 =    GPIO_NUM_4;  // 3V3 enable/disable
-            static constexpr gpio_num_t EN_SQT =    GPIO_NUM_14; // VSQT enable/disable
-            static constexpr gpio_num_t EN0 =       GPIO_NUM_13; // FeatherWings enable/disable (write)
+            static constexpr SoC::Pin EN_3V3 =    GPIO_NUM_4;  // 3V3 enable/disable
+            static constexpr SoC::Pin EN_SQT =    GPIO_NUM_14; // VSQT enable/disable
+            static constexpr SoC::Pin EN0 =       GPIO_NUM_13; // FeatherWings enable/disable (write)
 
-            static constexpr gpio_num_t SCL1 =      GPIO_NUM_48; // STEMMA QT I2C SCL
-            static constexpr gpio_num_t SDA1 =      GPIO_NUM_47; // STEMMA QT I2C SDA
+            static constexpr SoC::Pin SCL1 =      GPIO_NUM_48; // STEMMA QT I2C SCL
+            static constexpr SoC::Pin SDA1 =      GPIO_NUM_47; // STEMMA QT I2C SDA
 
-            static constexpr gpio_num_t PG =        GPIO_NUM_38; // Battery charger power good indicator
+            static constexpr SoC::Pin PG =        GPIO_NUM_38; // Battery charger power good indicator
         };
 
         /**
@@ -619,9 +618,9 @@ namespace PowerFeather
         static constexpr uint16_t _batfetCtrlWaitTime = 30; // 30 ms actual
 
 #ifdef ARDUINO
-        ArduinoMasterI2C _i2c{_i2cPort, Pin::SDA1, Pin::SCL1, _i2cFreq};
+        ArduinoMasterI2C _i2c{_i2cPort, Pins::SDA1, Pins::SCL1, _i2cFreq};
 #else
-        MasterI2C _i2c{_i2cPort, Pin::SDA1, Pin::SCL1, _i2cFreq};
+        MasterI2C _i2c{_i2cPort, Pins::SDA1, Pins::SCL1, _i2cFreq};
 #endif
 
         BQ2562x _charger{_i2c};
@@ -635,10 +634,7 @@ namespace PowerFeather
         Mutex _mutex{100};
 
         bool _isFirst();
-        bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
-        bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
         bool _isFuelGaugeEnabled();
-        bool _setRTCPin(gpio_num_t pin, bool value);
         Result _initFuelGauge();
         Result _udpateChargerADC();
     };

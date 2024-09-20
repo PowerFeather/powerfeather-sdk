@@ -8,9 +8,9 @@ using namespace PowerFeather; // for PowerFeather::Board
 
 extern "C" void app_main()
 {
-    gpio_reset_pin(Mainboard::Pin::LED);
-    gpio_set_direction(Mainboard::Pin::LED, GPIO_MODE_INPUT_OUTPUT);
-    gpio_set_level(Mainboard::Pin::LED, 1);
+    gpio_reset_pin(Mainboard::Pins::LED);
+    gpio_set_direction(Mainboard::Pins::LED, GPIO_MODE_INPUT_OUTPUT);
+    gpio_set_level(Mainboard::Pins::LED, 1);
 
     vTaskDelay(pdMS_TO_TICKS(1000));
 

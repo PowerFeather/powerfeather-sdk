@@ -37,8 +37,8 @@
 #include <string.h>
 #include <math.h>
 
-#include <soc/reset_reasons.h>
 #include <Utils/Logging.h>
+#include <Utils/SoC.h>
 
 #include "Mainboard.h"
 
@@ -52,47 +52,8 @@ namespace PowerFeather
 
     #define LOG_FAIL(r)                 Log.Debug(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
     #define RET_IF_ERR(f)               { Result r = (f); if (r != Result::Ok) { LOG_FAIL(1); return r; } }
-    #define RET_IF_NOK(f)               { esp_err_t r = (f); if (r != ESP_OK) { LOG_FAIL(r); return false; } }
     #define RET_IF_FALSE(f, r)          { if ((f) == false) { LOG_FAIL(false); return (r); } }
     #define TRY_LOCK(m)                 Mutex::Lock m##Lock(m); RET_IF_FALSE(m##Lock.isLocked(), Result::LockFailed);
-
-    static RTC_NOINIT_ATTR uint32_t first;
-    static const uint32_t firstMagic = 0xdeadbeef;
-
-    bool Mainboard::_isFirst()
-    {
-        // If the RTC is domain is shutdown, consider next boot as first boot.
-        bool isFirst = (first != firstMagic);
-        Log.Debug(TAG, "Check if first boot: %d.", isFirst);
-        return isFirst;
-    }
-
-    bool Mainboard::_initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode)
-    {
-        // Configure the digital pin.
-        gpio_config_t io_conf = {};
-        memset(&io_conf, 0, sizeof(io_conf));
-        io_conf.intr_type = GPIO_INTR_DISABLE;
-        io_conf.mode = mode;
-        io_conf.pin_bit_mask = (static_cast<uint64_t>(0b1) << pin);
-        io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-        io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-        RET_IF_NOK(gpio_config(&io_conf));
-        Log.Debug(TAG, "Initialized digital pin %d with mode %d.", pin, mode);
-        return true;
-    }
-
-    bool Mainboard::_initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode)
-    {
-        // Configure the RTC pin.
-        RET_IF_NOK(rtc_gpio_init(pin));
-        RET_IF_NOK(rtc_gpio_set_direction(pin, mode));
-        RET_IF_NOK(rtc_gpio_set_direction_in_sleep(pin, mode));
-        RET_IF_NOK(rtc_gpio_pullup_dis(pin));
-        RET_IF_NOK(rtc_gpio_pulldown_dis(pin));
-        Log.Debug(TAG, "Initialized RTC pin %d with mode %d.", pin, mode);
-        return true;
-    }
 
     bool Mainboard::_isFuelGaugeEnabled()
     {
@@ -131,16 +92,6 @@ namespace PowerFeather
         }
 
         return Result::Ok;
-    }
-
-    bool Mainboard::_setRTCPin(gpio_num_t pin, bool value)
-    {
-        // Disable pin hold, set the level, and re-enable pin hold.
-        rtc_gpio_hold_dis(pin);
-        rtc_gpio_set_level(pin, value);
-        rtc_gpio_hold_en(pin);
-        Log.Debug(TAG, "Set RTC pin %d to %d.", pin, value);
-        return true;
     }
 
     Result Mainboard::_udpateChargerADC()
@@ -190,9 +141,9 @@ namespace PowerFeather
         Log.Info(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
         // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
-        RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
-        _sqtEnabled = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT);
-        RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, _sqtEnabled), Result::Failure)
+        RET_IF_FALSE(Chip.ConfigureRTCPin(Pins::EN_SQT, SoC::PinMode::InputOutput), Result::Failure);
+        _sqtEnabled = Chip.IsFirstBoot() ? true : Chip.ReadRTCPin(Pins::EN_SQT);
+        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN_SQT, _sqtEnabled), Result::Failure)
         Log.Debug(TAG, "VSQT detected as %d during initialization", _sqtEnabled);
 
         if (_sqtEnabled)
@@ -243,19 +194,20 @@ namespace PowerFeather
         }
 
         // Initialize the rest of the RTC/digital pins managed by the SDK.
-        RET_IF_FALSE(_initInternalRTCPin(Pin::EN0, RTC_GPIO_MODE_INPUT_OUTPUT_OD), Result::Failure);
-        bool _enHigh = _isFirst() ? true : rtc_gpio_get_level(Pin::EN0);
-        RET_IF_FALSE(_setRTCPin(Pin::EN0, _enHigh), Result::Failure)
+        RET_IF_FALSE(Chip.ConfigureRTCPin(Pins::EN0, SoC::PinMode::InputOutputOpenDrain), Result::Failure);
+        bool _enHigh = Chip.IsFirstBoot() ? true : Chip.ReadRTCPin(Pins::EN0);
+        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN0, _enHigh), Result::Failure)
         Log.Debug(TAG, "EN detected as %d during initialization", _enHigh);
 
-        RET_IF_FALSE(_initInternalRTCPin(Pin::EN_3V3, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
-        bool _3V3Enabled = _isFirst() ? true :  rtc_gpio_get_level(Pin::EN_3V3);
-        RET_IF_FALSE(_setRTCPin(Pin::EN_3V3, _3V3Enabled), Result::Failure)
+        RET_IF_FALSE(Chip.ConfigureRTCPin(Pins::EN_3V3, SoC::PinMode::InputOutput), Result::Failure);
+        bool _3V3Enabled = Chip.IsFirstBoot() ? true :  Chip.ReadRTCPin(Pins::EN_3V3);
+        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN_3V3, _3V3Enabled), Result::Failure)
         Log.Debug(TAG, "3V3 detected as %d during initialization.", _3V3Enabled);
 
-        RET_IF_FALSE(_initInternalDigitalPin(Pin::PG, GPIO_MODE_INPUT), Result::Failure);
+        RET_IF_FALSE(Chip.ConfigureDigitalPin(Pins::PG, SoC::PinMode::Input), Result::Failure);
 
-        first = firstMagic;
+        Chip.Init();
+
         _initDone = true;
 
         Log.Debug(TAG, "Initialization done.");
@@ -267,7 +219,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_setRTCPin(Pin::EN0, value), Result::Failure);
+        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN0, value), Result::Failure);
         Log.Debug(TAG, "EN set to: %d.", value);
         return Result::Ok;
     }
@@ -276,7 +228,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_setRTCPin(Pin::EN_3V3, enable), Result::Failure);
+        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN_3V3, enable), Result::Failure);
         Log.Debug(TAG, "3V3 set to: %d.", enable);
         return Result::Ok;
     }
@@ -285,7 +237,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, enable), Result::Failure);
+        RET_IF_FALSE(Chip.SetRTCPin(Pins::EN_SQT, enable), Result::Failure);
         RET_IF_FALSE(enable ? (_sqtEnabled || _i2c.start()) : !_sqtEnabled || _i2c.end(), Result::Failure);
         _sqtEnabled = enable;
         Log.Debug(TAG, "VSQT set to: %d.", _sqtEnabled);
@@ -318,7 +270,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        good = (gpio_get_level(Pin::PG) == 0);
+        good = (Chip.ReadDigitalPin(Pins::PG) == 0);
         Log.Debug(TAG, "Check power supply good: %d.", good);
         return Result::Ok;
     }
