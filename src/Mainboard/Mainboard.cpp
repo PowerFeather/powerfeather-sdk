@@ -102,7 +102,7 @@ namespace PowerFeather
         {
             bool done = false;
             RET_IF_FALSE(getCharger().setupADC(true, BQ2562x::ADCRate::Oneshot, BQ2562x::ADCSampling::Bits_10), Result::Failure);
-            vTaskDelay(pdMS_TO_TICKS(_chargerADCWaitTime));
+            Chip.delay(_chargerADCWaitTime);
             RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
             _chargerADCTime = now;
             Log.Debug(TAG, "Updated charger ADC.");
@@ -294,7 +294,7 @@ namespace PowerFeather
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShipMode), Result::Failure);
         // If this executes, then charger did not enter ship mode. Return to normal operation
         // and return failure status.
-        vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
+        Chip.delay(_batfetCtrlWaitTime);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::Normal), Result::Failure);
         Log.Debug(TAG, "Failed to enter ship mode.");
         return Result::Failure;
@@ -308,7 +308,7 @@ namespace PowerFeather
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShutdownMode), Result::Failure);
         // If this executes, then charger did not enter shutdown mode. According to the datasheet,
         // charger automatically returns to normal mode, so just return failure.
-        vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
+        Chip.delay(_batfetCtrlWaitTime);
         Log.Debug(TAG, "Failed to enter shutdown mode.");
         return Result::Failure;
     }
@@ -320,7 +320,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset), Result::Failure);
         // If this executes, then charger did not perform power cycle.
-        vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
+        Chip.delay(_batfetCtrlWaitTime);
         Log.Debug(TAG, "Failed to do power cycle.");
         return Result::Failure;
     }

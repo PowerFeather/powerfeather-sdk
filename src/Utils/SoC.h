@@ -33,6 +33,8 @@ namespace PowerFeather
         bool isFirstBoot();
 
         static SoC &get();
+
+        void delay(size_t ms);
     };
 
     extern SoC &Chip;

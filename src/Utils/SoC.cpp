@@ -1,5 +1,7 @@
 #include <string.h>
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <driver/rtc_io.h>
 
 #include "Logging.h"
@@ -125,6 +127,11 @@ namespace PowerFeather
     bool SoC::readRTCPin(Pin pin)
     {
         return rtc_gpio_get_level(pin);
+    }
+
+    void SoC::delay(size_t ms)
+    {
+        vTaskDelay(pdMS_TO_TICKS(ms));
     }
 
     /*static*/ SoC &SoC::get()
