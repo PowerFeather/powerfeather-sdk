@@ -46,7 +46,7 @@ namespace PowerFeather
     {
     public:
         ArduinoMasterI2C(uint8_t port, uint8_t sda, uint8_t scl, uint32_t freq) :
-                         MasterI2C(port, sda, scl, freq) {};
+                         MasterI2C(static_cast<Port>(port), static_cast<SoC::Pin>(sda), static_cast<SoC::Pin>(scl), freq) {};
 
         bool start() override;
         bool end() override;

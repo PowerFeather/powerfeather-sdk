@@ -36,6 +36,8 @@
 
 #ifdef ARDUINO
 
+#include "Logging.h"
+
 namespace PowerFeather
 {
     static const char *TAG = "PowerFeather::Utils::ArduinoMasterI2C";
