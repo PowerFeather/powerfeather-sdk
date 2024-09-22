@@ -37,6 +37,8 @@
 
 namespace PowerFeather
 {
+
+#if ESP_PLATFORM
     static const char *TAG = "PowerFeather::Utils::MasterI2C";
 
     bool MasterI2C::start()
@@ -77,4 +79,5 @@ namespace PowerFeather
         Log.Debug(TAG, "End");
         return i2c_driver_delete(_port) == ESP_OK;
     }
+#endif
 }

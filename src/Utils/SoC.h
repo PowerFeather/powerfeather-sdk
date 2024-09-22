@@ -4,6 +4,10 @@
 #include <driver/gpio.h>
 #endif
 
+#ifndef CHAR_BIT
+#define CHAR_BIT 32
+#endif
+
 namespace PowerFeather
 {
     class SoC

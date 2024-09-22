@@ -72,6 +72,7 @@ namespace PowerFeather
              *      - SDK-Managed Fixed
              */
 
+#if ESP_PLATFORM
             // Free IO
             static constexpr SoC::Pin A0 =        GPIO_NUM_10;
             static constexpr SoC::Pin A1 =        GPIO_NUM_9;
@@ -119,6 +120,20 @@ namespace PowerFeather
             static constexpr SoC::Pin SDA1 =      GPIO_NUM_47; // STEMMA QT I2C SDA
 
             static constexpr SoC::Pin PG =        GPIO_NUM_38; // Battery charger power good indicator
+#else
+            // SDK-Managed Fixed
+            static constexpr SoC::Pin USBDP =     0; // USB D+
+            static constexpr SoC::Pin USBDM =     0; // USB D-
+
+            static constexpr SoC::Pin EN_3V3 =    0; // 3V3 enable/disable
+            static constexpr SoC::Pin EN_SQT =    0; // VSQT enable/disable
+            static constexpr SoC::Pin EN0 =       0; // FeatherWings enable/disable (write)
+
+            static constexpr SoC::Pin SCL1 =      0; // STEMMA QT I2C SCL
+            static constexpr SoC::Pin SDA1 =      0; // STEMMA QT I2C SDA
+
+            static constexpr SoC::Pin PG =        0; // Battery charger power good indicator
+#endif
         };
 
         /**

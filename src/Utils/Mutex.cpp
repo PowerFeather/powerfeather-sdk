@@ -41,24 +41,30 @@ namespace PowerFeather
 
     void Mutex::init()
     {
+#if ESP_PLATFORM
         _sem = xSemaphoreCreateRecursiveMutex();
         Log.Debug(TAG, "Mutex %p created.", this);
+#endif
     }
 
     bool Mutex::lock()
     {
+#if ESP_PLATFORM
         if (xSemaphoreTakeRecursive(_sem, pdMS_TO_TICKS(_timeout)) == pdTRUE)
         {
             Log.Debug(TAG, "Mutex %p take succeeded.", this);
             return true;
         }
         Log.Debug(TAG, "Failed to take mutex %p.", this);
+#endif
         return false;
     }
 
     void Mutex::unlock()
     {
+#if ESP_PLATFORM
         xSemaphoreGiveRecursive(_sem);
         Log.Debug(TAG, "Mutex %p released.", this);
+#endif
     }
 }

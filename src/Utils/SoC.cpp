@@ -1,15 +1,23 @@
 #include <string.h>
 
+#if ESP_PLATFORM
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <driver/rtc_io.h>
+#endif
 
 #include "Logging.h"
 #include "SoC.h"
 
 namespace PowerFeather
 {
-    static RTC_NOINIT_ATTR uint32_t first;
+#if ESP_PLATFORM
+    #define RETAINED       RTC_NOINIT_ATTR
+#else
+    #define RETAINED       
+#endif
+
+    static RETAINED uint32_t first;
     static const uint32_t firstMagic = 0xdeadbeef;
 
     #define LOG_FAIL(r)                 Log.Debug(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
@@ -34,6 +42,7 @@ namespace PowerFeather
 
     bool SoC::configureDigitalPin(Pin pin, PinMode mode)
     {
+#if ESP_PLATFORM
         gpio_mode_t _mode = GPIO_MODE_INPUT;
         switch (mode)
         {
@@ -65,10 +74,13 @@ namespace PowerFeather
         RET_IF_NOK(gpio_config(&io_conf));
         Log.Debug(TAG, "Initialized digital pin %d with mode %d.", pin, mode);
         return true;
+#endif
+        return false;
     }
 
     bool SoC::configureRTCPin(Pin pin, PinMode mode)
     {
+#if ESP_PLATFORM
         rtc_gpio_mode_t _mode = RTC_GPIO_MODE_INPUT_ONLY;
         switch (mode)
         {
@@ -97,41 +109,57 @@ namespace PowerFeather
         RET_IF_NOK(rtc_gpio_pulldown_dis(pin));
         Log.Debug(TAG, "Initialized RTC pin %d with mode %d.", pin, _mode);
         return true;
+#endif
+        return false;
     }
 
     bool SoC::setDigitalPin(Pin pin, bool value)
     {
+#if ESP_PLATFORM
         // Disable pin hold, set the level, and re-enable pin hold.
         rtc_gpio_hold_dis(pin);
         rtc_gpio_set_level(pin, value);
         rtc_gpio_hold_en(pin);
         Log.Debug(TAG, "Set RTC pin %d to %d.", pin, value);
         return true;
+#endif
+        return false;
     }
 
     bool SoC::setRTCPin(Pin pin, bool value)
     {
+#if ESP_PLATFORM
         // Disable pin hold, set the level, and re-enable pin hold.
         rtc_gpio_hold_dis(pin);
         rtc_gpio_set_level(pin, value);
         rtc_gpio_hold_en(pin);
         Log.Debug(TAG, "Set RTC pin %d to %d.", pin, value);
         return true;
+#endif
+        return false;
     }
 
     bool SoC::readDigitalPin(Pin pin)
     {
+#if ESP_PLATFORM
         return gpio_get_level(pin);
+#endif
+        return false;
     }
 
     bool SoC::readRTCPin(Pin pin)
     {
+#if ESP_PLATFORM
         return rtc_gpio_get_level(pin);
+#endif
+        return false;
     }
 
     void SoC::delay(size_t ms)
     {
+#if ESP_PLATFORM
         vTaskDelay(pdMS_TO_TICKS(ms));
+#endif
     }
 
     /*static*/ SoC &SoC::get()

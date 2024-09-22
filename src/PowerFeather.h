@@ -35,9 +35,3 @@
 #pragma once
 
 #include "Mainboard/Mainboard.h"
-
-#ifdef ARDUINO
-#ifndef ARDUINO_ESP32S3_POWERFEATHER
-#error "Board not supported by PowerFeather SDK"
-#endif
-#endif

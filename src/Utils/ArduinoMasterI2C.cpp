@@ -44,13 +44,17 @@ namespace PowerFeather
 
     bool ArduinoMasterI2C::start()
     {
+#if ESP_PLATFORM
         _wire = (_port == 0) ? &Wire : &Wire1;
         Log.Debug(TAG, "Start Wire%d with sda: %d, scl: %d and freq: %d.", _port, _sdaPin, _sclPin, _freq);
         return _wire->begin(_sdaPin, _sclPin, _freq);
+#endif
+        return false;
     }
 
     bool ArduinoMasterI2C::write(uint8_t address, uint8_t reg, const uint8_t *buf, size_t len)
     {
+#if ESP_PLATFORM
         _wire->beginTransmission(address);
         if (_wire->write(reg))
         {
@@ -64,10 +68,13 @@ namespace PowerFeather
             Log.Buffer(TAG, buf, len, Logging::Level::Verbose);
         }
         return (_wire->endTransmission(true) == 0);
+#endif
+        return false;
     }
 
     bool ArduinoMasterI2C::_read(uint8_t address, uint8_t *buf, size_t len)
     {
+#if ESP_PLATFORM
         size_t recv = _wire->requestFrom(address, static_cast<uint8_t>(len));
 
         if (recv != len)
@@ -84,10 +91,13 @@ namespace PowerFeather
         Log.Verbose(TAG, "Read buf %p of len %d succeeded.", buf, len);
         ESP_LOG_BUFFER_HEX_LEVEL(TAG, buf, len, ESP_LOG_VERBOSE);
         return true;
+#endif
+        return false;
     }
 
     bool ArduinoMasterI2C::read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len)
     {
+#if ESP_PLATFORM
         _wire->beginTransmission(address);
         if (_wire->write(reg))
         {
@@ -98,13 +108,18 @@ namespace PowerFeather
         }
 
         return false;
+#endif
+        return false;
     }
 
     bool ArduinoMasterI2C::end()
     {
+#if ESP_PLATFORM
         _wire->end();
         Log.Debug(TAG, "End");
         return true;
+#endif
+        return false;
     }
 }
 

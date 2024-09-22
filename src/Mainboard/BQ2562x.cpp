@@ -45,9 +45,9 @@ namespace PowerFeather
     template <typename T>
     bool BQ2562x::_readReg(Register reg, T &value)
     {
-        assert(reg.size <= sizeof(value));
-        assert(reg.start <= reg.end);
-        assert(reg.end <= (reg.size * CHAR_BIT) - 1);
+        //assert(reg.size <= sizeof(value));
+        //assert(reg.start <= reg.end);
+        //assert(reg.end <= (reg.size * CHAR_BIT) - 1);
 
         uint16_t data = 0;
         if (_i2c.read(_i2cAddress, reg.address, reinterpret_cast<uint8_t *>(&data), reg.size))
@@ -69,9 +69,9 @@ namespace PowerFeather
     {
         uint8_t last = (reg.size * CHAR_BIT) - 1;
 
-        assert(reg.size <= sizeof(value));
-        assert(reg.start <= reg.end);
-        assert(reg.end <= last);
+        //assert(reg.size <= sizeof(value));
+        //assert(reg.start <= reg.end);
+        //assert(reg.end <= last);
 
         uint16_t data = 0;
 
