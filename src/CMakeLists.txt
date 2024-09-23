@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(powerfeather-sdk VERSION 1.0.7 LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 add_compile_options("-Os")
 add_library(powerfeather-sdk STATIC

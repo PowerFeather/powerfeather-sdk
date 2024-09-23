@@ -465,7 +465,7 @@ namespace PowerFeather
         if (mins != 0xFFFF) // check if already the required 10 % rise/drop in charge
         {
             minutes = mins * (discharging ? -1 : 1); // return negative amount of time for discharging
-            Log.Debug(TAG, "Estimated battery time left (%s): %d mins.", discharging ? "discharging" : "charging", abs(minutes));
+            Log.Debug(TAG, "Estimated battery time left (%s): %d mins.", discharging ? "discharging" : "charging", fabs(minutes));
             return Result::Ok;
         }
 
