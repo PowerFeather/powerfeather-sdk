@@ -603,6 +603,19 @@ namespace PowerFeather
         return Result::Ok;
     };
 
+    Result Mainboard::updateBatteryFuelGaugeTemp(float temperature)
+    {
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_ERR(_initFuelGauge());
+        RET_IF_FALSE(temperature >= LC709204F::MinTemperature && temperature <= LC709204F::MaxTemperature, Result::InvalidState);
+        RET_IF_FALSE(getFuelGauge().setCellTemperature(temperature), Result::Failure);
+        ESP_LOGD(TAG, "Fuel guage temperature updated to: %f °C.", temperature);
+        return Result::Ok;
+    }
+
     /*static*/ Mainboard &Mainboard::get()
     {
         static Mainboard board;

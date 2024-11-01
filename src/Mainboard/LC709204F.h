@@ -51,10 +51,14 @@ namespace PowerFeather
         static constexpr float MaxTerminationFactor = 0.3f;
         static constexpr float MinTerminationFactor = 0.02f;
 
+        static constexpr float MinTemperature = -30.0f;
+        static constexpr float MaxTemperature = 80.0f;
+
         enum class Registers
         {
             TimeToEmpty = 0x03,
             TimeToFull = 0x05,
+            TSENSE1 = 0x08,
             Cell_Voltage = 0x09,
             APA = 0x0b,
             RSOC = 0x0d,
@@ -92,6 +96,7 @@ namespace PowerFeather
         bool setOperationMode(bool enable);
         bool setAPA(uint16_t capacity, ChangeOfParameter changeOfParam);
         bool setChangeOfParameter(ChangeOfParameter changeOfParam);
+        bool setCellTemperature(float temperature);
         bool enableTSENSE(bool enableTsense1, bool enableTsense2);
         bool setLowVoltageAlarm(uint16_t voltage);
         bool setHighVoltageAlarm(uint16_t voltage);

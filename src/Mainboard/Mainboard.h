@@ -613,6 +613,26 @@ namespace PowerFeather
          */
         Result setBatteryLowChargeAlarm(uint8_t percent);
 
+        /**
+         * @brief Let fuel guage know of the battery temperature.
+         *
+         * In order to increase fuel gauge accuracy, you can update the fuel gauge with the battery
+         * temperature obtained from getBatteryTemperature(). If not set, the fuel gauge assumes battery temperature of 25 °C.
+         *
+         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
+         *
+         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * @param[in] temperature The temperature reading from getBatteryTemperature().
+         *
+         * @return Result Returns \c Result::Ok if the fuel gauge's battery temperature has been update successfully;
+         * returns a value other than \c Result::Ok if not.
+         */
+        Result updateBatteryFuelGaugeTemp(float temperature);
+
         BQ2562x &getCharger() { return _charger; }
         LC709204F &getFuelGauge() { return _fuelGauge; }
 

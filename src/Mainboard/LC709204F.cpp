@@ -240,6 +240,13 @@ namespace PowerFeather
         return _writeReg(Registers::Change_Of_The_Parameter, static_cast<uint16_t>(changeOfParam));
     }
 
+    bool LC709204F::setCellTemperature(float temperature)
+    {
+        uint16_t raw_min = 0x0980, raw_max = 0x0DCC;
+        uint16_t val = raw_min + ((temperature - MinTemperature) * ((raw_max - raw_min) / (MaxTemperature - MinTemperature)));
+        return _writeReg(Registers::TSENSE1, val);
+    }
+
     bool LC709204F::enableTSENSE(bool enableTsense1, bool enableTsense2)
     {
         uint16_t status = enableTsense1 << 0 | enableTsense2 << 1;
