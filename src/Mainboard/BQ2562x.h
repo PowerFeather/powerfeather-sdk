@@ -205,6 +205,7 @@ namespace PowerFeather
         bool enableInterrupt(Interrupt mask, bool enable);
         bool enableWVBUS(bool enable);
         bool enableADC(Adc adc, bool enable);
+        bool enableSTAT(bool enable);
         bool setChargeCurrent(uint16_t current);
         bool setBATFETControl(BATFETControl control);
         bool setBATFETDelay(BATFETDelay delay);
@@ -227,6 +228,8 @@ namespace PowerFeather
         const Register Termination_Control_0_ITERM =          { 0x12, 2, 2, 7 };
 
         const Register Charger_Control_TOPOFF_TMR =           { 0x14, 1, 3, 4 };
+
+        const Register Charge_Timer_Control_DIS_STAT =        { 0x15, 1, 7, 7 };
 
         const Register Charger_Control_0_EN_CHG =             { 0x16, 1, 5, 5 };
         const Register Charger_Control_0_WATCHDOG =           { 0x16, 1, 0, 1 };

@@ -292,6 +292,16 @@ namespace PowerFeather
         return Result::Ok;
     }
 
+    Result Mainboard::enableSTAT(bool enable)
+    {
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(getCharger().enableSTAT(enable), Result::Failure);
+        ESP_LOGD(TAG, "STAT LED %s", enable ? "enabled" : "disabled");
+        return Result::Ok;
+    }
+
     Result Mainboard::getSupplyVoltage(uint16_t &voltage)
     {
         TRY_LOCK(_mutex);

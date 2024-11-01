@@ -295,6 +295,12 @@ namespace PowerFeather
         return _writeReg(reg, !enable);
     }
 
+    bool BQ2562x::enableSTAT(bool enable)
+    {
+        Register reg = Charge_Timer_Control_DIS_STAT;
+        return _writeReg(reg, !enable);
+    }
+
     bool BQ2562x::setChargeCurrent(uint16_t current)
     {
         if (current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent)
