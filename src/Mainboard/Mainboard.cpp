@@ -207,7 +207,7 @@ namespace PowerFeather
                 RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
                 RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().enableTS(false), Result::Failure);
-                RET_IF_FALSE(getCharger().setChargeCurrent(_defaultMaxChargingCurrent), Result::Failure);
+                RET_IF_FALSE(getCharger().setChargeCurrentLimit(_defaultMaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
                 RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
                 RET_IF_FALSE(getCharger().setTopOff(BQ2562x::TopOffTimer::Timer17Min), Result::Failure);
@@ -401,7 +401,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(current >= _minBatteryCapacity && current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
-        RET_IF_FALSE(getCharger().setChargeCurrent(current), Result::Failure);
+        RET_IF_FALSE(getCharger().setChargeCurrentLimit(current), Result::Failure);
         ESP_LOGD(TAG, "Max charging current set to: %d mA.", current);
         return Result::Ok;
     }

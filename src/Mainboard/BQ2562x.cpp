@@ -228,6 +228,33 @@ namespace PowerFeather
         return false;
     }
 
+    bool BQ2562x::getChargingEnabled(bool& enabled)
+    {
+        return _readReg(Charger_Control_0_EN_CHG, enabled);
+    }
+
+    bool BQ2562x::getVINDPM(uint16_t& voltage)
+    {
+        uint16_t value = 0;
+        if (_writeReg(Input_Current_Limit_VINDPM, value))
+        {
+            voltage = round(_map(value, 40.0f));
+            return true;
+        }
+        return false;
+    }
+
+    bool BQ2562x::getChargeCurrentLimit(uint16_t& current)
+    {
+        uint16_t value = 0;
+        if (_writeReg(Charge_Current_Limit_ICHG, value))
+        {
+            current = round(_map(value, 40.0f));
+            return true;
+        }
+        return false;
+    }
+
     bool BQ2562x::getPartInformation(uint8_t &value)
     {
         return _readReg(Part_Information, value);
@@ -301,7 +328,7 @@ namespace PowerFeather
         return _writeReg(reg, !enable);
     }
 
-    bool BQ2562x::setChargeCurrent(uint16_t current)
+    bool BQ2562x::setChargeCurrentLimit(uint16_t current)
     {
         if (current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent)
         {

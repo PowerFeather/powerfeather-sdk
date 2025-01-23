@@ -195,6 +195,9 @@ namespace PowerFeather
         bool getTSBias(float &voltage);
         bool getVBUSStat(VBUSStat &stat);
         bool getChargeStat(ChargeStat &stat);
+        bool getChargingEnabled(bool& enabled);
+        bool getVINDPM(uint16_t& voltage);
+        bool getChargeCurrentLimit(uint16_t& current);
         bool getPartInformation(uint8_t &info);
 
         bool setWD(WatchdogTimer timer);
@@ -206,7 +209,7 @@ namespace PowerFeather
         bool enableWVBUS(bool enable);
         bool enableADC(Adc adc, bool enable);
         bool enableSTAT(bool enable);
-        bool setChargeCurrent(uint16_t current);
+        bool setChargeCurrentLimit(uint16_t current);
         bool setBATFETControl(BATFETControl control);
         bool setBATFETDelay(BATFETDelay delay);
         bool setVINDPM(uint16_t voltage);
