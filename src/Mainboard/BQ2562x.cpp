@@ -106,7 +106,7 @@ namespace PowerFeather
         uint16_t value = 0;
         if (_readReg(VBUS_ADC, value))
         {
-            voltage = round(Util::map(value, 3.97f));
+            voltage = round(Util::fromRaw(value, 3.97f));
             return true;
         }
         return false;
@@ -115,9 +115,12 @@ namespace PowerFeather
     bool BQ2562x::getIBUS(int16_t &current)
     {
         uint16_t value = 0;
+
         if (_readReg(IBUS_ADC, value))
         {
-            current = round(Util::map(value, 2.0f, 0x7830, 0x7fff));
+            current = (value >= 0x7830 && value <= 0x7fff) ?
+                       round(Util::fromRaw(value, 2.0f, 0x7fff + 1)) :
+                       round(Util::fromRaw(value, 2.0f));
             return true;
         }
         return false;
@@ -128,7 +131,7 @@ namespace PowerFeather
         uint16_t value = 0;
         if (_readReg(VBAT_ADC, value))
         {
-            voltage = round(Util::map(value, 1.99f));
+            voltage = round(Util::fromRaw(value, 1.99f));
             return true;
         }
         return false;
@@ -142,7 +145,9 @@ namespace PowerFeather
         {
             if (value != invalid)
             {
-                current = round(Util::map(value, 4.0f, 0x38ad, 0x3fff));
+                current = (value >= 0x38ad && value <= 0x3fff) ?
+                          round(Util::fromRaw(value, 4.0f, 0x3fff + 1)) :
+                          round(Util::fromRaw(value, 4.0f));
                 return true;
             }
         }
@@ -181,7 +186,7 @@ namespace PowerFeather
         uint16_t value = 0;
         if (_readReg(TS_ADC, value))
         {
-            bias = Util::map(value, 0.0961f) / 100.0f;
+            bias = Util::fromRaw(value, 0.0961f) / 100.0f;
             return true;
         }
         return false;
@@ -234,7 +239,7 @@ namespace PowerFeather
         uint16_t value = 0;
         if (_writeReg(Input_Current_Limit_VINDPM, value))
         {
-            voltage = round(Util::map(value, 40.0f));
+            voltage = round(Util::fromRaw(value, 40.0f));
             return true;
         }
         return false;
@@ -245,7 +250,7 @@ namespace PowerFeather
         uint16_t value = 0;
         if (_writeReg(Charge_Current_Limit_ICHG, value))
         {
-            current = round(Util::map(value, 40.0f));
+            current = round(Util::fromRaw(value, 40.0f));
             return true;
         }
         return false;
@@ -328,7 +333,7 @@ namespace PowerFeather
     {
         if (current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent)
         {
-            uint16_t value = round(Util::map(current, 1/40.0f));
+            uint16_t value = round(Util::toRaw(current, 40.0f));
             return _writeReg(Charge_Current_Limit_ICHG, value);
         }
         return false;
@@ -350,7 +355,7 @@ namespace PowerFeather
     {
         if (voltage >= BQ2562x::MinVINDPMVoltage && voltage <= BQ2562x::MaxVINDPMVoltage)
         {
-            uint16_t value = round(Util::map(voltage, 1/40.0f));
+            uint16_t value = Util::toRaw(voltage, 40.0f);
             return _writeReg(Input_Current_Limit_VINDPM, value);
         }
         return false;
@@ -360,7 +365,7 @@ namespace PowerFeather
     {
         if (current >= BQ2562x::MinIINDPMCurrent && current <= BQ2562x::MaxIINDPMCurrent)
         {
-            uint16_t value = round(Util::map(current, 1/20.0f));
+            uint16_t value = Util::toRaw(current, 20.0f);
             return _writeReg(Input_Current_Limit_IINDPM, value);
         }
         return false;
@@ -370,7 +375,7 @@ namespace PowerFeather
     {
         if (current >= BQ2562x::MinITERMCurrent && current <= BQ2562x::MaxITERMCurrent)
         {
-            uint16_t value = round(Util::map(current, 1/5.0f));
+            uint16_t value = Util::toRaw(current, 5.0f);
             return _writeReg(Termination_Control_0_ITERM, value);
         }
         return false;

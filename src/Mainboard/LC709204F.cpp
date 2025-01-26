@@ -160,7 +160,7 @@ namespace PowerFeather
         uint16_t value = 0;
         if (_readReg(Registers::TSENSE1, value))
         {
-            temperature = Util::map(value, 0.1, MinTemperatureRaw, MaxTemperatureRaw);
+            temperature = Util::fromRaw(value, 0.1, 0x0DCC) + 80.0f;
         }
         return false;
     }
@@ -253,7 +253,7 @@ namespace PowerFeather
 
     bool LC709204F::setCellTemperature(float temperature)
     {
-        uint16_t value = round(Util::map(temperature, 1/0.1f, MinTemperatureRaw, MaxTemperatureRaw));
+        uint16_t value = Util::toRaw(temperature - 80.0f, 0.1f, 0xDCC);
         return _writeReg(Registers::TSENSE1, value);
     }
 

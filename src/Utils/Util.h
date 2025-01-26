@@ -41,9 +41,14 @@ namespace PowerFeather
 {
     namespace Util
     {
-        float map(uint16_t raw, float step, uint16_t min = 0, uint16_t max = 0)
+        static float fromRaw(uint16_t raw, float step, uint16_t origin = 0)
         {
-            return ((min && max) && (raw >= min && raw <= max)) ? ((max - raw + 1) * (-1) * step) : (raw * step);
+            return (raw - origin) * step;
+        }
+
+        static uint16_t toRaw(float value, float step, uint16_t origin = 0)
+        {
+            return origin + (value * (1/step));
         }
     }
 }
