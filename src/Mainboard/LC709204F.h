@@ -54,6 +54,9 @@ namespace PowerFeather
         static constexpr float MinTemperature = -30.0f;
         static constexpr float MaxTemperature = 80.0f;
 
+        static constexpr uint16_t MinTemperatureRaw = 0x0980;
+        static constexpr uint16_t MaxTemperatureRaw = 0x0DCC;
+
         enum class Registers
         {
             TimeToEmpty = 0x03,
@@ -90,6 +93,7 @@ namespace PowerFeather
         bool getRSOC(uint8_t &percent);
         bool getTimeToEmpty(uint16_t &minutes);
         bool getTimeToFull(uint16_t &minutes);
+        bool getCellTemperature(float &temperature);
         bool getCycles(uint16_t &cycles);
         bool getSOH(uint8_t &percent);
         bool getInitialized(bool& state);

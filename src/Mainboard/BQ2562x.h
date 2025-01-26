@@ -298,6 +298,5 @@ namespace PowerFeather
         template <typename T>
         bool _writeReg(Register reg, T value);
 
-        float _map(uint16_t raw, float step, uint16_t min = 0, uint16_t max = 0);
     };
 }
