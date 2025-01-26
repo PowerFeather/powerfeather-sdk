@@ -196,6 +196,7 @@ namespace PowerFeather
         bool getVBUSStat(VBUSStat &stat);
         bool getChargeStat(ChargeStat &stat);
         bool getChargingEnabled(bool& enabled);
+        bool getSTATEnabled(bool& enabled);
         bool getVINDPM(uint16_t& voltage);
         bool getChargeCurrentLimit(uint16_t& current);
         bool getPartInformation(uint8_t &info);

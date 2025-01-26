@@ -234,6 +234,16 @@ namespace PowerFeather
         return _readReg(Charger_Control_0_EN_CHG, enabled);
     }
 
+    bool BQ2562x::getSTATEnabled(bool& enabled)
+    {
+        if (_readReg(Charge_Timer_Control_DIS_STAT, enabled))
+        {
+            enabled = !enabled;
+            return true;
+        }
+        return false;
+    }
+
     bool BQ2562x::getVINDPM(uint16_t& voltage)
     {
         uint16_t value = 0;
