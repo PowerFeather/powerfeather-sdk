@@ -614,10 +614,10 @@ namespace PowerFeather
         Result setBatteryLowChargeAlarm(uint8_t percent);
 
         /**
-         * @brief Let fuel guage know of the battery temperature.
+         * @brief Update fuel guage with measured battery temperature
          *
          * In order to increase fuel gauge accuracy, you can update the fuel gauge with the battery
-         * temperature obtained from getBatteryTemperature(). If not set, the fuel gauge assumes battery temperature of 25 °C.
+         * temperature obtained from getBatteryTemperature() or other sources.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
@@ -626,7 +626,7 @@ namespace PowerFeather
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] temperature The temperature reading from getBatteryTemperature().
+         * @param[in] temperature The temperature of the battery cell
          *
          * @return Result Returns \c Result::Ok if the fuel gauge's battery temperature has been update successfully;
          * returns a value other than \c Result::Ok if not.
