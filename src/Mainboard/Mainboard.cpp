@@ -207,7 +207,7 @@ namespace PowerFeather
                 RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
                 RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().enableTS(false), Result::Failure);
-                RET_IF_FALSE(getCharger().setChargeCurrent(_defaultMaxChargingCurrent), Result::Failure);
+                RET_IF_FALSE(getCharger().setChargeCurrentLimit(_defaultMaxChargingCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
                 RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
                 RET_IF_FALSE(getCharger().setTopOff(BQ2562x::TopOffTimer::Timer17Min), Result::Failure);
@@ -289,6 +289,16 @@ namespace PowerFeather
         RET_IF_FALSE(enable ? (_sqtEnabled || _i2c.start()) : !_sqtEnabled || _i2c.end(), Result::Failure);
         _sqtEnabled = enable;
         ESP_LOGD(TAG, "VSQT set to: %d.", _sqtEnabled);
+        return Result::Ok;
+    }
+
+    Result Mainboard::enableSTAT(bool enable)
+    {
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(getCharger().enableSTAT(enable), Result::Failure);
+        ESP_LOGD(TAG, "STAT LED %s", enable ? "enabled" : "disabled");
         return Result::Ok;
     }
 
@@ -391,7 +401,7 @@ namespace PowerFeather
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(current >= _minBatteryCapacity && current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
-        RET_IF_FALSE(getCharger().setChargeCurrent(current), Result::Failure);
+        RET_IF_FALSE(getCharger().setChargeCurrentLimit(current), Result::Failure);
         ESP_LOGD(TAG, "Max charging current set to: %d mA.", current);
         return Result::Ok;
     }
@@ -592,6 +602,19 @@ namespace PowerFeather
         ESP_LOGD(TAG, "Low charge alarm set to: %d %%.", (int)percent);
         return Result::Ok;
     };
+
+    Result Mainboard::updateBatteryFuelGaugeTemp(float temperature)
+    {
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_ERR(_initFuelGauge());
+        RET_IF_FALSE(temperature >= LC709204F::MinTemperature && temperature <= LC709204F::MaxTemperature, Result::InvalidArg);
+        RET_IF_FALSE(getFuelGauge().setCellTemperature(temperature), Result::Failure);
+        ESP_LOGD(TAG, "Fuel guage temperature updated to: %f °C.", temperature);
+        return Result::Ok;
+    }
 
     /*static*/ Mainboard &Mainboard::get()
     {

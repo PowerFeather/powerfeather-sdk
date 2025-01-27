@@ -194,6 +194,24 @@ namespace PowerFeather
         Result enableVSQT(bool enable);
 
         /**
+         * @brief Enable or disable the \a STAT  LED.
+         *
+         * Normally, the STAT LED turns on when charging, or blinks when there is an error preventing
+         * charging (when battery temperature exceeds the set threshold, for example).
+         * This function can enable/disable this LED from turning on in these cases.
+         *
+         * One instance where disabling this LED is desirable is during low-sunlight charging conditions,
+         * where the current extracted from the solar panel should be used to charge the battery as
+         * much as possible.
+         *
+         * @param[in] enable If \c true, \a STAT LED is enabled; if \c false, \a STAT LED is disabled.
+         *
+         * @return Result Returns \c Result::Ok if \a STAT  LED was enabled or disabled successfully;
+         * returns a value other than \c Result::Ok if not.
+         */
+        Result enableSTAT(bool enable);
+
+        /**
          * @brief Measure the supply voltage.
          *
          * Measures the \a VUSB or \a VDC voltage. \a VUSB is the power input from the USB-C connector,
@@ -594,6 +612,26 @@ namespace PowerFeather
          * returns a value other than \c Result::Ok if not.
          */
         Result setBatteryLowChargeAlarm(uint8_t percent);
+
+        /**
+         * @brief Update fuel guage with measured battery temperature
+         *
+         * In order to increase fuel gauge accuracy, you can update the fuel gauge with the battery
+         * temperature obtained from getBatteryTemperature() or other sources.
+         *
+         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
+         *
+         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * @param[in] temperature The temperature of the battery cell
+         *
+         * @return Result Returns \c Result::Ok if the fuel gauge's battery temperature has been update successfully;
+         * returns a value other than \c Result::Ok if not.
+         */
+        Result updateBatteryFuelGaugeTemp(float temperature);
 
         BQ2562x &getCharger() { return _charger; }
         LC709204F &getFuelGauge() { return _fuelGauge; }

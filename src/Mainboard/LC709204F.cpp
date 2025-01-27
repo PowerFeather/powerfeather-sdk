@@ -36,6 +36,7 @@
 
 #include <esp_log.h>
 
+#include <Utils/Util.h>
 #include "LC709204F.h"
 
 namespace PowerFeather
@@ -154,6 +155,16 @@ namespace PowerFeather
         return _readReg(Registers::TimeToFull, minutes);
     }
 
+    bool LC709204F::getCellTemperature(float& temperature)
+    {
+        uint16_t value = 0;
+        if (_readReg(Registers::TSENSE1, value))
+        {
+            temperature = Util::fromRaw(value, 0.1, 0x0DCC) + 80.0f;
+        }
+        return false;
+    }
+
     bool LC709204F::getCycles(uint16_t &cycles)
     {
         return _readReg(Registers::Cycle_Count, cycles);
@@ -238,6 +249,12 @@ namespace PowerFeather
     bool LC709204F::setChangeOfParameter(ChangeOfParameter changeOfParam)
     {
         return _writeReg(Registers::Change_Of_The_Parameter, static_cast<uint16_t>(changeOfParam));
+    }
+
+    bool LC709204F::setCellTemperature(float temperature)
+    {
+        uint16_t value = Util::toRaw(temperature - 80.0f, 0.1f, 0xDCC);
+        return _writeReg(Registers::TSENSE1, value);
     }
 
     bool LC709204F::enableTSENSE(bool enableTsense1, bool enableTsense2)

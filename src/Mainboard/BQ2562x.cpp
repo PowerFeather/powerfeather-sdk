@@ -36,6 +36,7 @@
 
 #include <esp_log.h>
 
+#include <Utils/Util.h>
 #include "BQ2562x.h"
 
 namespace PowerFeather
@@ -95,11 +96,6 @@ namespace PowerFeather
         return false;
     }
 
-    float BQ2562x::_map(uint16_t raw, float step, uint16_t min, uint16_t max)
-    {
-        return ((min && max) && (raw >= min && raw <= max)) ? ((max - raw + 1) * (-1) * step) : (raw * step);
-    }
-
     bool BQ2562x::getWD(bool &enabled)
     {
         return _readReg(Charger_Control_0_WATCHDOG, enabled);
@@ -110,7 +106,7 @@ namespace PowerFeather
         uint16_t value = 0;
         if (_readReg(VBUS_ADC, value))
         {
-            voltage = round(_map(value, 3.97f));
+            voltage = round(Util::fromRaw(value, 3.97f));
             return true;
         }
         return false;
@@ -119,9 +115,11 @@ namespace PowerFeather
     bool BQ2562x::getIBUS(int16_t &current)
     {
         uint16_t value = 0;
+
         if (_readReg(IBUS_ADC, value))
         {
-            current = round(_map(value, 2.0f, 0x7830, 0x7fff));
+            uint16_t origin = (value >= 0x7830 && value <= 0x7fff) ? 0x7fff + 1 : 0;
+            current = round(Util::fromRaw(value, 2.0f, origin));
             return true;
         }
         return false;
@@ -132,7 +130,7 @@ namespace PowerFeather
         uint16_t value = 0;
         if (_readReg(VBAT_ADC, value))
         {
-            voltage = round(_map(value, 1.99f));
+            voltage = round(Util::fromRaw(value, 1.99f));
             return true;
         }
         return false;
@@ -146,7 +144,8 @@ namespace PowerFeather
         {
             if (value != invalid)
             {
-                current = round(_map(value, 4.0f, 0x38ad, 0x3fff));
+                uint16_t origin = (value >= 0x38ad && value <= 0x3fff) ? 0x3fff + 1 : 0;
+                current = round(Util::fromRaw(value, 4.0f, origin));
                 return true;
             }
         }
@@ -185,7 +184,7 @@ namespace PowerFeather
         uint16_t value = 0;
         if (_readReg(TS_ADC, value))
         {
-            bias = _map(value, 0.0961f) / 100.0f;
+            bias = Util::fromRaw(value, 0.0961f) / 100.0f;
             return true;
         }
         return false;
@@ -223,6 +222,43 @@ namespace PowerFeather
                 stat = ChargeStat::Terminated;
                 break;
             }
+            return true;
+        }
+        return false;
+    }
+
+    bool BQ2562x::getChargingEnabled(bool& enabled)
+    {
+        return _readReg(Charger_Control_0_EN_CHG, enabled);
+    }
+
+    bool BQ2562x::getSTATEnabled(bool& enabled)
+    {
+        if (_readReg(Charge_Timer_Control_DIS_STAT, enabled))
+        {
+            enabled = !enabled;
+            return true;
+        }
+        return false;
+    }
+
+    bool BQ2562x::getVINDPM(uint16_t& voltage)
+    {
+        uint16_t value = 0;
+        if (_readReg(Input_Current_Limit_VINDPM, value))
+        {
+            voltage = round(Util::fromRaw(value, 40.0f));
+            return true;
+        }
+        return false;
+    }
+
+    bool BQ2562x::getChargeCurrentLimit(uint16_t& current)
+    {
+        uint16_t value = 0;
+        if (_readReg(Charge_Current_Limit_ICHG, value))
+        {
+            current = round(Util::fromRaw(value, 40.0f));
             return true;
         }
         return false;
@@ -295,11 +331,17 @@ namespace PowerFeather
         return _writeReg(reg, !enable);
     }
 
-    bool BQ2562x::setChargeCurrent(uint16_t current)
+    bool BQ2562x::enableSTAT(bool enable)
+    {
+        Register reg = Charge_Timer_Control_DIS_STAT;
+        return _writeReg(reg, !enable);
+    }
+
+    bool BQ2562x::setChargeCurrentLimit(uint16_t current)
     {
         if (current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent)
         {
-            uint16_t value = round(_map(current, 1/40.0f));
+            uint16_t value = round(Util::toRaw(current, 40.0f));
             return _writeReg(Charge_Current_Limit_ICHG, value);
         }
         return false;
@@ -321,7 +363,7 @@ namespace PowerFeather
     {
         if (voltage >= BQ2562x::MinVINDPMVoltage && voltage <= BQ2562x::MaxVINDPMVoltage)
         {
-            uint16_t value = round(_map(voltage, 1/40.0f));
+            uint16_t value = Util::toRaw(voltage, 40.0f);
             return _writeReg(Input_Current_Limit_VINDPM, value);
         }
         return false;
@@ -331,7 +373,7 @@ namespace PowerFeather
     {
         if (current >= BQ2562x::MinIINDPMCurrent && current <= BQ2562x::MaxIINDPMCurrent)
         {
-            uint16_t value = round(_map(current, 1/20.0f));
+            uint16_t value = Util::toRaw(current, 20.0f);
             return _writeReg(Input_Current_Limit_IINDPM, value);
         }
         return false;
@@ -341,7 +383,7 @@ namespace PowerFeather
     {
         if (current >= BQ2562x::MinITERMCurrent && current <= BQ2562x::MaxITERMCurrent)
         {
-            uint16_t value = round(_map(current, 1/5.0f));
+            uint16_t value = Util::toRaw(current, 5.0f);
             return _writeReg(Termination_Control_0_ITERM, value);
         }
         return false;
