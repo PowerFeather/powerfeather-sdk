@@ -675,9 +675,7 @@ namespace PowerFeather
         bool _isFirst();
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
-        bool _isFuelGaugeEnabled();
         bool _setRTCPin(gpio_num_t pin, bool value);
-        Result _initFuelGauge();
         Result _udpateChargerADC();
     };
 
