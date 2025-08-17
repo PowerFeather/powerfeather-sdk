@@ -37,10 +37,11 @@
 #include <tuple>
 
 #include "Utils/MasterI2C.h"
+#include "FuelGauge.h"
 
 namespace PowerFeather
 {
-    class LC709204F
+    class LC709204F : public FuelGauge
     {
     public:
 
@@ -86,7 +87,7 @@ namespace PowerFeather
             Nominal_3V85_Charging_4V4 = 0x04,
         };
 
-        LC709204F(MasterI2C &i2c) : _i2c(i2c) {}
+        LC709204F(MasterI2C &i2c) : FuelGauge(i2c) {}
 
         bool getOperationMode(bool &enabled);
         bool getCellVoltage(uint16_t &voltage);
@@ -141,8 +142,6 @@ namespace PowerFeather
         };
 
         static constexpr uint8_t _i2cAddress = 0x0b;
-
-        MasterI2C &_i2c;
 
         bool _readReg(Registers reg, uint16_t &data);
         bool _writeReg(Registers reg, uint16_t data);
