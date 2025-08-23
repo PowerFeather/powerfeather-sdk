@@ -49,7 +49,6 @@
 
 namespace PowerFeather
 {
-
     class Mainboard
     {
     public:
