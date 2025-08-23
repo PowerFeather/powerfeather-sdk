@@ -1,7 +1,7 @@
 /**
  *  POWERFEATHER 4-CLAUSE LICENSE
  *
- *  Copyright (C) 2025, PowerFeather.
+ *  Copyright (C) 2023, PowerFeather.
  *
  *  Redistribution and use in source and binary forms, with or without modification,
  *  are permitted provided that the following conditions are met:
@@ -31,22 +31,14 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#pragma once
 
-#include "Utils/Result.h"
+#include <math.h>
 
-#include "Utils/MasterI2C.h"
+#include <esp_log.h>
+
+#include "MAX17260.h"
 
 namespace PowerFeather
 {
-    class FuelGauge
-    {
-    protected:
-        MasterI2C &_i2c;
-
-    public:
-        FuelGauge(MasterI2C &i2c) : _i2c(i2c) {}
-    };
+    static const char *TAG = "PowerFeather::Mainboard::MAX17260";
 }
-
-
