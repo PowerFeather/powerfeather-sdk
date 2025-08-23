@@ -41,4 +41,104 @@
 namespace PowerFeather
 {
     static const char *TAG = "PowerFeather::Mainboard::MAX17260";
+
+    bool MAX17260::getEnabled(bool &enabled)
+    {
+        return false;
+    }
+
+    bool MAX17260::getCellVoltage(uint16_t &voltage)
+    {
+        return false;
+    }
+
+    bool MAX17260::getRSOC(uint8_t &percent)
+    {
+        return false;
+    }
+
+    bool MAX17260::getTimeToEmpty(uint16_t &minutes)
+    {
+        return false;
+    }
+
+    bool MAX17260::getTimeToFull(uint16_t &minutes)
+    {
+        return false;
+    }
+
+    bool MAX17260::getCellTemperature(float &temperature)
+    {
+        return false;
+    }
+
+    bool MAX17260::getCycles(uint16_t &cycles)
+    {
+        return false;
+    }
+
+    bool MAX17260::getSOH(uint8_t &percent)
+    {
+        return false;
+    }
+
+    bool MAX17260::getInitialized(bool& state)
+    {
+        return false;
+    }
+
+    bool MAX17260::setEnabled(bool enable)
+    {
+        return false;
+    }
+
+    bool MAX17260::setCellTemperature(float temperature)
+    {
+        return false;
+    }
+
+    bool MAX17260::enableTSENSE(bool enableTsense1, bool enableTsense2)
+    {
+        return false;
+    }
+
+    bool MAX17260::setLowVoltageAlarm(uint16_t voltage)
+    {
+        return false;
+    }
+
+    bool MAX17260::setHighVoltageAlarm(uint16_t voltage)
+    {
+        return false;
+    }
+
+    bool MAX17260::setLowRSOCAlarm(uint8_t percent)
+    {
+        return false;
+    }
+
+    bool MAX17260::setTerminationFactor(float factor)
+    {
+        return false;
+    }
+
+    bool MAX17260::setInitialized()
+    {
+        return false;
+    }
+
+    bool MAX17260::clearLowVoltageAlarm()
+    {
+        return false;
+    }
+
+    bool MAX17260::clearHighVoltageAlarm()
+    {
+        return false;
+    }
+
+    bool MAX17260::clearLowRSOCAlarm()
+    {
+        return false;
+    }
 }

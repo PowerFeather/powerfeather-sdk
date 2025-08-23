@@ -42,5 +42,28 @@ namespace PowerFeather
 {
     class MAX17260 : public FuelGauge
     {
+    public:
+        MAX17260(MasterI2C &i2c) : FuelGauge(i2c) {}
+
+        bool getEnabled(bool &enabled) override;
+        bool getCellVoltage(uint16_t &voltage) override;
+        bool getRSOC(uint8_t &percent) override;
+        bool getTimeToEmpty(uint16_t &minutes) override;
+        bool getTimeToFull(uint16_t &minutes) override;
+        bool getCellTemperature(float &temperature) override;
+        bool getCycles(uint16_t &cycles) override;
+        bool getSOH(uint8_t &percent) override;
+        bool getInitialized(bool& state) override;
+        bool setEnabled(bool enable) override;
+        bool setCellTemperature(float temperature) override;
+        bool enableTSENSE(bool enableTsense1, bool enableTsense2) override;
+        bool setLowVoltageAlarm(uint16_t voltage) override;
+        bool setHighVoltageAlarm(uint16_t voltage) override;
+        bool setLowRSOCAlarm(uint8_t percent) override;
+        bool setTerminationFactor(float factor) override;
+        bool setInitialized() override;
+        bool clearLowVoltageAlarm() override;
+        bool clearHighVoltageAlarm() override;
+        bool clearLowRSOCAlarm() override;
     };
 }
