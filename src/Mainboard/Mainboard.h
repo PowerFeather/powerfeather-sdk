@@ -677,6 +677,9 @@ namespace PowerFeather
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
         bool _setRTCPin(gpio_num_t pin, bool value);
         Result _udpateChargerADC();
+
+        bool _isFuelGaugeEnabled();
+        Result _initFuelGauge();
     };
 
     extern Mainboard &Board; // singleton instance of Mainboard
