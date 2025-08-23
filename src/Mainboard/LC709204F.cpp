@@ -316,4 +316,5 @@ namespace PowerFeather
     {
         return _clearAlarm(BatteryStatus::LowRSOC);
     }
+
 }

@@ -36,51 +36,6 @@
 
 namespace PowerFeather
 {
-    class FuelGauge
-    {
 
-        LC709204F getFuelGauge()
-        {
-            return _fuelGauge;
-        }
 
-        bool FuelGauge::isEnabled()
-        {
-            bool enabled = false;
-            getFuelGauge().getOperationMode(enabled); // failure here means false is returned
-            return enabled;
-        }
-
-        Result FuelGauge::_init()
-        {
-            bool inited = false;
-            RET_IF_FALSE(getFuelGauge().getInitialized(inited), Result::Failure); // check if already initialized
-
-            if (!inited)
-            {
-                LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650_26H ? LC709204F::ChangeOfParameter::ICR18650_26H :
-                                                    _batteryType == BatteryType::UR18650ZY ? LC709204F::ChangeOfParameter::UR18650ZY :
-                                                    LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
-                RET_IF_FALSE(getFuelGauge().setAPA(_batteryCapacity, param), Result::Failure);
-                RET_IF_FALSE(getFuelGauge().setChangeOfParameter(param), Result::Failure);
-
-                const float minFactor = LC709204F::MinTerminationFactor;
-                const float maxFactor = LC709204F::MaxTerminationFactor;
-                float terminationFactor = _terminationCurrent/static_cast<float>(_batteryCapacity);
-                terminationFactor = std::min(std::max(terminationFactor, minFactor), maxFactor);
-                RET_IF_FALSE(getFuelGauge().setTerminationFactor(terminationFactor), Result::Failure);
-
-                RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
-                RET_IF_FALSE(getFuelGauge().setOperationMode(true), Result::Failure);
-                RET_IF_FALSE(getFuelGauge().setInitialized(), Result::Failure);
-                ESP_LOGD(TAG, "Fuel gauge initialized.");
-            }
-            else
-            {
-                ESP_LOGD(TAG, "Fuel gauge already initialized.");
-            }
-
-            return Result::Ok;
-        }
-    }
 }

@@ -31,7 +31,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#pragma once
 
 #include "Utils/Result.h"
 
@@ -47,9 +47,6 @@ namespace PowerFeather
 
     public:
         FuelGauge(MasterI2C &i2c) : _i2c(i2c) {}
-
-        Result init() { return Result::Ok; }
-        bool isEnabled() { return false; }
     };
 }
 
