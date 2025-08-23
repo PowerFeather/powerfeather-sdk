@@ -31,22 +31,16 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #pragma once
 
-#include "Utils/Result.h"
+#include <tuple>
 
-#include "Utils/MasterI2C.h"
+#include "FuelGauge.h"
 
 namespace PowerFeather
 {
-    class FuelGauge
+    class MAX17260 : public FuelGauge
     {
-    protected:
-        MasterI2C &_i2c;
-
-    public:
-        FuelGauge(MasterI2C &i2c) : _i2c(i2c) {}
     };
 }
-
-
