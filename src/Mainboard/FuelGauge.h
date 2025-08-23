@@ -46,6 +46,27 @@ namespace PowerFeather
 
     public:
         FuelGauge(MasterI2C &i2c) : _i2c(i2c) {}
+
+        virtual bool getEnabled(bool &enabled);
+        virtual bool getCellVoltage(uint16_t &voltage);
+        virtual bool getRSOC(uint8_t &percent);
+        virtual bool getTimeToEmpty(uint16_t &minutes);
+        virtual bool getTimeToFull(uint16_t &minutes);
+        virtual bool getCellTemperature(float &temperature);
+        virtual bool getCycles(uint16_t &cycles);
+        virtual bool getSOH(uint8_t &percent);
+        virtual bool getInitialized(bool& state);
+        virtual bool setEnabled(bool enable);
+        virtual bool setCellTemperature(float temperature);
+        virtual bool enableTSENSE(bool enableTsense1, bool enableTsense2);
+        virtual bool setLowVoltageAlarm(uint16_t voltage);
+        virtual bool setHighVoltageAlarm(uint16_t voltage);
+        virtual bool setLowRSOCAlarm(uint8_t percent);
+        virtual bool setTerminationFactor(float factor);
+        virtual bool setInitialized();
+        virtual bool clearLowVoltageAlarm();
+        virtual bool clearHighVoltageAlarm();
+        virtual bool clearLowRSOCAlarm();
     };
 }
 

@@ -121,7 +121,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool LC709204F::getOperationMode(bool &enabled)
+    bool LC709204F::getEnabled(bool &enabled)
     {
         uint16_t value = 0;
         bool res = _readReg(Registers::IC_Power_Mode, value);
@@ -192,7 +192,7 @@ namespace PowerFeather
         return false;
     }
 
-    bool LC709204F::setOperationMode(bool enable)
+    bool LC709204F::setEnabled(bool enable)
     {
         uint16_t value = static_cast<uint16_t>(enable ? OperationMode::OperationalMode : OperationMode::SleepMode);
         return _writeReg(Registers::IC_Power_Mode, value);

@@ -89,28 +89,29 @@ namespace PowerFeather
 
         LC709204F(MasterI2C &i2c) : FuelGauge(i2c) {}
 
-        bool getOperationMode(bool &enabled);
-        bool getCellVoltage(uint16_t &voltage);
-        bool getRSOC(uint8_t &percent);
-        bool getTimeToEmpty(uint16_t &minutes);
-        bool getTimeToFull(uint16_t &minutes);
-        bool getCellTemperature(float &temperature);
-        bool getCycles(uint16_t &cycles);
-        bool getSOH(uint8_t &percent);
-        bool getInitialized(bool& state);
-        bool setOperationMode(bool enable);
         bool setAPA(uint16_t capacity, ChangeOfParameter changeOfParam);
         bool setChangeOfParameter(ChangeOfParameter changeOfParam);
-        bool setCellTemperature(float temperature);
-        bool enableTSENSE(bool enableTsense1, bool enableTsense2);
-        bool setLowVoltageAlarm(uint16_t voltage);
-        bool setHighVoltageAlarm(uint16_t voltage);
-        bool setLowRSOCAlarm(uint8_t percent);
         bool setTerminationFactor(float factor);
+        bool getInitialized(bool& state);
         bool setInitialized();
-        bool clearLowVoltageAlarm();
-        bool clearHighVoltageAlarm();
-        bool clearLowRSOCAlarm();
+
+        bool getEnabled(bool &enabled) override;
+        bool getCellVoltage(uint16_t &voltage) override;
+        bool getRSOC(uint8_t &percent) override;
+        bool getTimeToEmpty(uint16_t &minutes) override;
+        bool getTimeToFull(uint16_t &minutes) override;
+        bool getCellTemperature(float &temperature) override;
+        bool getCycles(uint16_t &cycles) override;
+        bool getSOH(uint8_t &percent) override;
+        bool setEnabled(bool enable) override;
+        bool setCellTemperature(float temperature) override;
+        bool enableTSENSE(bool enableTsense1, bool enableTsense2) override;
+        bool setLowVoltageAlarm(uint16_t voltage) override;
+        bool setHighVoltageAlarm(uint16_t voltage) override;
+        bool setLowRSOCAlarm(uint8_t percent) override;
+        bool clearLowVoltageAlarm() override;
+        bool clearHighVoltageAlarm() override;
+        bool clearLowRSOCAlarm() override;
 
     private:
         enum class BatteryStatus : uint8_t
