@@ -63,7 +63,7 @@ namespace PowerFeather
     bool Mainboard::_isFuelGaugeEnabled()
     {
         bool enabled = false;
-        getFuelGauge().getOperationMode(enabled); // failure here means false is returned
+        getFuelGauge().getEnabled(enabled); // failure here means false is returned
         return enabled;
     }
 
@@ -87,7 +87,7 @@ namespace PowerFeather
             RET_IF_FALSE(getFuelGauge().setTerminationFactor(terminationFactor), Result::Failure);
 
             RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
-            RET_IF_FALSE(getFuelGauge().setOperationMode(true), Result::Failure);
+            RET_IF_FALSE(getFuelGauge().setEnabled(true), Result::Failure);
             RET_IF_FALSE(getFuelGauge().setInitialized(), Result::Failure);
             ESP_LOGD(TAG, "Fuel gauge initialized.");
         }
@@ -435,7 +435,7 @@ namespace PowerFeather
             // the finally this function is called.
             RET_IF_ERR(_initFuelGauge());
         }
-        RET_IF_FALSE(getFuelGauge().setOperationMode(enable), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().setEnabled(enable), Result::Failure);
         ESP_LOGD(TAG, "Fuel gauge set to: %d.", enable);
         return Result::Ok;
     }
