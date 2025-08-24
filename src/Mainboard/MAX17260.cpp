@@ -35,12 +35,80 @@
 #include <math.h>
 
 #include <esp_log.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 #include "MAX17260.h"
 
 namespace PowerFeather
 {
     static const char *TAG = "PowerFeather::Mainboard::MAX17260";
+
+    bool MAX17260::_readReg(Register reg, uint16_t &value)
+    {
+        assert(reg.start <= reg.end);
+        assert(reg.end <= (_regSize * CHAR_BIT) - 1);
+
+        uint16_t data = 0;
+        if (_i2c.read(_i2cAddress, reg.address, reinterpret_cast<uint8_t*>(&data), _regSize))
+        {
+            int left = (((sizeof(data) * CHAR_BIT) - 1) - reg.end);
+            data <<= left;
+            data >>= left + reg.start;
+            value = data;
+            ESP_LOGD(TAG, "Read bit%d to bit%d on register %02x, value = %04x.", reg.start, reg.end, reg.address, value);
+            return true;
+        }
+
+        ESP_LOGD(TAG, "Read bit%d to bit%d on register %02x failed.", reg.start, reg.end, reg.address);
+        return false;
+    }
+
+    bool MAX17260::_writeReg(Register reg, uint16_t value)
+    {
+        uint8_t last = (_regSize * CHAR_BIT) - 1;
+
+        assert(reg.start <= reg.end);
+        assert(reg.end <= last);
+
+        uint16_t data = 0;
+
+        if (_readReg(Register{reg.address, 0, last}, data))
+        {
+            uint8_t bits = reg.end - reg.start + 1;
+            uint16_t mask = ((1 << bits) - 1) << reg.start;
+            data = (data & ~mask) | ((value << reg.start) & mask);
+            bool res = _i2c.write(_i2cAddress, reg.address, reinterpret_cast<uint8_t *>(&data), _regSize);
+            if (res)
+            {
+                ESP_LOGD(TAG, "Write bit%d to bit%d on register %02x, value = %04x.", reg.start, reg.end, reg.address, data);
+            }
+            else
+            {
+                ESP_LOGD(TAG, "Write bit%d to bit%d on register %02x failed.", reg.start, reg.end, reg.address);
+            }
+            return res;
+        }
+
+        return false;
+    }
+
+    bool MAX17260::init()
+    {
+        uint16_t stat = 0;
+
+        if (_readReg(Status_POR, stat)) // POR occured if true
+        {
+            uint16_t fstat = 0;
+            while (_readReg(FStat_DNR, fstat)) vTaskDelay(pdMS_TO_TICKS(10));
+
+        }
+        else
+        {
+        }
+
+        return false;
+    }
 
     bool MAX17260::getEnabled(bool &enabled)
     {

@@ -46,17 +46,22 @@
 
 #include "BQ2562x.h"
 #include "LC709204F.h"
+#include "MAX17260.h"
 
 namespace PowerFeather
 {
     class Mainboard
     {
     public:
+        typedef void* BatteryProfile;
+
         enum class BatteryType
         {
             Generic_3V7, // Generic Li-ion/LiPo, 3.7 V nominal and 4.2 V max
             ICR18650_26H, // Samsung ICR18650-26H
-            UR18650ZY // Panasonic UR18650ZY
+            UR18650ZY, // Panasonic UR18650ZY
+            Generic_LFP,
+            Profile
         };
 
         class Pin
@@ -148,7 +153,7 @@ namespace PowerFeather
          *
          * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.
          */
-        Result init(uint16_t capacity = 0, BatteryType type = BatteryType::Generic_3V7);
+        Result init(uint16_t capacity = 0, BatteryType type = BatteryType::Generic_3V7, BatteryProfile profile = NULL);
 
         /**
          * @brief Set \a EN pin high or low.
@@ -663,6 +668,8 @@ namespace PowerFeather
 
         BQ2562x _charger{_i2c};
         LC709204F _fuelGauge{_i2c};
+        MAX17260 _fuelGauge2{_i2c};
+
         bool _sqtEnabled{false};
         bool _initDone{false};
         uint32_t _chargerADCTime{0};

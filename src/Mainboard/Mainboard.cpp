@@ -96,6 +96,7 @@ namespace PowerFeather
             ESP_LOGD(TAG, "Fuel gauge already initialized.");
         }
 
+
         return Result::Ok;
     }
 
@@ -163,7 +164,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::init(uint16_t capacity, BatteryType type)
+    Result Mainboard::init(uint16_t capacity, BatteryType type, BatteryProfile profile)
     {
         _mutex.init();
 
@@ -244,6 +245,8 @@ namespace PowerFeather
             {
                 _initFuelGauge();
             }
+
+            _fuelGauge2.init();
         }
 
         // Initialize the rest of the RTC/digital pins managed by the SDK.

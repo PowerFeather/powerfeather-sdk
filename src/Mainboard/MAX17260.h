@@ -42,8 +42,29 @@ namespace PowerFeather
 {
     class MAX17260 : public FuelGauge
     {
+    private:
+        static constexpr uint16_t _fStatDNRWaitTime = 10; // from software implementation guide
+
+        struct Register
+        {
+            uint8_t address;
+            uint8_t start;
+            uint8_t end;
+        };
+
+        const Register Status_POR =            { 0x00, 1, 1 };
+        const Register FStat_DNR =             { 0x3D, 0, 0 };
+
+        bool _readReg(Register reg, uint16_t &value);
+        bool _writeReg(Register reg, uint16_t value);
+
+        static constexpr uint8_t _i2cAddress = 0x6c;
+        static constexpr uint8_t _regSize = 2;
+
     public:
         MAX17260(MasterI2C &i2c) : FuelGauge(i2c) {}
+
+        bool init();
 
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(uint16_t &voltage) override;
