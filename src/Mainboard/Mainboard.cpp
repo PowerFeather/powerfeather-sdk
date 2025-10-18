@@ -288,7 +288,6 @@ namespace PowerFeather
 
         _initDone = false;
 
-    _maxModelProfile = nullptr;
     if (type == BatteryType::Profile)
     {
         RET_IF_FALSE(profile != nullptr, Result::InvalidArg);
@@ -298,9 +297,9 @@ namespace PowerFeather
             capacity = _maxModelProfile->designCap;
         }
     }
-    else if (profile != nullptr)
+    else
     {
-        _maxModelProfile = static_cast<const MAX17260::Model *>(profile);
+        _maxModelProfile = nullptr;
     }
 
     _batteryCapacity = capacity;
