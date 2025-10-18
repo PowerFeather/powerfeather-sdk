@@ -69,6 +69,7 @@ namespace PowerFeather
     {
         ESP_LOGV(TAG, "Read address: %02x, reg: %02x, buf: %p, len: %d.", address, reg, buf, len);
         esp_err_t res = i2c_master_write_read_device(_port, address, &reg, sizeof(reg), buf, len, pdMS_TO_TICKS(1000));
+        ESP_LOGV(TAG, "Result is: %d", res);
         ESP_LOG_BUFFER_HEX_LEVEL(TAG, buf, len, ESP_LOG_VERBOSE);
         return res == ESP_OK;
     }
