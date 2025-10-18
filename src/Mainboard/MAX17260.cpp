@@ -71,6 +71,12 @@ namespace PowerFeather
         return res;
     }
 
+    bool MAX17260::probe()
+    {
+        uint16_t value = 0;
+        return readField(Status_POR, value);
+    }
+
     bool MAX17260::init()
     {
         uint16_t por = 0;

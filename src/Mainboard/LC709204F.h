@@ -86,7 +86,26 @@ namespace PowerFeather
             Nominal_3V85_Charging_4V4 = 0x04,
         };
 
+        static constexpr uint8_t RegisterSize = 2;
+
         LC709204F(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
+
+        bool probe() override;
+        const char *name() const override { return "LC709204F"; }
+        bool voltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const override
+        {
+            minMv = MinVoltageAlarm;
+            maxMv = MaxVoltageAlarm;
+            return true;
+        }
+        bool temperatureRange(float &minC, float &maxC) const override
+        {
+            minC = MinTemperature;
+            maxC = MaxTemperature;
+            return true;
+        }
+        float minTerminationFactor() const override { return MinTerminationFactor; }
+        float maxTerminationFactor() const override { return MaxTerminationFactor; }
 
         bool setAPA(uint16_t capacity, ChangeOfParameter changeOfParam);
         bool setChangeOfParameter(ChangeOfParameter changeOfParam);
@@ -142,7 +161,6 @@ namespace PowerFeather
         };
 
         static constexpr uint8_t _i2cAddress = 0x0b;
-        static constexpr uint8_t RegisterSize = 2;
 
         using Field = RegisterFuelGauge::RegisterField;
 

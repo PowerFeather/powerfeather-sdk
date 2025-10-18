@@ -84,6 +84,12 @@ namespace PowerFeather
         return _i2c.write(_i2cAddress, send[1], &(send[2]), 3);
     }
 
+    bool LC709204F::probe()
+    {
+        uint16_t value = 0;
+        return readRegister(static_cast<uint8_t>(Registers::IC_Power_Mode), value);
+    }
+
     uint8_t LC709204F::_computeCRC8(uint8_t *data, int len)
     {
         const uint8_t polynomial = 0x07;
