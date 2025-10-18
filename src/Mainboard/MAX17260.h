@@ -45,6 +45,12 @@ namespace PowerFeather
 
         static constexpr uint8_t RegisterSize = 2;
         static constexpr uint16_t _fStatDNRWaitTime = 10; // from software implementation guide
+        static constexpr uint16_t MinVoltageAlarm = 0;
+        static constexpr uint16_t MaxVoltageAlarm = 5120;
+        static constexpr float MinTemperature = -128.0f;
+        static constexpr float MaxTemperature = 127.996f;
+        static constexpr float MinTermination = 0.01f;
+        static constexpr float MaxTermination = 1.0f;
 
         static constexpr uint8_t _i2cAddress = 0x6c;
         static constexpr uint8_t Config_Register = 0x1D;
@@ -80,6 +86,23 @@ namespace PowerFeather
         MAX17260(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
 
         bool init();
+
+        bool probe() override;
+        const char *name() const override { return "MAX17260"; }
+        bool voltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const override
+        {
+            minMv = MinVoltageAlarm;
+            maxMv = MaxVoltageAlarm;
+            return true;
+        }
+        bool temperatureRange(float &minC, float &maxC) const override
+        {
+            minC = MinTemperature;
+            maxC = MaxTemperature;
+            return true;
+        }
+        float minTerminationFactor() const override { return MinTermination; }
+        float maxTerminationFactor() const override { return MaxTermination; }
 
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(uint16_t &voltage) override;

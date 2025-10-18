@@ -638,7 +638,7 @@ namespace PowerFeather
         Result updateBatteryFuelGaugeTemp(float temperature);
 
         BQ2562x &getCharger() { return _charger; }
-        LC709204F &getFuelGauge() { return _fuelGauge; }
+        FuelGauge &getFuelGauge();
 
         static Mainboard &get();
 
@@ -667,8 +667,10 @@ namespace PowerFeather
 #endif
 
         BQ2562x _charger{_i2c};
-        LC709204F _fuelGauge{_i2c};
-        MAX17260 _fuelGauge2{_i2c};
+        LC709204F _fuelGaugeLc{_i2c};
+        MAX17260 _fuelGaugeMax{_i2c};
+        FuelGauge *_activeFuelGauge{nullptr};
+        bool _fuelGaugeProbeAttempted{false};
 
         bool _sqtEnabled{false};
         bool _initDone{false};
@@ -686,6 +688,8 @@ namespace PowerFeather
 
         bool _isFuelGaugeEnabled();
         Result _initFuelGauge();
+        FuelGauge *_selectFuelGauge();
+        FuelGauge *_getActiveFuelGauge();
     };
 
     extern Mainboard &Board; // singleton instance of Mainboard
