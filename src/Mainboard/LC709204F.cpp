@@ -43,11 +43,11 @@ namespace PowerFeather
 {
     static const char *TAG = "PowerFeather::Mainboard::LC709204F";
 
-    bool LC709204F::_readReg(Registers reg, uint16_t &data)
+    bool LC709204F::readRegister(uint8_t address, uint16_t &data)
     {
         uint8_t reply[6];
         reply[0] = _i2cAddress << 1;          // write byte
-        reply[1] = static_cast<uint8_t>(reg); // register
+        reply[1] = address;                   // register
         reply[2] = reply[0] | 0x1;            // read byte
 
         if (!_i2c.read(_i2cAddress, reply[1], &(reply[3]), 3))
@@ -72,11 +72,11 @@ namespace PowerFeather
         return true;
     }
 
-    bool LC709204F::_writeReg(Registers reg, uint16_t data)
+    bool LC709204F::writeRegister(uint8_t address, uint16_t data)
     {
         uint8_t send[5];
         send[0] = _i2cAddress << 1;
-        send[1] = static_cast<uint8_t>(reg);
+        send[1] = address;
         send[2] = data & 0xFF;
         send[3] = data >> 8;
         send[4] = _computeCRC8(send, 4);
@@ -105,41 +105,38 @@ namespace PowerFeather
     {
         if (voltage == 0 || (voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm))
         {
-            return _writeReg(reg, voltage);
+            return writeRegister(static_cast<uint8_t>(reg), voltage);
         }
         return false;
     }
 
-    bool LC709204F::_clearAlarm(BatteryStatus alarm)
+    bool LC709204F::_clearAlarm(const Field &alarmField)
     {
-        uint16_t value = 0;
-        if (_readReg(Registers::BatteryStatus, value))
-        {
-            value &= ~(0b1 << static_cast<uint8_t>(alarm));
-            return _writeReg(Registers::BatteryStatus, value);
-        }
-        return false;
+        return writeField(alarmField, 0);
     }
 
     bool LC709204F::getEnabled(bool &enabled)
     {
         uint16_t value = 0;
-        bool res = _readReg(Registers::IC_Power_Mode, value);
-        enabled = (value == static_cast<uint16_t>(OperationMode::OperationalMode));
+        bool res = readRegister(static_cast<uint8_t>(Registers::IC_Power_Mode), value);
+        if (res)
+        {
+            enabled = (value == static_cast<uint16_t>(OperationMode::OperationalMode));
+        }
         return res;
     }
 
     bool LC709204F::getCellVoltage(uint16_t &voltage)
     {
-        return _readReg(Registers::Cell_Voltage, voltage);
+        return readRegister(static_cast<uint8_t>(Registers::Cell_Voltage), voltage);
     }
 
     bool LC709204F::getRSOC(uint8_t &percent)
     {
         uint16_t value = 0;
-        if (_readReg(Registers::RSOC, value))
+        if (readRegister(static_cast<uint8_t>(Registers::RSOC), value))
         {
-            percent = value;
+            percent = static_cast<uint8_t>(value);
             return true;
         }
         return false;
@@ -147,35 +144,36 @@ namespace PowerFeather
 
     bool LC709204F::getTimeToEmpty(uint16_t &minutes)
     {
-        return _readReg(Registers::TimeToEmpty, minutes);
+        return readRegister(static_cast<uint8_t>(Registers::TimeToEmpty), minutes);
     }
 
     bool LC709204F::getTimeToFull(uint16_t &minutes)
     {
-        return _readReg(Registers::TimeToFull, minutes);
+        return readRegister(static_cast<uint8_t>(Registers::TimeToFull), minutes);
     }
 
     bool LC709204F::getCellTemperature(float& temperature)
     {
         uint16_t value = 0;
-        if (_readReg(Registers::TSENSE1, value))
+        if (readRegister(static_cast<uint8_t>(Registers::TSENSE1), value))
         {
             temperature = Util::fromRaw(value, 0.1, 0x0DCC) + 80.0f;
+            return true;
         }
         return false;
     }
 
     bool LC709204F::getCycles(uint16_t &cycles)
     {
-        return _readReg(Registers::Cycle_Count, cycles);
+        return readRegister(static_cast<uint8_t>(Registers::Cycle_Count), cycles);
     }
 
     bool LC709204F::getSOH(uint8_t &percent)
     {
         uint16_t value = 0;
-        if (_readReg(Registers::State_Of_Health, value))
+        if (readRegister(static_cast<uint8_t>(Registers::State_Of_Health), value))
         {
-            percent = value;
+            percent = static_cast<uint8_t>(value);
             return true;
         }
         return false;
@@ -183,10 +181,10 @@ namespace PowerFeather
 
     bool LC709204F::getInitialized(bool& state)
     {
-        uint16_t value = 0;
-        if (_readReg(Registers::BatteryStatus, value))
+        uint16_t bit = 0;
+        if (readField(BatteryStatusInitialized, bit))
         {
-            state = !(value & (0b1 << static_cast<uint8_t>(BatteryStatus::Initialized)));
+            state = (bit == 0);
             return true;
         }
         return false;
@@ -195,7 +193,7 @@ namespace PowerFeather
     bool LC709204F::setEnabled(bool enable)
     {
         uint16_t value = static_cast<uint16_t>(enable ? OperationMode::OperationalMode : OperationMode::SleepMode);
-        return _writeReg(Registers::IC_Power_Mode, value);
+        return writeRegister(static_cast<uint8_t>(Registers::IC_Power_Mode), value);
     }
 
     bool LC709204F::setAPA(uint16_t capacity, ChangeOfParameter changeOfParam)
@@ -204,11 +202,11 @@ namespace PowerFeather
         {
             if (changeOfParam == ChangeOfParameter::ICR18650_26H)
             {
-                return _writeReg(Registers::APA, 0x0606);
+                return writeRegister(static_cast<uint8_t>(Registers::APA), 0x0606);
             }
             else if (changeOfParam == ChangeOfParameter::UR18650ZY)
             {
-                return _writeReg(Registers::APA, 0x1010);
+                return writeRegister(static_cast<uint8_t>(Registers::APA), 0x1010);
             }
             else
             {
@@ -236,7 +234,7 @@ namespace PowerFeather
 
                     if (apa)
                     {
-                        return _writeReg(Registers::APA, apa);
+                        return writeRegister(static_cast<uint8_t>(Registers::APA), apa);
                     }
 
                     prev = cur;
@@ -248,19 +246,19 @@ namespace PowerFeather
 
     bool LC709204F::setChangeOfParameter(ChangeOfParameter changeOfParam)
     {
-        return _writeReg(Registers::Change_Of_The_Parameter, static_cast<uint16_t>(changeOfParam));
+        return writeRegister(static_cast<uint8_t>(Registers::Change_Of_The_Parameter), static_cast<uint16_t>(changeOfParam));
     }
 
     bool LC709204F::setCellTemperature(float temperature)
     {
         uint16_t value = Util::toRaw(temperature - 80.0f, 0.1f, 0xDCC);
-        return _writeReg(Registers::TSENSE1, value);
+        return writeRegister(static_cast<uint8_t>(Registers::TSENSE1), value);
     }
 
     bool LC709204F::enableTSENSE(bool enableTsense1, bool enableTsense2)
     {
         uint16_t status = enableTsense1 << 0 | enableTsense2 << 1;
-        return _writeReg(Registers::Status_Bit, status);
+        return writeRegister(static_cast<uint8_t>(Registers::Status_Bit), status);
     }
 
     bool LC709204F::setLowVoltageAlarm(uint16_t voltage)
@@ -277,44 +275,38 @@ namespace PowerFeather
     {
         if (percent <= 100)
         {
-            return _writeReg(Registers::Alarm_Low_RSOC, static_cast<uint16_t>(percent));
+            return writeRegister(static_cast<uint8_t>(Registers::Alarm_Low_RSOC), static_cast<uint16_t>(percent));
         }
-        return 0;
+        return false;
     }
 
     bool LC709204F::setTerminationFactor(float factor)
     {
         if (factor >= LC709204F::MinTerminationFactor && factor <= LC709204F::MaxTerminationFactor)
         {
-            return _writeReg(Registers::Termination_Current_Rate, static_cast<uint16_t>(factor * 100));
+            return writeRegister(static_cast<uint8_t>(Registers::Termination_Current_Rate), static_cast<uint16_t>(factor * 100));
         }
         return false;
     }
 
     bool LC709204F::setInitialized()
     {
-        uint16_t value = 0;
-        if (_readReg(Registers::BatteryStatus, value))
-        {
-            value &= ~(0b1 << static_cast<uint8_t>(BatteryStatus::Initialized));
-            return _writeReg(Registers::BatteryStatus, value);
-        }
-        return false;
+        return writeField(BatteryStatusInitialized, 0);
     }
 
     bool LC709204F::clearLowVoltageAlarm()
     {
-        return _clearAlarm(BatteryStatus::LowCellVoltage);
+        return _clearAlarm(BatteryStatusLowVoltage);
     }
 
     bool LC709204F::clearHighVoltageAlarm()
     {
-        return _clearAlarm(BatteryStatus::HighCellVoltage);
+        return _clearAlarm(BatteryStatusHighVoltage);
     }
 
     bool LC709204F::clearLowRSOCAlarm()
     {
-        return _clearAlarm(BatteryStatus::LowRSOC);
+        return _clearAlarm(BatteryStatusLowRSOC);
     }
 
 }

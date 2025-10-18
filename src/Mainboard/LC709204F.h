@@ -36,12 +36,11 @@
 
 #include <tuple>
 
-#include "Utils/MasterI2C.h"
 #include "FuelGauge.h"
 
 namespace PowerFeather
 {
-    class LC709204F : public FuelGauge
+    class LC709204F : public RegisterFuelGauge
     {
     public:
 
@@ -87,7 +86,7 @@ namespace PowerFeather
             Nominal_3V85_Charging_4V4 = 0x04,
         };
 
-        LC709204F(MasterI2C &i2c) : FuelGauge(i2c) {}
+        LC709204F(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
 
         bool setAPA(uint16_t capacity, ChangeOfParameter changeOfParam);
         bool setChangeOfParameter(ChangeOfParameter changeOfParam);
@@ -143,12 +142,33 @@ namespace PowerFeather
         };
 
         static constexpr uint8_t _i2cAddress = 0x0b;
+        static constexpr uint8_t RegisterSize = 2;
 
-        bool _readReg(Registers reg, uint16_t &data);
-        bool _writeReg(Registers reg, uint16_t data);
+        using Field = RegisterFuelGauge::RegisterField;
+
+        const Field BatteryStatusInitialized = {
+            static_cast<uint8_t>(Registers::BatteryStatus),
+            static_cast<uint8_t>(BatteryStatus::Initialized),
+            static_cast<uint8_t>(BatteryStatus::Initialized)};
+        const Field BatteryStatusLowVoltage = {
+            static_cast<uint8_t>(Registers::BatteryStatus),
+            static_cast<uint8_t>(BatteryStatus::LowCellVoltage),
+            static_cast<uint8_t>(BatteryStatus::LowCellVoltage)};
+        const Field BatteryStatusHighVoltage = {
+            static_cast<uint8_t>(Registers::BatteryStatus),
+            static_cast<uint8_t>(BatteryStatus::HighCellVoltage),
+            static_cast<uint8_t>(BatteryStatus::HighCellVoltage)};
+        const Field BatteryStatusLowRSOC = {
+            static_cast<uint8_t>(Registers::BatteryStatus),
+            static_cast<uint8_t>(BatteryStatus::LowRSOC),
+            static_cast<uint8_t>(BatteryStatus::LowRSOC)};
+
+        bool readRegister(uint8_t address, uint16_t &data) override;
+        bool writeRegister(uint8_t address, uint16_t data) override;
+
         uint8_t _computeCRC8(uint8_t *data, int len);
 
         bool _setVoltageAlarm(Registers reg, uint16_t voltage);
-        bool _clearAlarm(BatteryStatus alarm);
+        bool _clearAlarm(const Field &alarmField);
     };
 }

@@ -33,8 +33,11 @@
  */
 #pragma once
 
-#include "Utils/Result.h"
+#include <cassert>
+#include <climits>
+#include <cstdint>
 
+#include "Utils/Result.h"
 #include "Utils/MasterI2C.h"
 
 namespace PowerFeather
@@ -70,4 +73,78 @@ namespace PowerFeather
     };
 }
 
+namespace PowerFeather
+{
+    class RegisterFuelGauge : public FuelGauge
+    {
+    protected:
+        struct RegisterField
+        {
+            uint8_t address;
+            uint8_t start;
+            uint8_t end;
+        };
+
+        RegisterFuelGauge(MasterI2C &i2c, uint8_t registerSizeBytes)
+            : FuelGauge(i2c), _registerSizeBytes(registerSizeBytes)
+        {
+            assert(_registerSizeBytes > 0);
+        }
+
+        bool readField(const RegisterField &field, uint16_t &value);
+        bool writeField(const RegisterField &field, uint16_t value);
+
+        uint8_t registerSizeBytes() const { return _registerSizeBytes; }
+        uint8_t registerBitWidth() const { return static_cast<uint8_t>(_registerSizeBytes * CHAR_BIT); }
+
+        virtual bool readRegister(uint8_t address, uint16_t &value) = 0;
+        virtual bool writeRegister(uint8_t address, uint16_t value) = 0;
+
+    private:
+        static constexpr uint16_t _maskForWidth(uint8_t width)
+        {
+            return (width >= 16) ? 0xFFFFu : static_cast<uint16_t>((1u << width) - 1u);
+        }
+
+        uint8_t _registerSizeBytes;
+    };
+
+    inline bool RegisterFuelGauge::readField(const RegisterField &field, uint16_t &value)
+    {
+        uint8_t lastBit = static_cast<uint8_t>(registerBitWidth() - 1);
+        assert(field.start <= field.end);
+        assert(field.end <= lastBit);
+
+        uint16_t data = 0;
+        if (!readRegister(field.address, data))
+        {
+            return false;
+        }
+
+        uint8_t width = static_cast<uint8_t>(field.end - field.start + 1);
+        uint16_t mask = _maskForWidth(width);
+        value = static_cast<uint16_t>((data >> field.start) & mask);
+        return true;
+    }
+
+    inline bool RegisterFuelGauge::writeField(const RegisterField &field, uint16_t value)
+    {
+        uint8_t lastBit = static_cast<uint8_t>(registerBitWidth() - 1);
+        assert(field.start <= field.end);
+        assert(field.end <= lastBit);
+
+        uint16_t data = 0;
+        if (!readRegister(field.address, data))
+        {
+            return false;
+        }
+
+        uint8_t width = static_cast<uint8_t>(field.end - field.start + 1);
+        uint16_t valueMask = _maskForWidth(width);
+        uint16_t maskedValue = static_cast<uint16_t>(value & valueMask);
+        uint16_t fieldMask = static_cast<uint16_t>(valueMask << field.start);
+        data = static_cast<uint16_t>((data & ~fieldMask) | ((maskedValue << field.start) & fieldMask));
+        return writeRegister(field.address, data);
+    }
+}
 
