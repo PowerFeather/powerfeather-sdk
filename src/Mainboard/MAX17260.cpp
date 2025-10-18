@@ -32,7 +32,8 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <math.h>
+#include <algorithm>
+#include <cmath>
 
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
@@ -95,118 +96,322 @@ namespace PowerFeather
 
     bool MAX17260::init()
     {
-        uint16_t stat = 0;
-
-        if (_readReg(Status_POR, stat)) // POR occured if true
+        uint16_t por = 0;
+        if (!_readReg(Status_POR, por))
         {
-            uint16_t fstat = 0;
-            while (_readReg(FStat_DNR, fstat)) vTaskDelay(pdMS_TO_TICKS(10));
-
-        }
-        else
-        {
+            return false;
         }
 
-        return false;
+        if (por != 0)
+        {
+            constexpr uint16_t maxAttempts = 100;
+            uint16_t attempts = 0;
+            uint16_t dnr = 0;
+
+            do
+            {
+                if (!_readReg(FStat_DNR, dnr))
+                {
+                    return false;
+                }
+
+                if ((dnr & 0x1) == 0)
+                {
+                    break;
+                }
+
+                vTaskDelay(pdMS_TO_TICKS(_fStatDNRWaitTime));
+            } while (++attempts < maxAttempts);
+
+            if ((dnr & 0x1) != 0)
+            {
+                ESP_LOGW(TAG, "FSTAT.DNR remained set after initialization wait.");
+                return false;
+            }
+        }
+
+        return true;
     }
 
     bool MAX17260::getEnabled(bool &enabled)
     {
+        uint16_t value = 0;
+        if (_readReg(Config_SHDN, value))
+        {
+            enabled = (value == 0);
+            return true;
+        }
         return false;
     }
 
     bool MAX17260::getCellVoltage(uint16_t &voltage)
     {
+        uint16_t raw = 0;
+        if (_readReg(VCell_Reg, raw))
+        {
+            uint32_t mv = static_cast<uint32_t>(raw) * 5u;
+            voltage = static_cast<uint16_t>((mv + 32u) >> 6); // divide by 64 with rounding
+            return true;
+        }
         return false;
     }
 
     bool MAX17260::getRSOC(uint8_t &percent)
     {
+        uint16_t raw = 0;
+        if (_readReg(RepSOC_Reg, raw))
+        {
+            percent = static_cast<uint8_t>(std::min<uint16_t>(100, (raw + 0x80) >> 8));
+            return true;
+        }
         return false;
     }
 
     bool MAX17260::getTimeToEmpty(uint16_t &minutes)
     {
+        uint16_t raw = 0;
+        if (_readReg(TTE_Reg, raw))
+        {
+            uint32_t value = (static_cast<uint32_t>(raw) * 3u + 16u) >> 5;
+            minutes = static_cast<uint16_t>(std::min<uint32_t>(value, 0xFFFFu));
+            return true;
+        }
         return false;
     }
 
     bool MAX17260::getTimeToFull(uint16_t &minutes)
     {
+        uint16_t raw = 0;
+        if (_readReg(TTF_Reg, raw))
+        {
+            uint32_t value = (static_cast<uint32_t>(raw) * 3u + 16u) >> 5;
+            minutes = static_cast<uint16_t>(std::min<uint32_t>(value, 0xFFFFu));
+            return true;
+        }
         return false;
     }
 
     bool MAX17260::getCellTemperature(float &temperature)
     {
+        uint16_t raw = 0;
+        if (_readReg(Temp_Reg, raw))
+        {
+            int16_t signedRaw = static_cast<int16_t>(raw);
+            temperature = static_cast<float>(signedRaw) / 256.0f;
+            return true;
+        }
         return false;
     }
 
     bool MAX17260::getCycles(uint16_t &cycles)
     {
+        uint16_t raw = 0;
+        if (_readReg(Cycles_Reg, raw))
+        {
+            cycles = static_cast<uint16_t>((raw + 50u) / 100u);
+            return true;
+        }
         return false;
     }
 
     bool MAX17260::getSOH(uint8_t &percent)
     {
+        uint16_t fullCap = 0;
+        uint16_t designCap = 0;
+        if (_readReg(FullCapRep_Reg, fullCap) && _readReg(DesignCap_Reg, designCap) && designCap != 0)
+        {
+            uint32_t value = (static_cast<uint32_t>(fullCap) * 100u + (designCap / 2u)) / designCap;
+            percent = static_cast<uint8_t>(std::min<uint32_t>(value, 100u));
+            return true;
+        }
         return false;
     }
 
     bool MAX17260::getInitialized(bool& state)
     {
+        uint16_t por = 0;
+        if (_readReg(Status_POR, por))
+        {
+            state = (por == 0);
+            return true;
+        }
         return false;
     }
 
     bool MAX17260::setEnabled(bool enable)
     {
-        return false;
+        return _writeReg(Config_SHDN, enable ? 0 : 1);
     }
 
     bool MAX17260::setCellTemperature(float temperature)
     {
-        return false;
+        int32_t raw = static_cast<int32_t>(std::lround(temperature * 256.0f));
+        if (raw < -32768)
+        {
+            raw = -32768;
+        }
+        else if (raw > 32767)
+        {
+            raw = 32767;
+        }
+        uint16_t encoded = static_cast<uint16_t>(static_cast<int16_t>(raw));
+        return _writeReg(Temp_Reg, encoded);
     }
 
     bool MAX17260::enableTSENSE(bool enableTsense1, bool enableTsense2)
     {
-        return false;
+        uint16_t config = 0;
+        if (!_readReg(Config_All, config))
+        {
+            return false;
+        }
+
+        uint16_t newConfig = config;
+        const uint16_t bitTSel = static_cast<uint16_t>(1u << 15);
+        const uint16_t bitTEn = static_cast<uint16_t>(1u << 9);
+        const uint16_t bitTEx = static_cast<uint16_t>(1u << 8);
+        const uint16_t bitETHRM = static_cast<uint16_t>(1u << 4);
+        const uint16_t bitFTHRM = static_cast<uint16_t>(1u << 3);
+
+        newConfig &= ~bitTEn;
+        newConfig &= ~bitTEx;
+        newConfig &= ~bitTSel;
+        newConfig &= ~bitETHRM;
+        newConfig &= ~bitFTHRM;
+
+        if (enableTsense2)
+        {
+            newConfig |= bitTEn;
+            newConfig &= ~bitTEx;
+            newConfig |= bitTSel;
+            newConfig |= bitETHRM;
+        }
+        else if (enableTsense1)
+        {
+            newConfig |= bitTEn;
+            newConfig &= ~bitTEx;
+        }
+        else
+        {
+            newConfig |= bitTEn;
+            newConfig |= bitTEx;
+        }
+
+        if (newConfig == config)
+        {
+            return true;
+        }
+
+        return _writeReg(Config_All, newConfig);
     }
 
     bool MAX17260::setLowVoltageAlarm(uint16_t voltage)
     {
-        return false;
+        uint16_t current = 0;
+        if (!_readReg(VAlrtTh_All, current))
+        {
+            return false;
+        }
+
+        uint8_t high = static_cast<uint8_t>(current >> 8);
+        uint8_t raw = 0;
+        if (voltage != 0)
+        {
+            uint32_t value = (static_cast<uint32_t>(voltage) + 10u) / 20u;
+            raw = static_cast<uint8_t>(std::min<uint32_t>(value, 0xFFu));
+        }
+
+        uint16_t updated = static_cast<uint16_t>((static_cast<uint16_t>(high) << 8) | raw);
+        if (updated == current)
+        {
+            return true;
+        }
+        return _writeReg(VAlrtTh_All, updated);
     }
 
     bool MAX17260::setHighVoltageAlarm(uint16_t voltage)
     {
-        return false;
+        uint16_t current = 0;
+        if (!_readReg(VAlrtTh_All, current))
+        {
+            return false;
+        }
+
+        uint8_t low = static_cast<uint8_t>(current & 0xFF);
+        uint8_t raw = 0xFF;
+        if (voltage != 0)
+        {
+            uint32_t value = (static_cast<uint32_t>(voltage) + 10u) / 20u;
+            raw = static_cast<uint8_t>(std::min<uint32_t>(value, 0xFFu));
+        }
+
+        uint16_t updated = static_cast<uint16_t>((static_cast<uint16_t>(raw) << 8) | low);
+        if (updated == current)
+        {
+            return true;
+        }
+        return _writeReg(VAlrtTh_All, updated);
     }
 
     bool MAX17260::setLowRSOCAlarm(uint8_t percent)
     {
-        return false;
+        uint16_t current = 0;
+        if (!_readReg(SAlrtTh_All, current))
+        {
+            return false;
+        }
+
+        uint8_t high = static_cast<uint8_t>(current >> 8);
+        uint8_t raw = 0;
+        if (percent != 0)
+        {
+            raw = std::min<uint8_t>(percent, 100);
+        }
+
+        uint16_t updated = static_cast<uint16_t>((static_cast<uint16_t>(high) << 8) | raw);
+        if (updated == current)
+        {
+            return true;
+        }
+        return _writeReg(SAlrtTh_All, updated);
     }
 
     bool MAX17260::setTerminationFactor(float factor)
     {
-        return false;
+        if (factor <= 0.0f)
+        {
+            return false;
+        }
+
+        uint16_t designCap = 0;
+        if (!_readReg(DesignCap_Reg, designCap) || designCap == 0)
+        {
+            return false;
+        }
+
+        float scaled = static_cast<float>(designCap) * factor * 3.2f;
+        uint32_t raw = static_cast<uint32_t>(std::lround(scaled));
+        raw = std::min<uint32_t>(raw, 0xFFFFu);
+        return _writeReg(IChgTerm_Reg, static_cast<uint16_t>(raw));
     }
 
     bool MAX17260::setInitialized()
     {
-        return false;
+        return _writeReg(Status_POR, 0);
     }
 
     bool MAX17260::clearLowVoltageAlarm()
     {
-        return false;
+        return _writeReg(Status_Vmn, 0);
     }
 
     bool MAX17260::clearHighVoltageAlarm()
     {
-        return false;
+        return _writeReg(Status_Vmx, 0);
     }
 
     bool MAX17260::clearLowRSOCAlarm()
     {
-        return false;
+        return _writeReg(Status_Smn, 0);
     }
 }
