@@ -180,6 +180,7 @@ bool MAX17260::loadModel(const Model &model)
     if (!writeRegister(0x63, 0x0000)) return false;
 
     if (!writeRegister(0x05, 0x0000)) return false;
+    vTaskDelay(pdMS_TO_TICKS(100));
     if (!writeRegister(DesignCap_Register, model.designCap)) return false;
 
     const uint16_t fullCapNom = model.designCap;
