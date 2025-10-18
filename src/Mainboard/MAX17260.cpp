@@ -118,12 +118,12 @@ namespace PowerFeather
         return true;
     }
 
-    bool MAX17260::setModelID(uint8_t modelId)
+bool MAX17260::setModelID(uint8_t modelId)
+{
+    uint16_t cfg = 0;
+    if (!readRegister(ModelCfg_Register, cfg))
     {
-        uint16_t cfg = 0;
-        if (!readRegister(ModelCfg_Register, cfg))
-        {
-            return false;
+        return false;
         }
 
         cfg &= static_cast<uint16_t>(~(0x7u << 5));
@@ -135,8 +135,146 @@ namespace PowerFeather
             return false;
         }
 
-        return _waitForDNRClear();
+    return _waitForDNRClear();
+}
+
+bool MAX17260::loadModel(const Model &model)
+{
+    if (!_waitForDNRClear())
+    {
+        return false;
     }
+
+    uint16_t hibCfg = 0;
+    if (!readRegister(0xBA, hibCfg))
+    {
+        return false;
+    }
+
+    if (!writeRegister(0x60, 0x0090)) return false;
+    if (!writeRegister(0xBA, 0x0000)) return false;
+    if (!writeRegister(0x60, 0x0000)) return false;
+
+    if (!writeRegister(0x62, 0x0059)) return false;
+    if (!writeRegister(0x63, 0x00C4)) return false;
+
+    for (size_t i = 0; i < 16; ++i)
+    {
+        if (!writeRegister(static_cast<uint8_t>(0x80 + i), model.modelTable[i]))
+        {
+            return false;
+        }
+    }
+
+    for (size_t i = 0; i < 16; ++i)
+    {
+        if (!writeRegister(static_cast<uint8_t>(0x90 + i), model.modelTable[16 + i]))
+        {
+            return false;
+        }
+    }
+
+    if (!writeRegister(0xAF, model.rCompSeg)) return false;
+
+    if (!writeRegister(0x62, 0x0000)) return false;
+    if (!writeRegister(0x63, 0x0000)) return false;
+
+    if (!writeRegister(0x05, 0x0000)) return false;
+    if (!writeRegister(DesignCap_Register, model.designCap)) return false;
+
+    const uint16_t fullCapNom = model.designCap;
+    const uint16_t fullCapRep = model.designCap;
+
+    if (!writeRegister(FullCapRep_Register, fullCapRep)) return false;
+    if (!writeRegister(0x45, static_cast<uint16_t>(fullCapNom / 2))) return false;
+    if (!writeRegister(0x46, 0x0C80)) return false;
+    if (!writeRegister(0x23, fullCapNom)) return false;
+    if (!writeRegister(0x0F, fullCapNom)) return false;
+    if (!writeRegister(0x1F, fullCapNom)) return false;
+
+    vTaskDelay(pdMS_TO_TICKS(200));
+
+    if (!writeRegister(IChgTerm_Register, model.ichgTerm)) return false;
+    if (!writeRegister(0x3A, model.vEmpty)) return false;
+    if (!writeRegister(0x38, model.rComp0)) return false;
+    if (!writeRegister(0x39, model.tempCo)) return false;
+
+    const uint8_t qrAddresses[4] = { 0x12, 0x22, 0x32, 0x42 };
+    for (size_t i = 0; i < model.qrTable.size(); ++i)
+    {
+        if (!writeRegister(qrAddresses[i], model.qrTable[i]))
+        {
+            return false;
+        }
+    }
+
+    if (!writeRegister(0x28, model.learnCfg)) return false;
+    if (!writeRegister(0x2A, model.relaxCfg)) return false;
+    if (!writeRegister(0x1D, model.config)) return false;
+    if (!writeRegister(0x2B, model.miscCfg)) return false;
+    if (!writeRegister(0x13, model.fullSocThr)) return false;
+    if (!writeRegister(0x2C, model.tGain)) return false;
+    if (!writeRegister(0x2D, model.tOff)) return false;
+    if (!writeRegister(0xB9, model.curve)) return false;
+
+    if (!writeRegister(ModelCfg_Register, model.modelCfg)) return false;
+
+    for (int i = 0; i < 50; ++i)
+    {
+        uint16_t cfg = 0;
+        if (!readRegister(ModelCfg_Register, cfg))
+        {
+            return false;
+        }
+
+        if ((cfg & 0x8000u) == 0)
+        {
+            break;
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(10));
+        if (i == 49)
+        {
+            return false;
+        }
+    }
+
+    uint16_t config2 = model.config2;
+    if (!writeRegister(0xBB, static_cast<uint16_t>(config2 | 0x0020))) return false;
+
+    for (int i = 0; i < 200; ++i)
+    {
+        uint16_t cfg2 = 0;
+        if (!readRegister(0xBB, cfg2))
+        {
+            return false;
+        }
+
+        if ((cfg2 & 0x0020u) == 0)
+        {
+            break;
+        }
+
+        if (!writeRegister(0x0A, 0x0000)) return false;
+        if (!writeRegister(0x0B, 0x0000)) return false;
+        vTaskDelay(pdMS_TO_TICKS(10));
+
+        if (i == 199)
+        {
+            return false;
+        }
+    }
+
+    if (!writeRegister(0xBB, config2)) return false;
+
+    if (!writeRegister(0x32, model.qrTable[2])) return false;
+    if (!writeRegister(0x42, model.qrTable[3])) return false;
+    if (!writeRegister(0x17, 0x0000)) return false;
+
+    if (!writeRegister(0xBA, hibCfg)) return false;
+
+    return _waitForDNRClear();
+}
 
     bool MAX17260::getEnabled(bool &enabled)
     {

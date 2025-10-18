@@ -151,19 +151,26 @@ namespace PowerFeather
             }
             else if (gauge == &_fuelGaugeMax)
             {
-                uint8_t modelId = 0;
-                if (_batteryType == BatteryType::Generic_LFP)
+                if (_maxModelProfile)
                 {
-                    modelId = 6;
+                    RET_IF_FALSE(_fuelGaugeMax.loadModel(*_maxModelProfile), Result::Failure);
                 }
-                else if (_batteryType == BatteryType::ICR18650_26H || _batteryType == BatteryType::UR18650ZY)
+                else
                 {
-                    modelId = 2;
-                }
+                    uint8_t modelId = 0;
+                    if (_batteryType == BatteryType::Generic_LFP)
+                    {
+                        modelId = 6;
+                    }
+                    else if (_batteryType == BatteryType::ICR18650_26H || _batteryType == BatteryType::UR18650ZY)
+                    {
+                        modelId = 2;
+                    }
 
-                if (modelId)
-                {
-                    RET_IF_FALSE(_fuelGaugeMax.setModelID(modelId), Result::Failure);
+                    if (modelId)
+                    {
+                        RET_IF_FALSE(_fuelGaugeMax.setModelID(modelId), Result::Failure);
+                    }
                 }
             }
 
@@ -281,6 +288,21 @@ namespace PowerFeather
 
         _initDone = false;
 
+    _maxModelProfile = nullptr;
+    if (type == BatteryType::Profile)
+    {
+        RET_IF_FALSE(profile != nullptr, Result::InvalidArg);
+        _maxModelProfile = static_cast<const MAX17260::Model *>(profile);
+        if (capacity == 0 && _maxModelProfile->designCap)
+        {
+            capacity = _maxModelProfile->designCap;
+        }
+    }
+    else if (profile != nullptr)
+    {
+        _maxModelProfile = static_cast<const MAX17260::Model *>(profile);
+    }
+
     _batteryCapacity = capacity;
     _batteryType = type;
     _activeFuelGauge = nullptr;
@@ -294,6 +316,10 @@ namespace PowerFeather
     ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
     uint16_t chargeVoltageMv = 4200;
+    if (_maxModelProfile && _maxModelProfile->chargeVoltageMv)
+    {
+        chargeVoltageMv = _maxModelProfile->chargeVoltageMv;
+    }
     if (_batteryType == BatteryType::Generic_LFP)
     {
         chargeVoltageMv = 3600;
@@ -314,6 +340,10 @@ namespace PowerFeather
 
             FuelGauge *detectedGauge = _selectFuelGauge();
             if (_batteryType == BatteryType::Generic_LFP)
+            {
+                RET_IF_FALSE(detectedGauge == &_fuelGaugeMax, Result::InvalidArg);
+            }
+            if (_maxModelProfile)
             {
                 RET_IF_FALSE(detectedGauge == &_fuelGaugeMax, Result::InvalidArg);
             }
