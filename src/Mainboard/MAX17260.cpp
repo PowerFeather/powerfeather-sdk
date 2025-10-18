@@ -71,6 +71,31 @@ namespace PowerFeather
         return res;
     }
 
+    bool MAX17260::_waitForDNRClear()
+    {
+        constexpr uint16_t maxAttempts = 100;
+        uint16_t attempts = 0;
+        uint16_t dnr = 0;
+
+        do
+        {
+            if (!readField(FStat_DNR, dnr))
+            {
+                return false;
+            }
+
+            if (dnr == 0)
+            {
+                return true;
+            }
+
+            vTaskDelay(pdMS_TO_TICKS(_fStatDNRWaitTime));
+        } while (++attempts < maxAttempts);
+
+        ESP_LOGW(TAG, "FSTAT.DNR remained set after waiting.");
+        return false;
+    }
+
     bool MAX17260::probe()
     {
         uint16_t value = 0;
@@ -87,33 +112,30 @@ namespace PowerFeather
 
         if (por != 0)
         {
-            constexpr uint16_t maxAttempts = 100;
-            uint16_t attempts = 0;
-            uint16_t dnr = 0;
-
-            do
-            {
-                if (!readField(FStat_DNR, dnr))
-                {
-                    return false;
-                }
-
-                if (dnr == 0)
-                {
-                    break;
-                }
-
-                vTaskDelay(pdMS_TO_TICKS(_fStatDNRWaitTime));
-            } while (++attempts < maxAttempts);
-
-            if (dnr != 0)
-            {
-                ESP_LOGW(TAG, "FSTAT.DNR remained set after initialization wait.");
-                return false;
-            }
+            return _waitForDNRClear();
         }
 
         return true;
+    }
+
+    bool MAX17260::setModelID(uint8_t modelId)
+    {
+        uint16_t cfg = 0;
+        if (!readRegister(ModelCfg_Register, cfg))
+        {
+            return false;
+        }
+
+        cfg &= static_cast<uint16_t>(~(0x7u << 5));
+        cfg |= static_cast<uint16_t>((modelId & 0x7u) << 5);
+        cfg |= static_cast<uint16_t>(1u << 15); // Refresh
+
+        if (!writeRegister(ModelCfg_Register, cfg))
+        {
+            return false;
+        }
+
+        return _waitForDNRClear();
     }
 
     bool MAX17260::getEnabled(bool &enabled)
