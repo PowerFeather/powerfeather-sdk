@@ -34,6 +34,8 @@
 
 #pragma once
 
+#include <array>
+
 #include "FuelGauge.h"
 
 namespace PowerFeather
@@ -85,6 +87,29 @@ namespace PowerFeather
         bool _waitForDNRClear();
 
     public:
+        struct Model
+        {
+            std::array<uint16_t, 32> modelTable{};
+            uint16_t rComp0{0};
+            uint16_t tempCo{0};
+            uint16_t rCompSeg{0};
+            uint16_t designCap{0};
+            uint16_t ichgTerm{0};
+            uint16_t vEmpty{0};
+            uint16_t modelCfg{0};
+            uint16_t learnCfg{0};
+            uint16_t relaxCfg{0};
+            uint16_t config{0};
+            uint16_t config2{0};
+            uint16_t miscCfg{0};
+            uint16_t fullSocThr{0};
+            uint16_t tGain{0};
+            uint16_t tOff{0};
+            uint16_t curve{0};
+            std::array<uint16_t, 4> qrTable{{0, 0, 0, 0}};
+            uint16_t chargeVoltageMv{0};
+        };
+
         MAX17260(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
 
         bool init();
@@ -107,6 +132,7 @@ namespace PowerFeather
         float maxTerminationFactor() const override { return MaxTermination; }
 
         bool setModelID(uint8_t modelId);
+        bool loadModel(const Model &model);
 
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(uint16_t &voltage) override;
