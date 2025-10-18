@@ -199,6 +199,7 @@ namespace PowerFeather
         bool getSTATEnabled(bool& enabled);
         bool getVINDPM(uint16_t& voltage);
         bool getChargeCurrentLimit(uint16_t& current);
+        bool getChargeVoltageLimit(uint16_t& voltage);
         bool getPartInformation(uint8_t &info);
 
         bool setWD(WatchdogTimer timer);
@@ -211,6 +212,7 @@ namespace PowerFeather
         bool enableADC(Adc adc, bool enable);
         bool enableSTAT(bool enable);
         bool setChargeCurrentLimit(uint16_t current);
+        bool setChargeVoltageLimit(uint16_t voltage);
         bool setBATFETControl(BATFETControl control);
         bool setBATFETDelay(BATFETDelay delay);
         bool setVINDPM(uint16_t voltage);
@@ -225,6 +227,7 @@ namespace PowerFeather
 
     private:
         const Register Charge_Current_Limit_ICHG =            { 0x02, 2, 5, 10 };
+        const Register Charge_Voltage_Limit_VREG =            { 0x04, 2, 3, 11 };
 
         const Register Input_Current_Limit_IINDPM =           { 0x06, 2, 4, 11 };
         const Register Input_Current_Limit_VINDPM =           { 0x08, 2, 5, 13 };

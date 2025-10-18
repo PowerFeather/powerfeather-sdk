@@ -264,6 +264,17 @@ namespace PowerFeather
         return false;
     }
 
+    bool BQ2562x::getChargeVoltageLimit(uint16_t& voltage)
+    {
+        uint16_t value = 0;
+        if (_readReg(Charge_Voltage_Limit_VREG, value))
+        {
+            voltage = round(Util::fromRaw(value, 10.0f));
+            return true;
+        }
+        return false;
+    }
+
     bool BQ2562x::getPartInformation(uint8_t &value)
     {
         return _readReg(Part_Information, value);
@@ -343,6 +354,19 @@ namespace PowerFeather
         {
             uint16_t value = round(Util::toRaw(current, 40.0f));
             return _writeReg(Charge_Current_Limit_ICHG, value);
+        }
+        return false;
+    }
+
+    bool BQ2562x::setChargeVoltageLimit(uint16_t voltage)
+    {
+        static constexpr uint16_t minVoltageMv = 3500;
+        static constexpr uint16_t maxVoltageMv = 4800;
+
+        if (voltage >= minVoltageMv && voltage <= maxVoltageMv)
+        {
+            uint16_t value = round(Util::toRaw(static_cast<float>(voltage), 10.0f));
+            return _writeReg(Charge_Voltage_Limit_VREG, value);
         }
         return false;
     }

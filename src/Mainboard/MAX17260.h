@@ -71,6 +71,7 @@ namespace PowerFeather
         static constexpr uint8_t DesignCap_Register = 0x18;
         static constexpr uint8_t IChgTerm_Register = 0x1E;
         static constexpr uint8_t TTF_Register = 0x20;
+        static constexpr uint8_t ModelCfg_Register = 0xDB;
 
         const Field Status_POR =            { 0x00, 1, 1 };
         const Field FStat_DNR =             { 0x3D, 0, 0 };
@@ -81,6 +82,7 @@ namespace PowerFeather
 
         bool readRegister(uint8_t address, uint16_t &value) override;
         bool writeRegister(uint8_t address, uint16_t value) override;
+        bool _waitForDNRClear();
 
     public:
         MAX17260(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
@@ -103,6 +105,8 @@ namespace PowerFeather
         }
         float minTerminationFactor() const override { return MinTermination; }
         float maxTerminationFactor() const override { return MaxTermination; }
+
+        bool setModelID(uint8_t modelId);
 
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(uint16_t &voltage) override;

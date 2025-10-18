@@ -33,6 +33,7 @@
  */
 
 #include <algorithm>
+#include <cstddef>
 #include <climits>
 #include <cstdint>
 #include <cstring>
@@ -65,10 +66,24 @@ namespace PowerFeather
         if (!_fuelGaugeProbeAttempted)
         {
             _fuelGaugeProbeAttempted = true;
-            FuelGauge *candidates[] = { &_fuelGaugeLc, &_fuelGaugeMax };
 
-            for (auto *candidate : candidates)
+            FuelGauge *candidates[2];
+            size_t candidateCount = 0;
+
+            if (_batteryType == BatteryType::Generic_LFP)
             {
+                candidates[candidateCount++] = &_fuelGaugeMax;
+                candidates[candidateCount++] = &_fuelGaugeLc;
+            }
+            else
+            {
+                candidates[candidateCount++] = &_fuelGaugeLc;
+                candidates[candidateCount++] = &_fuelGaugeMax;
+            }
+
+            for (size_t i = 0; i < candidateCount; ++i)
+            {
+                auto *candidate = candidates[i];
                 if (candidate->probe())
                 {
                     _activeFuelGauge = candidate;
@@ -133,6 +148,23 @@ namespace PowerFeather
                                                     LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
                 RET_IF_FALSE(lc->setAPA(_batteryCapacity, param), Result::Failure);
                 RET_IF_FALSE(lc->setChangeOfParameter(param), Result::Failure);
+            }
+            else if (gauge == &_fuelGaugeMax)
+            {
+                uint8_t modelId = 0;
+                if (_batteryType == BatteryType::Generic_LFP)
+                {
+                    modelId = 6;
+                }
+                else if (_batteryType == BatteryType::ICR18650_26H || _batteryType == BatteryType::UR18650ZY)
+                {
+                    modelId = 2;
+                }
+
+                if (modelId)
+                {
+                    RET_IF_FALSE(_fuelGaugeMax.setModelID(modelId), Result::Failure);
+                }
             }
 
             const float minFactor = gauge->minTerminationFactor();
@@ -249,15 +281,23 @@ namespace PowerFeather
 
         _initDone = false;
 
-        _batteryCapacity = capacity;
-        _batteryType = type;
-        ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
+    _batteryCapacity = capacity;
+    _batteryType = type;
+    _activeFuelGauge = nullptr;
+    _fuelGaugeProbeAttempted = false;
+    ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
         // Set termination current to C / 10, or within limits of the IC.
         uint16_t minCurrent = BQ2562x::MinITERMCurrent;
-        uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
-        _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
-        _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
-        ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
+    uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
+    _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
+    _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
+    ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
+
+    uint16_t chargeVoltageMv = 4200;
+    if (_batteryType == BatteryType::Generic_LFP)
+    {
+        chargeVoltageMv = 3600;
+    }
 
         // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
@@ -271,6 +311,17 @@ namespace PowerFeather
 
             bool wdOn = true;
             RET_IF_FALSE(getCharger().getWD(wdOn), Result::Failure);
+
+            FuelGauge *detectedGauge = _selectFuelGauge();
+            if (_batteryType == BatteryType::Generic_LFP)
+            {
+                RET_IF_FALSE(detectedGauge == &_fuelGaugeMax, Result::InvalidArg);
+            }
+
+            if (_batteryCapacity && !detectedGauge)
+            {
+                return Result::Failure;
+            }
 
             if (wdOn) // watchdog enabled means that the initiatialization was not done previously
             {
@@ -290,7 +341,7 @@ namespace PowerFeather
                 RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
                 if (_batteryCapacity)
                 {
-                    RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
+                RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
                 }
                 // Disable the charger watchdog to keep the charger in host mode and to
                 // keep some registers from resetting to their POR values.
@@ -312,6 +363,7 @@ namespace PowerFeather
             }
 
             _fuelGaugeMax.init();
+            RET_IF_FALSE(getCharger().setChargeVoltageLimit(chargeVoltageMv), Result::Failure);
         }
 
         // Initialize the rest of the RTC/digital pins managed by the SDK.
