@@ -36,6 +36,8 @@
 
 #include "MasterI2C.h"
 
+#ifndef ARDUINO
+
 namespace PowerFeather
 {
     static const char *TAG = "PowerFeather::Utils::MasterI2C";
@@ -79,3 +81,5 @@ namespace PowerFeather
         return i2c_driver_delete(_port) == ESP_OK;
     }
 }
+
+#endif
