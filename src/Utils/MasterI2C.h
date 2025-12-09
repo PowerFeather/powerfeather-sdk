@@ -35,15 +35,23 @@
 #pragma once
 
 #include <cstring>
-#include <driver/i2c.h>
+
+#ifndef ARDUINO
+#include <driver/i2c.h> // TODO: need to use updated driver
+#endif
 
 namespace PowerFeather
 {
     class MasterI2C
     {
     public:
+#ifndef ARDUINO
         MasterI2C(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq) :
-                  _port(static_cast<i2c_port_t>(port)), _sdaPin(sdaPin), _sclPin(sclPin), _freq(freq) {};
+                _port(static_cast<i2c_port_t>(port)), _sdaPin(sdaPin), _sclPin(sclPin), _freq(freq) {};
+#else
+        MasterI2C(uint8_t port, uint8_t sdaPin, uint8_t sclPin, uint32_t freq) :
+                _port(port), _sdaPin(sdaPin), _sclPin(sclPin), _freq(freq) {};
+#endif
 
         virtual bool start();
         virtual bool end();
@@ -51,7 +59,11 @@ namespace PowerFeather
         virtual bool read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len);
 
     protected:
+#ifndef ARDUINO
         i2c_port_t _port;
+#else
+        uint8_t _port;
+#endif
         uint8_t _sdaPin;
         uint8_t _sclPin;
         uint32_t _freq;
