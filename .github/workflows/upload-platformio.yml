@@ -1,0 +1,41 @@
+name: Upload PlatformIO Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Validate only (no upload)"
+        type: boolean
+        default: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install PlatformIO CLI
+        run: pip install --upgrade platformio
+
+      - name: Publish to PlatformIO Registry
+        if: github.ref == 'refs/heads/main' || inputs.dry_run == true
+        env:
+          PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
+        run: |
+          if [ -z "$PLATFORMIO_AUTH_TOKEN" ]; then
+            echo "PLATFORMIO_AUTH_TOKEN is not set. Add it in repository secrets." >&2
+            exit 1
+          fi
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            pio pkg publish --type=library --owner powerfeather --no-interactive --dry-run
+          else
+            pio pkg publish --type=library --owner powerfeather --no-interactive
+          fi
