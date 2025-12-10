@@ -35,7 +35,9 @@ jobs:
           fi
 
           if [ "${{ inputs.dry_run }}" = "true" ]; then
-            pio pkg publish --type=library --owner powerfeather --no-interactive --dry-run
+            # Dry-run: verify auth and build the archive to validate metadata but do not publish.
+            pio account show
+            pio pkg pack .
           else
             pio pkg publish --type=library --owner powerfeather --no-interactive
           fi
