@@ -7,6 +7,9 @@ on:
         description: "Validate only (no upload)"
         type: boolean
         default: false
+  release:
+    types:
+      - published
 
 jobs:
   upload:
@@ -21,7 +24,7 @@ jobs:
 
       - name: Upload component to ESP Component Registry
         uses: espressif/upload-components-ci-action@v2
-        if: github.ref == 'refs/heads/main' || inputs.dry_run == true
+        if: github.ref == 'refs/heads/main' || inputs.dry_run == true || github.event_name == 'release'
         with:
           namespace: powerfeather
           components: |
