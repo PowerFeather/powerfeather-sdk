@@ -1,0 +1,30 @@
+name: Upload IDF Component
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Validate only (no upload)"
+        type: boolean
+        default: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required for OIDC auth with the ESP component registry
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Upload component to ESP Component Registry
+        uses: espressif/upload-components-ci-action@v2
+        if: github.ref == 'refs/heads/main' || inputs.dry_run == true
+        with:
+          namespace: powerfeather
+          components: |
+            powerfeather-sdk: .
+          skip_pre_release: true
+          dry_run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
