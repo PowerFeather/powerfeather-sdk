@@ -160,11 +160,11 @@ namespace PowerFeather
                     uint8_t modelId = 0;
                     if (_batteryType == BatteryType::Generic_LFP)
                     {
-                        modelId = 6;
+                        modelId = MAX17260::ModelID_LFP;
                     }
                     else if (_batteryType == BatteryType::ICR18650_26H || _batteryType == BatteryType::UR18650ZY)
                     {
-                        modelId = 2;
+                        modelId = MAX17260::ModelID_LiCoO2;
                     }
 
                     if (modelId)
