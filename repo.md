@@ -1,29 +1,44 @@
 # MAX17260 Support Status
 
-The support for **MAX17260** is currently **feature-complete** and fully integrated into the main SDK logic.
+The support for **MAX17260** is integrated into the SDK, but it is **not yet feature-complete**. The driver and selection logic exist, however there are gaps in documentation, examples, and validation, and some aspects of detection/configuration are still brittle.
 
-### Summary of Effort
+### Summary of Effort (What Exists)
 
-1.  **Driver Implementation (`src/Mainboard/MAX17260.{cpp,h}`)**
-    *   Implemented the full `MAX17260` class inheriting from `RegisterFuelGauge`.
-    *   **Features:** Supports I2C communication, ModelGauge m5 algorithm configuration (model loading/model ID), and telemetry (Voltage, SOC, Time-to-empty/full, SOH, etc.).
-    *   **Configuration:** Implemented mechanisms to wait for the "Data Not Ready" (DNR) bit during initialization and model loading.
+1. **Driver Implementation (`src/Mainboard/MAX17260.{cpp,h}`)**
+   - Implements `MAX17260` (derived from `RegisterFuelGauge`) with I2C access, basic telemetry, alarms, enable/TSENSE, and termination current.
+   - Supports model loading and model ID selection with DNR wait handling.
 
-2.  **SDK Integration (`src/Mainboard/Mainboard.cpp`)**
-    *   **Auto-Detection:** The `Mainboard` now probes for both `LC709204F` and `MAX17260`.
-    *   **Selection Logic:**
-        *   **LFP Batteries:** Prioritizes `MAX17260` (Model ID 6).
-        *   **Li-ion/Others:** Prioritizes `LC709204F` but falls back to `MAX17260` (Model ID 2) if detected.
-    *   **Custom Profiles:** Added support for `BatteryType::Profile` to load custom `MAX17260::Model` structures for specific battery characterization.
+2. **SDK Integration (`src/Mainboard/Mainboard.cpp`)**
+   - Auto-detects LC709204F vs MAX17260 and selects a fuel gauge at runtime.
+   - LFP batteries prioritize MAX17260 and apply a model ID.
+   - `BatteryType::Profile` allows passing a custom `MAX17260::Model`.
 
-### Next Steps
+### Gaps / Risks (Why It Is Not Feature-Complete)
 
-1.  **Hardware Verification**
-    *   Test on physical hardware with a `MAX17260` to verify I2C stability and the startup sequence (specifically the `_waitForDNRClear` loop).
-    *   Verify that `Mainboard::_selectFuelGauge` correctly identifies the chip when it is the only one present or when it is the preferred one.
+- **No shipped profile data or example usage** for `BatteryType::Profile`, so the API is hard to use in practice.
+- **Documentation is missing** (README/examples do not mention MAX17260 behavior, profile loading, or selection rules).
+- **Probe logic is minimal** (relies on POR bit read), which risks false positives.
+- **Magic values are embedded** (model IDs and many register addresses without named constants or notes).
+- **Limited validation** (no known hardware verification or test artifacts in repo).
 
-2.  **Refactoring**
-    *   **Magic Numbers:** Replace the hardcoded model IDs (`6` for LFP, `2` for others) in `Mainboard.cpp` with named constants (e.g., `ModelID_LFP`, `ModelID_LiPo`) in `MAX17260.h`.
+### Implementation Plan (Easiest -> Hardest)
 
-3.  **Documentation & Examples**
-    *   Add a simple example or comment block in `examples/` demonstrating how to use `BatteryType::Profile` with a custom model array, as this is a powerful but complex feature for the MAX17260.
+1. **Docs update**
+   - Add README section for MAX17260: detection order, LFP behavior, profile loading.
+   - Add a short note in examples or a minimal snippet showing `BatteryType::Profile`.
+
+2. **Constants cleanup**
+   - Replace hardcoded model IDs with named constants in `MAX17260.h`.
+   - Introduce named register constants for frequently used “magic addresses” to improve readability.
+
+3. **Example + profile scaffolding**
+   - Add a minimal profile header/source with a sample `MAX17260::Model`.
+   - Add an example that passes the profile through `Mainboard::init`.
+
+4. **Probe hardening**
+   - Update `probe()` to check a stable ID register or known register defaults to avoid false positives.
+   - Ensure `_fuelGaugeMax.init()` only runs when MAX17260 is detected.
+
+5. **Hardware verification**
+   - Validate telemetry scaling, model loading sequence, and alarm behavior on real hardware.
+   - Capture findings and update docs (and code) based on behavior.
