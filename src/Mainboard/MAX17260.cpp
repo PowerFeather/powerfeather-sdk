@@ -146,21 +146,21 @@ bool MAX17260::loadModel(const Model &model)
     }
 
     uint16_t hibCfg = 0;
-    if (!readRegister(0xBA, hibCfg))
+    if (!readRegister(HibCfg_Register, hibCfg))
     {
         return false;
     }
 
-    if (!writeRegister(0x60, 0x0090)) return false;
-    if (!writeRegister(0xBA, 0x0000)) return false;
-    if (!writeRegister(0x60, 0x0000)) return false;
+    if (!writeRegister(Command_Register, HibernateExit_Command1)) return false;
+    if (!writeRegister(HibCfg_Register, HibernateExit_Command2)) return false;
+    if (!writeRegister(Command_Register, HibernateExit_Command2)) return false;
 
-    if (!writeRegister(0x62, 0x0059)) return false;
-    if (!writeRegister(0x63, 0x00C4)) return false;
+    if (!writeRegister(UnlockModel1_Register, UnlockKey1)) return false;
+    if (!writeRegister(UnlockModel2_Register, UnlockKey2)) return false;
 
     for (size_t i = 0; i < 16; ++i)
     {
-        if (!writeRegister(static_cast<uint8_t>(0x80 + i), model.modelTable[i]))
+        if (!writeRegister(static_cast<uint8_t>(ModelTableStart_Register + i), model.modelTable[i]))
         {
             return false;
         }
@@ -168,18 +168,18 @@ bool MAX17260::loadModel(const Model &model)
 
     for (size_t i = 0; i < 16; ++i)
     {
-        if (!writeRegister(static_cast<uint8_t>(0x90 + i), model.modelTable[16 + i]))
+        if (!writeRegister(static_cast<uint8_t>(ModelTableStart_Register + 16 + i), model.modelTable[16 + i]))
         {
             return false;
         }
     }
 
-    if (!writeRegister(0xAF, model.rCompSeg)) return false;
+    if (!writeRegister(RCompSeg_Register, model.rCompSeg)) return false;
 
-    if (!writeRegister(0x62, 0x0000)) return false;
-    if (!writeRegister(0x63, 0x0000)) return false;
+    if (!writeRegister(UnlockModel1_Register, 0x0000)) return false;
+    if (!writeRegister(UnlockModel2_Register, 0x0000)) return false;
 
-    if (!writeRegister(0x05, 0x0000)) return false;
+    if (!writeRegister(RepCap_Register, 0x0000)) return false;
     vTaskDelay(pdMS_TO_TICKS(100));
     if (!writeRegister(DesignCap_Register, model.designCap)) return false;
 
@@ -187,20 +187,20 @@ bool MAX17260::loadModel(const Model &model)
     const uint16_t fullCapRep = model.designCap;
 
     if (!writeRegister(FullCapRep_Register, fullCapRep)) return false;
-    if (!writeRegister(0x45, static_cast<uint16_t>(fullCapNom / 2))) return false;
-    if (!writeRegister(0x46, 0x0C80)) return false;
-    if (!writeRegister(0x23, fullCapNom)) return false;
-    if (!writeRegister(0x0F, fullCapNom)) return false;
-    if (!writeRegister(0x1F, fullCapNom)) return false;
+    if (!writeRegister(dQAcc_Register, static_cast<uint16_t>(fullCapNom / 2))) return false;
+    if (!writeRegister(dPAcc_Register, 0x0C80)) return false;
+    if (!writeRegister(FullCapNom_Register, fullCapNom)) return false;
+    if (!writeRegister(MixCap_Register, fullCapNom)) return false;
+    if (!writeRegister(AvCap_Register, fullCapNom)) return false;
 
     vTaskDelay(pdMS_TO_TICKS(200));
 
     if (!writeRegister(IChgTerm_Register, model.ichgTerm)) return false;
-    if (!writeRegister(0x3A, model.vEmpty)) return false;
-    if (!writeRegister(0x38, model.rComp0)) return false;
-    if (!writeRegister(0x39, model.tempCo)) return false;
+    if (!writeRegister(VEmpty_Register, model.vEmpty)) return false;
+    if (!writeRegister(RComp0_Register, model.rComp0)) return false;
+    if (!writeRegister(TempCo_Register, model.tempCo)) return false;
 
-    const uint8_t qrAddresses[4] = { 0x12, 0x22, 0x32, 0x42 };
+    const uint8_t qrAddresses[4] = { QRTable00_Register, QRTable10_Register, QRTable20_Register, QRTable30_Register };
     for (size_t i = 0; i < model.qrTable.size(); ++i)
     {
         if (!writeRegister(qrAddresses[i], model.qrTable[i]))
@@ -209,14 +209,14 @@ bool MAX17260::loadModel(const Model &model)
         }
     }
 
-    if (!writeRegister(0x28, model.learnCfg)) return false;
-    if (!writeRegister(0x2A, model.relaxCfg)) return false;
-    if (!writeRegister(0x1D, model.config)) return false;
-    if (!writeRegister(0x2B, model.miscCfg)) return false;
-    if (!writeRegister(0x13, model.fullSocThr)) return false;
-    if (!writeRegister(0x2C, model.tGain)) return false;
-    if (!writeRegister(0x2D, model.tOff)) return false;
-    if (!writeRegister(0xB9, model.curve)) return false;
+    if (!writeRegister(LearnCfg_Register, model.learnCfg)) return false;
+    if (!writeRegister(RelaxCfg_Register, model.relaxCfg)) return false;
+    if (!writeRegister(Config_Register, model.config)) return false;
+    if (!writeRegister(MiscCfg_Register, model.miscCfg)) return false;
+    if (!writeRegister(FullSOCThr_Register, model.fullSocThr)) return false;
+    if (!writeRegister(TGain_Register, model.tGain)) return false;
+    if (!writeRegister(TOff_Register, model.tOff)) return false;
+    if (!writeRegister(Curve_Register, model.curve)) return false;
 
     if (!writeRegister(ModelCfg_Register, model.modelCfg)) return false;
 
@@ -241,12 +241,12 @@ bool MAX17260::loadModel(const Model &model)
     }
 
     uint16_t config2 = model.config2;
-    if (!writeRegister(0xBB, static_cast<uint16_t>(config2 | 0x0020))) return false;
+    if (!writeRegister(Config2_Register, static_cast<uint16_t>(config2 | 0x0020))) return false;
 
     for (int i = 0; i < 200; ++i)
     {
         uint16_t cfg2 = 0;
-        if (!readRegister(0xBB, cfg2))
+        if (!readRegister(Config2_Register, cfg2))
         {
             return false;
         }
@@ -256,8 +256,8 @@ bool MAX17260::loadModel(const Model &model)
             break;
         }
 
-        if (!writeRegister(0x0A, 0x0000)) return false;
-        if (!writeRegister(0x0B, 0x0000)) return false;
+        if (!writeRegister(FullCap_Register, 0x0000)) return false;
+        if (!writeRegister(Register_0B, 0x0000)) return false;
         vTaskDelay(pdMS_TO_TICKS(10));
 
         if (i == 199)
@@ -266,13 +266,13 @@ bool MAX17260::loadModel(const Model &model)
         }
     }
 
-    if (!writeRegister(0xBB, config2)) return false;
+    if (!writeRegister(Config2_Register, config2)) return false;
 
-    if (!writeRegister(0x32, model.qrTable[2])) return false;
-    if (!writeRegister(0x42, model.qrTable[3])) return false;
-    if (!writeRegister(0x17, 0x0000)) return false;
+    if (!writeRegister(QRTable20_Register, model.qrTable[2])) return false;
+    if (!writeRegister(QRTable30_Register, model.qrTable[3])) return false;
+    if (!writeRegister(Cycles_Register, 0x0000)) return false;
 
-    if (!writeRegister(0xBA, hibCfg)) return false;
+    if (!writeRegister(HibCfg_Register, hibCfg)) return false;
 
     return _waitForDNRClear();
 }
