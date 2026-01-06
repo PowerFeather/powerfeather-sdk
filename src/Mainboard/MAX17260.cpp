@@ -256,8 +256,8 @@ bool MAX17260::loadModel(const Model &model)
             break;
         }
 
-        if (!writeRegister(FullCap_Register, 0x0000)) return false;
-        if (!writeRegister(Register_0B, 0x0000)) return false;
+        if (!writeRegister(Current_Register, 0x0000)) return false;
+        if (!writeRegister(AvgCurrent_Register, 0x0000)) return false;
         vTaskDelay(pdMS_TO_TICKS(10));
 
         if (i == 199)
