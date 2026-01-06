@@ -32,10 +32,148 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <esp_log.h>
+
 #include "FuelGauge.h"
 
 namespace PowerFeather
 {
+    static const char *TAG = "PowerFeather::Mainboard::FuelGauge";
 
+    bool FuelGauge::getEnabled(bool &enabled)
+    {
+        (void)enabled;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
 
+    bool FuelGauge::getCellVoltage(uint16_t &voltage)
+    {
+        (void)voltage;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::getRSOC(uint8_t &percent)
+    {
+        (void)percent;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::getTimeToEmpty(uint16_t &minutes)
+    {
+        (void)minutes;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::getTimeToFull(uint16_t &minutes)
+    {
+        (void)minutes;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::getCellTemperature(float &temperature)
+    {
+        (void)temperature;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::getCycles(uint16_t &cycles)
+    {
+        (void)cycles;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::getSOH(uint8_t &percent)
+    {
+        (void)percent;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::getInitialized(bool &state)
+    {
+        (void)state;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::setEnabled(bool enable)
+    {
+        (void)enable;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::setCellTemperature(float temperature)
+    {
+        (void)temperature;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::enableTSENSE(bool enableTsense1, bool enableTsense2)
+    {
+        (void)enableTsense1;
+        (void)enableTsense2;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::setLowVoltageAlarm(uint16_t voltage)
+    {
+        (void)voltage;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::setHighVoltageAlarm(uint16_t voltage)
+    {
+        (void)voltage;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::setLowRSOCAlarm(uint8_t percent)
+    {
+        (void)percent;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::setTerminationFactor(float factor)
+    {
+        (void)factor;
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::setInitialized()
+    {
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::clearLowVoltageAlarm()
+    {
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::clearHighVoltageAlarm()
+    {
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
+
+    bool FuelGauge::clearLowRSOCAlarm()
+    {
+        ESP_LOGE(TAG, "%s not implemented.", __func__);
+        return false;
+    }
 }
