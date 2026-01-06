@@ -105,8 +105,6 @@ namespace PowerFeather
         static constexpr uint16_t HibernateExit_Command1 = 0x0090;
         static constexpr uint16_t HibernateExit_Command2 = 0x0000;
 
-        static constexpr uint8_t FullCapRep_Register = 0x10;
-
         static constexpr uint16_t ConfigBit_TSel = 1u << 15;
         static constexpr uint16_t ConfigBit_TEn = 1u << 9;
         static constexpr uint16_t ConfigBit_TEx = 1u << 8;
@@ -117,6 +115,7 @@ namespace PowerFeather
         static constexpr uint8_t ModelID_LiCoO2 = 2;
         static constexpr uint8_t ModelID_LFP = 6;
         const Field FStat_DNR =             { 0x3D, 0, 0 };
+        const Field Status_POR =            { 0x00, 1, 1 };
         const Field Status_Vmn =            { 0x00, 8, 8 };
         const Field Status_Vmx =            { 0x00, 12, 12 };
         const Field Status_Smn =            { 0x00, 10, 10 };
