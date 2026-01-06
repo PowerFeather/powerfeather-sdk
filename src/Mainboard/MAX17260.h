@@ -98,6 +98,7 @@ namespace PowerFeather
         static constexpr uint8_t HibCfg_Register = 0xBA;
         static constexpr uint8_t Config2_Register = 0xBB;
         static constexpr uint8_t ModelCfg_Register = 0xDB;
+        static constexpr uint8_t VFSOC_Register = 0xFF;
 
         static constexpr uint16_t DevName_MAX17260 = 0x4031;
         static constexpr uint16_t UnlockKey1 = 0x0059;
@@ -112,7 +113,7 @@ namespace PowerFeather
         static constexpr uint16_t ConfigBit_FTHRM = 1u << 3;
 
     public:
-        static constexpr uint8_t ModelID_LiCoO2 = 2;
+        static constexpr uint8_t ModelID_LiCoO2 = 0;
         static constexpr uint8_t ModelID_LFP = 6;
         const Field FStat_DNR =             { 0x3D, 0, 0 };
         const Field Status_POR =            { 0x00, 1, 1 };
