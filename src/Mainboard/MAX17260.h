@@ -61,8 +61,8 @@ namespace PowerFeather
         static constexpr uint8_t RepSOC_Register = 0x06;
         static constexpr uint8_t Temp_Register = 0x08;
         static constexpr uint8_t VCell_Register = 0x09;
-        static constexpr uint8_t FullCap_Register = 0x0A;
-        static constexpr uint8_t Register_0B = 0x0B;
+        static constexpr uint8_t Current_Register = 0x0A;
+        static constexpr uint8_t AvgCurrent_Register = 0x0B;
         static constexpr uint8_t MixCap_Register = 0x0F;
         static constexpr uint8_t FullCapRep_Register = 0x10;
         static constexpr uint8_t TTE_Register = 0x11; // 0x11 is TTE
