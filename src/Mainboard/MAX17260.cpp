@@ -187,11 +187,49 @@ bool MAX17260::loadModel(const Model &model)
     const uint16_t fullCapRep = model.designCap;
 
     if (!writeRegister(FullCapRep_Register, fullCapRep)) return false;
-    if (!writeRegister(dQAcc_Register, static_cast<uint16_t>(fullCapNom / 2))) return false;
-    if (!writeRegister(dPAcc_Register, 0x0C80)) return false;
-    if (!writeRegister(FullCapNom_Register, fullCapNom)) return false;
-    if (!writeRegister(MixCap_Register, fullCapNom)) return false;
-    if (!writeRegister(AvCap_Register, fullCapNom)) return false;
+
+    const uint16_t dQAcc = static_cast<uint16_t>(fullCapNom / 2);
+    constexpr uint16_t dPAcc = 0x0C80;
+    bool verified = false;
+    for (int attempt = 0; attempt < 3; ++attempt)
+    {
+        if (!writeRegister(dQAcc_Register, dQAcc)) return false;
+        if (!writeRegister(dPAcc_Register, dPAcc)) return false;
+        vTaskDelay(pdMS_TO_TICKS(10));
+        if (!writeRegister(FullCapNom_Register, fullCapNom)) return false;
+
+        uint16_t checkFullCapNom = 0;
+        uint16_t checkDQAcc = 0;
+        uint16_t checkDPAcc = 0;
+        if (!readRegister(FullCapNom_Register, checkFullCapNom) ||
+            !readRegister(dQAcc_Register, checkDQAcc) ||
+            !readRegister(dPAcc_Register, checkDPAcc))
+        {
+            return false;
+        }
+
+        if (checkFullCapNom == fullCapNom && checkDQAcc == dQAcc && checkDPAcc == dPAcc)
+        {
+            verified = true;
+            break;
+        }
+    }
+
+    if (!verified)
+    {
+        return false;
+    }
+
+    uint16_t vfsoc = 0;
+    if (!readRegister(VFSOC_Register, vfsoc))
+    {
+        return false;
+    }
+
+    uint32_t updateCapacity = (static_cast<uint32_t>(vfsoc) * fullCapNom) / 25600u;
+    uint16_t updateCapacity16 = static_cast<uint16_t>(std::min<uint32_t>(updateCapacity, 0xFFFFu));
+    if (!writeRegister(MixCap_Register, updateCapacity16)) return false;
+    if (!writeRegister(AvCap_Register, updateCapacity16)) return false;
 
     vTaskDelay(pdMS_TO_TICKS(200));
 
