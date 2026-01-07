@@ -76,6 +76,7 @@ namespace PowerFeather
         virtual void getVoltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const = 0;
         virtual void getTemperatureRange(float &minC, float &maxC) const = 0;
         virtual void getTerminationFactorRange(float &minFactor, float &maxFactor) const = 0;
+        virtual void getBatteryCapacityRange(uint16_t &minMah, uint16_t &maxMah) const = 0;
     };
 }
 

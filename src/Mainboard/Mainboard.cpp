@@ -280,50 +280,58 @@ namespace PowerFeather
             // Ignore set capacity and set 2600 mAh for both ICR18650_26H and UR18650ZY.
             capacity = 2600;
         }
-        else
-        {
-            // Capacity should either be 0, in which case it indicates to the SDK that there is no battery expected
-            // to be connected to the system; or within _minBatteryCapacity and _maxBatteryCapacity inclusive.
-            RET_IF_FALSE(!capacity || (capacity >= _minBatteryCapacity && capacity <= LC709204F::MaxBatteryCapacity), Result::InvalidArg);
-        }
 
         _initDone = false;
 
-    if (type == BatteryType::Profile)
-    {
-        RET_IF_FALSE(profile != nullptr, Result::InvalidArg);
-        _maxModelProfile = static_cast<const MAX17260::Model *>(profile);
-        if (capacity == 0 && _maxModelProfile->designCap)
+        if (type == BatteryType::Profile)
         {
-            capacity = _maxModelProfile->designCap;
+            RET_IF_FALSE(profile != nullptr, Result::InvalidArg);
+            _maxModelProfile = static_cast<const MAX17260::Model *>(profile);
+            if (capacity == 0 && _maxModelProfile->designCap)
+            {
+                capacity = _maxModelProfile->designCap;
+            }
         }
-    }
-    else
-    {
-        _maxModelProfile = nullptr;
-    }
+        else
+        {
+            _maxModelProfile = nullptr;
+        }
 
-    _batteryCapacity = capacity;
-    _batteryType = type;
-    _activeFuelGauge = nullptr;
-    _fuelGaugeProbeAttempted = false;
-    ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
+        uint16_t minCapacity = 0;
+        uint16_t maxCapacity = 0;
+        if (type == BatteryType::Generic_LFP || type == BatteryType::Profile)
+        {
+            _fuelGaugeMax.getBatteryCapacityRange(minCapacity, maxCapacity);
+        }
+        else
+        {
+            _fuelGaugeLc.getBatteryCapacityRange(minCapacity, maxCapacity);
+        }
+        // Capacity should either be 0, in which case it indicates to the SDK that there is no battery expected
+        // to be connected to the system; or within range inclusive.
+        RET_IF_FALSE(!capacity || (capacity >= minCapacity && capacity <= maxCapacity), Result::InvalidArg);
+
+        _batteryCapacity = capacity;
+        _batteryType = type;
+        _activeFuelGauge = nullptr;
+        _fuelGaugeProbeAttempted = false;
+        ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
         // Set termination current to C / 10, or within limits of the IC.
         uint16_t minCurrent = BQ2562x::MinITERMCurrent;
-    uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
-    _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
-    _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
-    ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
+        uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
+        _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
+        _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
+        ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
-    uint16_t chargeVoltageMv = 4200;
-    if (_maxModelProfile && _maxModelProfile->chargeVoltageMv)
-    {
-        chargeVoltageMv = _maxModelProfile->chargeVoltageMv;
-    }
-    if (_batteryType == BatteryType::Generic_LFP)
-    {
-        chargeVoltageMv = 3600;
-    }
+        uint16_t chargeVoltageMv = 4200;
+        if (_maxModelProfile && _maxModelProfile->chargeVoltageMv)
+        {
+            chargeVoltageMv = _maxModelProfile->chargeVoltageMv;
+        }
+        if (_batteryType == BatteryType::Generic_LFP)
+        {
+            chargeVoltageMv = 3600;
+        }
 
         // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
@@ -554,7 +562,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
-        RET_IF_FALSE(current >= _minBatteryCapacity && current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
+        RET_IF_FALSE(current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setChargeCurrentLimit(current), Result::Failure);
         ESP_LOGD(TAG, "Max charging current set to: %d mA.", current);
         return Result::Ok;
