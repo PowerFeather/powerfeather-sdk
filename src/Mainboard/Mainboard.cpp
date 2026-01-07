@@ -269,7 +269,37 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::init(uint16_t capacity, BatteryType type, BatteryProfile profile)
+    Result Mainboard::init(uint16_t capacity, BatteryType type)
+    {
+        return _initInternal(capacity, type, nullptr);
+    }
+
+    Result Mainboard::init(const MAX17260::Model &profile)
+    {
+        uint16_t capacity = _capacityFromProfile(profile);
+        return _initInternal(capacity, BatteryType::Profile, &profile);
+    }
+
+    uint16_t Mainboard::_capacityFromProfile(const MAX17260::Model &profile) const
+    {
+        if (profile.designCap == 0)
+        {
+            return 0;
+        }
+
+        uint16_t minMah = 0;
+        uint16_t maxMah = 0;
+        _fuelGaugeMax.getBatteryCapacityRange(minMah, maxMah);
+        if (maxMah == 0)
+        {
+            return 0;
+        }
+
+        uint32_t value = (static_cast<uint32_t>(profile.designCap) * maxMah + 0x7FFFu) / 0xFFFFu;
+        return static_cast<uint16_t>(std::min<uint32_t>(value, maxMah));
+    }
+
+    Result Mainboard::_initInternal(uint16_t capacity, BatteryType type, const MAX17260::Model *profile)
     {
         _mutex.init();
 
@@ -286,10 +316,10 @@ namespace PowerFeather
         if (type == BatteryType::Profile)
         {
             RET_IF_FALSE(profile != nullptr, Result::InvalidArg);
-            _maxModelProfile = static_cast<const MAX17260::Model *>(profile);
-            if (capacity == 0 && _maxModelProfile->designCap)
+            _maxModelProfile = profile;
+            if (capacity == 0)
             {
-                capacity = _maxModelProfile->designCap;
+                capacity = _capacityFromProfile(*_maxModelProfile);
             }
         }
         else
