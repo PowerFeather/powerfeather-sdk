@@ -53,8 +53,6 @@ namespace PowerFeather
     class Mainboard
     {
     public:
-        typedef void* BatteryProfile;
-
         enum class BatteryType
         {
             Generic_3V7, // Generic Li-ion/LiPo, 3.7 V nominal and 4.2 V max
@@ -150,11 +148,23 @@ namespace PowerFeather
          * will return \c Result::InvalidState. If using multiple batteries connected in parallel, specify
          * only the capacity for one cell. Ignored when \p type is \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY.
          * @param[in] type Type of Li-ion/LiPo battery; ignored when \p capacity is zero, except when value is
-         * \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY
+         * \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY. Use \c init(const MAX17260::Model &profile)
+         * for MAX17260 profiles.
          *
          * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.
          */
-        Result init(uint16_t capacity = 0, BatteryType type = BatteryType::Generic_3V7, BatteryProfile profile = NULL);
+        Result init(uint16_t capacity = 0, BatteryType type = BatteryType::Generic_3V7);
+
+        /**
+         * @brief Initialize the board using a MAX17260 model profile.
+         *
+         * The battery capacity is inferred from the profile.
+         *
+         * @param[in] profile MAX17260 model profile.
+         *
+         * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.
+         */
+        Result init(const MAX17260::Model &profile);
 
         /**
          * @brief Set \a EN pin high or low.
@@ -684,6 +694,8 @@ namespace PowerFeather
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
         bool _setRTCPin(gpio_num_t pin, bool value);
+        uint16_t _capacityFromProfile(const MAX17260::Model &profile) const;
+        Result _initInternal(uint16_t capacity, BatteryType type, const MAX17260::Model *profile);
         Result _udpateChargerADC();
 
         bool _isFuelGaugeEnabled();
