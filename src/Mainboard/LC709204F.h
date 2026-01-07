@@ -77,7 +77,7 @@ namespace PowerFeather
             State_Of_Health = 0x32
         };
 
-        enum class ChangeOfParameter
+        enum class ChangeOfParameter : uint8_t
         {
             Nominal_3V7_Charging_4V2 = 0x00,
             UR18650ZY = 0x01,
@@ -107,12 +107,6 @@ namespace PowerFeather
         float minTerminationFactor() const override { return MinTerminationFactor; }
         float maxTerminationFactor() const override { return MaxTerminationFactor; }
 
-        bool setAPA(uint16_t capacity, ChangeOfParameter changeOfParam);
-        bool setChangeOfParameter(ChangeOfParameter changeOfParam);
-        bool setTerminationFactor(float factor);
-        bool getInitialized(bool& state);
-        bool setInitialized();
-
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(uint16_t &voltage) override;
         bool getRSOC(uint8_t &percent) override;
@@ -121,12 +115,17 @@ namespace PowerFeather
         bool getCellTemperature(float &temperature) override;
         bool getCycles(uint16_t &cycles) override;
         bool getSOH(uint8_t &percent) override;
+        bool getInitialized(bool& state);
         bool setEnabled(bool enable) override;
+        bool setAPA(uint16_t capacity, ChangeOfParameter changeOfParam);
+        bool setChangeOfParameter(ChangeOfParameter changeOfParam);
         bool setCellTemperature(float temperature) override;
         bool enableTSENSE(bool enableTsense1, bool enableTsense2) override;
         bool setLowVoltageAlarm(uint16_t voltage) override;
         bool setHighVoltageAlarm(uint16_t voltage) override;
         bool setLowRSOCAlarm(uint8_t percent) override;
+        bool setTerminationFactor(float factor);
+        bool setInitialized();
         bool clearLowVoltageAlarm() override;
         bool clearHighVoltageAlarm() override;
         bool clearLowRSOCAlarm() override;
@@ -134,10 +133,10 @@ namespace PowerFeather
     private:
         enum class BatteryStatus : uint8_t
         {
-            LowRSOC=9,
-            LowCellVoltage=11,
-            HighCellVoltage=15,
-            Initialized=7
+            LowRSOC = 9,
+            LowCellVoltage = 11,
+            HighCellVoltage = 15,
+            Initialized = 7
         };
 
         enum class OperationMode : uint16_t
