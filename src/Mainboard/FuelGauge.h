@@ -50,26 +50,26 @@ namespace PowerFeather
     public:
         FuelGauge(MasterI2C &i2c) : _i2c(i2c) {}
 
-        virtual bool getEnabled(bool &enabled);
-        virtual bool getCellVoltage(uint16_t &voltage);
-        virtual bool getRSOC(uint8_t &percent);
-        virtual bool getTimeToEmpty(uint16_t &minutes);
-        virtual bool getTimeToFull(uint16_t &minutes);
-        virtual bool getCellTemperature(float &temperature);
-        virtual bool getCycles(uint16_t &cycles);
-        virtual bool getSOH(uint8_t &percent);
-        virtual bool getInitialized(bool& state);
-        virtual bool setEnabled(bool enable);
-        virtual bool setCellTemperature(float temperature);
-        virtual bool enableTSENSE(bool enableTsense1, bool enableTsense2);
-        virtual bool setLowVoltageAlarm(uint16_t voltage);
-        virtual bool setHighVoltageAlarm(uint16_t voltage);
-        virtual bool setLowRSOCAlarm(uint8_t percent);
-        virtual bool setTerminationFactor(float factor);
-        virtual bool setInitialized();
-        virtual bool clearLowVoltageAlarm();
-        virtual bool clearHighVoltageAlarm();
-        virtual bool clearLowRSOCAlarm();
+        virtual bool getEnabled(bool &enabled) = 0;
+        virtual bool getCellVoltage(uint16_t &voltage) = 0;
+        virtual bool getRSOC(uint8_t &percent) = 0;
+        virtual bool getTimeToEmpty(uint16_t &minutes) = 0;
+        virtual bool getTimeToFull(uint16_t &minutes) = 0;
+        virtual bool getCellTemperature(float &temperature) = 0;
+        virtual bool getCycles(uint16_t &cycles) = 0;
+        virtual bool getSOH(uint8_t &percent) = 0;
+        virtual bool getInitialized(bool& state) = 0;
+        virtual bool setEnabled(bool enable) = 0;
+        virtual bool setCellTemperature(float temperature) = 0;
+        virtual bool enableTSENSE(bool enableTsense1, bool enableTsense2) = 0;
+        virtual bool setLowVoltageAlarm(uint16_t voltage) = 0;
+        virtual bool setHighVoltageAlarm(uint16_t voltage) = 0;
+        virtual bool setLowRSOCAlarm(uint8_t percent) = 0;
+        virtual bool setTerminationFactor(float factor) = 0;
+        virtual bool setInitialized() = 0;
+        virtual bool clearLowVoltageAlarm() = 0;
+        virtual bool clearHighVoltageAlarm() = 0;
+        virtual bool clearLowRSOCAlarm() = 0;
 
         virtual bool probe() = 0;
         virtual const char *getName() const = 0;
