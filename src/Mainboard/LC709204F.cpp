@@ -188,7 +188,7 @@ namespace PowerFeather
     bool LC709204F::getInitialized(bool& state)
     {
         uint16_t bit = 0;
-        if (readField(BatteryStatusInitialized, bit))
+        if (readField(Fields::BatteryStatus::Initialized, bit))
         {
             state = (bit == 0);
             return true;
@@ -297,22 +297,22 @@ namespace PowerFeather
 
     bool LC709204F::setInitialized()
     {
-        return writeField(BatteryStatusInitialized, 0);
+        return writeField(Fields::BatteryStatus::Initialized, 0);
     }
 
     bool LC709204F::clearLowVoltageAlarm()
     {
-        return _clearAlarm(BatteryStatusLowVoltage);
+        return _clearAlarm(Fields::BatteryStatus::LowVoltage);
     }
 
     bool LC709204F::clearHighVoltageAlarm()
     {
-        return _clearAlarm(BatteryStatusHighVoltage);
+        return _clearAlarm(Fields::BatteryStatus::HighVoltage);
     }
 
     bool LC709204F::clearLowRSOCAlarm()
     {
-        return _clearAlarm(BatteryStatusLowRSOC);
+        return _clearAlarm(Fields::BatteryStatus::LowRSOC);
     }
 
 }

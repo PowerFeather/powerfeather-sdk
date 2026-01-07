@@ -79,7 +79,7 @@ namespace PowerFeather
 
         do
         {
-            if (!readField(FStat_DNR, dnr))
+            if (!readField(Fields::FStat::DNR, dnr))
             {
                 return false;
             }
@@ -99,13 +99,13 @@ namespace PowerFeather
     bool MAX17260::probe()
     {
         uint16_t value = 0;
-        return readField(Status_POR, value);
+        return readField(Fields::Status::POR, value);
     }
 
     bool MAX17260::init()
     {
         uint16_t por = 0;
-        if (!readField(Status_POR, por))
+        if (!readField(Fields::Status::POR, por))
         {
             return false;
         }
@@ -324,7 +324,7 @@ bool MAX17260::loadModel(const Model &model)
     bool MAX17260::getEnabled(bool &enabled)
     {
         uint16_t value = 0;
-        if (readField(Config_SHDN, value))
+        if (readField(Fields::Config::SHDN, value))
         {
             enabled = (value == 0);
             return true;
@@ -420,7 +420,7 @@ bool MAX17260::loadModel(const Model &model)
     bool MAX17260::getInitialized(bool& state)
     {
         uint16_t por = 0;
-        if (readField(Status_POR, por))
+        if (readField(Fields::Status::POR, por))
         {
             state = (por == 0);
             return true;
@@ -430,7 +430,7 @@ bool MAX17260::loadModel(const Model &model)
 
     bool MAX17260::setEnabled(bool enable)
     {
-        return writeField(Config_SHDN, enable ? 0 : 1);
+        return writeField(Fields::Config::SHDN, enable ? 0 : 1);
     }
 
     bool MAX17260::setCellTemperature(float temperature)
@@ -564,21 +564,21 @@ bool MAX17260::loadModel(const Model &model)
 
     bool MAX17260::setInitialized()
     {
-        return writeField(Status_POR, 0);
+        return writeField(Fields::Status::POR, 0);
     }
 
     bool MAX17260::clearLowVoltageAlarm()
     {
-        return writeField(Status_Vmn, 0);
+        return writeField(Fields::Status::Vmn, 0);
     }
 
     bool MAX17260::clearHighVoltageAlarm()
     {
-        return writeField(Status_Vmx, 0);
+        return writeField(Fields::Status::Vmx, 0);
     }
 
     bool MAX17260::clearLowRSOCAlarm()
     {
-        return writeField(Status_Smn, 0);
+        return writeField(Fields::Status::Smn, 0);
     }
 }

@@ -164,22 +164,32 @@ namespace PowerFeather
 
         using Field = RegisterFuelGauge::RegisterField;
 
-        const Field BatteryStatusInitialized = {
-            static_cast<uint8_t>(Register::BatteryStatus),
-            static_cast<uint8_t>(BatteryStatus::Initialized),
-            static_cast<uint8_t>(BatteryStatus::Initialized)};
-        const Field BatteryStatusLowVoltage = {
-            static_cast<uint8_t>(Register::BatteryStatus),
-            static_cast<uint8_t>(BatteryStatus::LowCellVoltage),
-            static_cast<uint8_t>(BatteryStatus::LowCellVoltage)};
-        const Field BatteryStatusHighVoltage = {
-            static_cast<uint8_t>(Register::BatteryStatus),
-            static_cast<uint8_t>(BatteryStatus::HighCellVoltage),
-            static_cast<uint8_t>(BatteryStatus::HighCellVoltage)};
-        const Field BatteryStatusLowRSOC = {
-            static_cast<uint8_t>(Register::BatteryStatus),
-            static_cast<uint8_t>(BatteryStatus::LowRSOC),
-            static_cast<uint8_t>(BatteryStatus::LowRSOC)};
+        struct Fields
+        {
+            struct BatteryStatus
+            {
+                static constexpr Field Initialized = {
+                    static_cast<uint8_t>(Register::BatteryStatus),
+                    static_cast<uint8_t>(LC709204F::BatteryStatus::Initialized),
+                    static_cast<uint8_t>(LC709204F::BatteryStatus::Initialized)
+                };
+                static constexpr Field LowVoltage = {
+                    static_cast<uint8_t>(Register::BatteryStatus),
+                    static_cast<uint8_t>(LC709204F::BatteryStatus::LowCellVoltage),
+                    static_cast<uint8_t>(LC709204F::BatteryStatus::LowCellVoltage)
+                };
+                static constexpr Field HighVoltage = {
+                    static_cast<uint8_t>(Register::BatteryStatus),
+                    static_cast<uint8_t>(LC709204F::BatteryStatus::HighCellVoltage),
+                    static_cast<uint8_t>(LC709204F::BatteryStatus::HighCellVoltage)
+                };
+                static constexpr Field LowRSOC = {
+                    static_cast<uint8_t>(Register::BatteryStatus),
+                    static_cast<uint8_t>(LC709204F::BatteryStatus::LowRSOC),
+                    static_cast<uint8_t>(LC709204F::BatteryStatus::LowRSOC)
+                };
+            };
+        };
 
         bool readRegister(uint8_t address, uint16_t &data) override;
         bool writeRegister(uint8_t address, uint16_t data) override;
