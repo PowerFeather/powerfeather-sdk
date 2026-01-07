@@ -144,7 +144,8 @@ namespace PowerFeather
          *
          * This function should be called once, before calling all other \c Mainboard functions.
          *
-         * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh), from 50 mAh to 6000 mAh.
+         * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh).
+         * Valid range depends on the active fuel gauge; see \c FuelGauge::getBatteryCapacityRange().
          * A value of zero indicates that no battery is connected, and therefore some of the other \c Mainboard functions
          * will return \c Result::InvalidState. If using multiple batteries connected in parallel, specify
          * only the capacity for one cell. Ignored when \p type is \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY.
@@ -649,13 +650,11 @@ namespace PowerFeather
         static constexpr uint32_t _i2cFreq = 100000;
         static constexpr uint32_t _i2cTimeout = 1000;
 
-        static constexpr uint16_t _minBatteryCapacity = LC709204F::MinBatteryCapacity; // higher of charger and fuel gauge limit
-        static constexpr uint16_t _defaultMaxChargingCurrent = _minBatteryCapacity; // minimum charge current at 1C
+        static constexpr uint16_t _defaultMaxChargingCurrent = 50; // minimum charge current at 1C
         static constexpr uint16_t _minSupplyMaintainVoltage = BQ2562x::ResetVINDPMVoltage;
 
         static_assert(_minSupplyMaintainVoltage >= BQ2562x::MinVINDPMVoltage);
-        static_assert(_minBatteryCapacity >= BQ2562x::MinChargingCurrent);
-        static_assert(_minBatteryCapacity >= BQ2562x::MinChargingCurrent);
+        static_assert(_defaultMaxChargingCurrent >= BQ2562x::MinChargingCurrent);
 
         static constexpr uint16_t _chargerADCWaitTime = 100; // 80 ms actual
         static constexpr uint16_t _batfetCtrlWaitTime = 30; // 30 ms actual

@@ -90,6 +90,11 @@ namespace PowerFeather
             minFactor = MinTermination;
             maxFactor = MaxTermination;
         }
+        void getBatteryCapacityRange(uint16_t &minMah, uint16_t &maxMah) const override
+        {
+            minMah = MinBatteryCapacity;
+            maxMah = MaxBatteryCapacity;
+        }
 
         bool setModelID(uint8_t modelId);
         bool loadModel(const Model &model);
@@ -117,6 +122,11 @@ namespace PowerFeather
 
     private:
         static constexpr uint8_t RegisterSize = 2;
+        static constexpr uint16_t SenseResistorMilliohms = 20;
+        static constexpr uint32_t MaxBatteryCapacityMah = (0xFFFFu * 5u) / SenseResistorMilliohms;
+        static_assert(MaxBatteryCapacityMah <= UINT16_MAX);
+        static constexpr uint16_t MinBatteryCapacity = 1;
+        static constexpr uint16_t MaxBatteryCapacity = static_cast<uint16_t>(MaxBatteryCapacityMah);
         static constexpr uint16_t MinVoltageAlarm = 0;
         static constexpr uint16_t MaxVoltageAlarm = 5120;
         static constexpr float MinTemperature = -128.0f;

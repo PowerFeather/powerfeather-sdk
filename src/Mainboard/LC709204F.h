@@ -43,9 +43,6 @@ namespace PowerFeather
     class LC709204F : public RegisterFuelGauge
     {
     public:
-        static constexpr uint16_t MaxBatteryCapacity = 6000;
-        static constexpr uint16_t MinBatteryCapacity = 50;
-
         enum class ChangeOfParameter : uint8_t
         {
             Nominal_3V7_Charging_4V2 = 0x00,
@@ -74,6 +71,11 @@ namespace PowerFeather
             minFactor = MinTerminationFactor;
             maxFactor = MaxTerminationFactor;
         }
+        void getBatteryCapacityRange(uint16_t &minMah, uint16_t &maxMah) const override
+        {
+            minMah = MinBatteryCapacity;
+            maxMah = MaxBatteryCapacity;
+        }
 
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(uint16_t &voltage) override;
@@ -99,6 +101,8 @@ namespace PowerFeather
         bool clearLowRSOCAlarm() override;
 
     private:
+        static constexpr uint16_t MaxBatteryCapacity = 6000;
+        static constexpr uint16_t MinBatteryCapacity = 50;
         static constexpr uint16_t MinVoltageAlarm = 2500;
         static constexpr uint16_t MaxVoltageAlarm = 5000;
         static constexpr float MaxTerminationFactor = 0.3f;
