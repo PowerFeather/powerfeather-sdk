@@ -54,7 +54,7 @@ namespace PowerFeather
         static constexpr float MinTermination = 0.01f;
         static constexpr float MaxTermination = 1.0f;
 
-        static constexpr uint8_t _i2cAddress = 0x6c;
+        static constexpr uint8_t _i2cAddress = 0x36;
         static constexpr uint8_t VAlrtTh_Register = 0x01;
         static constexpr uint8_t SAlrtTh_Register = 0x03;
         static constexpr uint8_t RepCap_Register = 0x05;
