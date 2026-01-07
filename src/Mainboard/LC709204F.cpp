@@ -87,7 +87,7 @@ namespace PowerFeather
     bool LC709204F::probe()
     {
         uint16_t value = 0;
-        return readRegister(static_cast<uint8_t>(Registers::IC_Power_Mode), value);
+        return readRegister(static_cast<uint8_t>(Register::IC_Power_Mode), value);
     }
 
     uint8_t LC709204F::_computeCRC8(uint8_t *data, int len)
@@ -107,7 +107,7 @@ namespace PowerFeather
         return crc;
     }
 
-    bool LC709204F::_setVoltageAlarm(Registers reg, uint16_t voltage)
+    bool LC709204F::_setVoltageAlarm(Register reg, uint16_t voltage)
     {
         if (voltage == 0 || (voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm))
         {
@@ -124,7 +124,7 @@ namespace PowerFeather
     bool LC709204F::getEnabled(bool &enabled)
     {
         uint16_t value = 0;
-        bool res = readRegister(static_cast<uint8_t>(Registers::IC_Power_Mode), value);
+        bool res = readRegister(static_cast<uint8_t>(Register::IC_Power_Mode), value);
         if (res)
         {
             enabled = (value == static_cast<uint16_t>(OperationMode::OperationalMode));
@@ -134,13 +134,13 @@ namespace PowerFeather
 
     bool LC709204F::getCellVoltage(uint16_t &voltage)
     {
-        return readRegister(static_cast<uint8_t>(Registers::Cell_Voltage), voltage);
+        return readRegister(static_cast<uint8_t>(Register::Cell_Voltage), voltage);
     }
 
     bool LC709204F::getRSOC(uint8_t &percent)
     {
         uint16_t value = 0;
-        if (readRegister(static_cast<uint8_t>(Registers::RSOC), value))
+        if (readRegister(static_cast<uint8_t>(Register::RSOC), value))
         {
             percent = static_cast<uint8_t>(value);
             return true;
@@ -150,18 +150,18 @@ namespace PowerFeather
 
     bool LC709204F::getTimeToEmpty(uint16_t &minutes)
     {
-        return readRegister(static_cast<uint8_t>(Registers::TimeToEmpty), minutes);
+        return readRegister(static_cast<uint8_t>(Register::TimeToEmpty), minutes);
     }
 
     bool LC709204F::getTimeToFull(uint16_t &minutes)
     {
-        return readRegister(static_cast<uint8_t>(Registers::TimeToFull), minutes);
+        return readRegister(static_cast<uint8_t>(Register::TimeToFull), minutes);
     }
 
     bool LC709204F::getCellTemperature(float& temperature)
     {
         uint16_t value = 0;
-        if (readRegister(static_cast<uint8_t>(Registers::TSENSE1), value))
+        if (readRegister(static_cast<uint8_t>(Register::TSENSE1), value))
         {
             temperature = Util::fromRaw(value, 0.1, 0x0DCC) + 80.0f;
             return true;
@@ -171,13 +171,13 @@ namespace PowerFeather
 
     bool LC709204F::getCycles(uint16_t &cycles)
     {
-        return readRegister(static_cast<uint8_t>(Registers::Cycle_Count), cycles);
+        return readRegister(static_cast<uint8_t>(Register::Cycle_Count), cycles);
     }
 
     bool LC709204F::getSOH(uint8_t &percent)
     {
         uint16_t value = 0;
-        if (readRegister(static_cast<uint8_t>(Registers::State_Of_Health), value))
+        if (readRegister(static_cast<uint8_t>(Register::State_Of_Health), value))
         {
             percent = static_cast<uint8_t>(value);
             return true;
@@ -199,7 +199,7 @@ namespace PowerFeather
     bool LC709204F::setEnabled(bool enable)
     {
         uint16_t value = static_cast<uint16_t>(enable ? OperationMode::OperationalMode : OperationMode::SleepMode);
-        return writeRegister(static_cast<uint8_t>(Registers::IC_Power_Mode), value);
+        return writeRegister(static_cast<uint8_t>(Register::IC_Power_Mode), value);
     }
 
     bool LC709204F::setAPA(uint16_t capacity, ChangeOfParameter changeOfParam)
@@ -208,11 +208,11 @@ namespace PowerFeather
         {
             if (changeOfParam == ChangeOfParameter::ICR18650_26H)
             {
-                return writeRegister(static_cast<uint8_t>(Registers::APA), 0x0606);
+                return writeRegister(static_cast<uint8_t>(Register::APA), 0x0606);
             }
             else if (changeOfParam == ChangeOfParameter::UR18650ZY)
             {
-                return writeRegister(static_cast<uint8_t>(Registers::APA), 0x1010);
+                return writeRegister(static_cast<uint8_t>(Register::APA), 0x1010);
             }
             else
             {
@@ -240,7 +240,7 @@ namespace PowerFeather
 
                     if (apa)
                     {
-                        return writeRegister(static_cast<uint8_t>(Registers::APA), apa);
+                        return writeRegister(static_cast<uint8_t>(Register::APA), apa);
                     }
 
                     prev = cur;
@@ -252,36 +252,36 @@ namespace PowerFeather
 
     bool LC709204F::setChangeOfParameter(ChangeOfParameter changeOfParam)
     {
-        return writeRegister(static_cast<uint8_t>(Registers::Change_Of_The_Parameter), static_cast<uint16_t>(changeOfParam));
+        return writeRegister(static_cast<uint8_t>(Register::Change_Of_The_Parameter), static_cast<uint16_t>(changeOfParam));
     }
 
     bool LC709204F::setCellTemperature(float temperature)
     {
         uint16_t value = Util::toRaw(temperature - 80.0f, 0.1f, 0xDCC);
-        return writeRegister(static_cast<uint8_t>(Registers::TSENSE1), value);
+        return writeRegister(static_cast<uint8_t>(Register::TSENSE1), value);
     }
 
     bool LC709204F::enableTSENSE(bool enableTsense1, bool enableTsense2)
     {
         uint16_t status = enableTsense1 << 0 | enableTsense2 << 1;
-        return writeRegister(static_cast<uint8_t>(Registers::Status_Bit), status);
+        return writeRegister(static_cast<uint8_t>(Register::Status_Bit), status);
     }
 
     bool LC709204F::setLowVoltageAlarm(uint16_t voltage)
     {
-        return _setVoltageAlarm(Registers::Alarm_Low_Cell_Voltage, voltage);
+        return _setVoltageAlarm(Register::Alarm_Low_Cell_Voltage, voltage);
     }
 
     bool LC709204F::setHighVoltageAlarm(uint16_t voltage)
     {
-        return _setVoltageAlarm(Registers::Alarm_High_Cell_Voltage, voltage);
+        return _setVoltageAlarm(Register::Alarm_High_Cell_Voltage, voltage);
     }
 
     bool LC709204F::setLowRSOCAlarm(uint8_t percent)
     {
         if (percent <= 100)
         {
-            return writeRegister(static_cast<uint8_t>(Registers::Alarm_Low_RSOC), static_cast<uint16_t>(percent));
+            return writeRegister(static_cast<uint8_t>(Register::Alarm_Low_RSOC), static_cast<uint16_t>(percent));
         }
         return false;
     }
@@ -290,7 +290,7 @@ namespace PowerFeather
     {
         if (factor >= LC709204F::MinTerminationFactor && factor <= LC709204F::MaxTerminationFactor)
         {
-            return writeRegister(static_cast<uint8_t>(Registers::Termination_Current_Rate), static_cast<uint16_t>(factor * 100));
+            return writeRegister(static_cast<uint8_t>(Register::Termination_Current_Rate), static_cast<uint16_t>(factor * 100));
         }
         return false;
     }

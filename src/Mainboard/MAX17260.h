@@ -55,50 +55,55 @@ namespace PowerFeather
         static constexpr float MaxTermination = 1.0f;
 
         static constexpr uint8_t _i2cAddress = 0x36;
-        static constexpr uint8_t VAlrtTh_Register = 0x01;
-        static constexpr uint8_t SAlrtTh_Register = 0x03;
-        static constexpr uint8_t RepCap_Register = 0x05;
-        static constexpr uint8_t RepSOC_Register = 0x06;
-        static constexpr uint8_t Temp_Register = 0x08;
-        static constexpr uint8_t VCell_Register = 0x09;
-        static constexpr uint8_t Current_Register = 0x0A;
-        static constexpr uint8_t AvgCurrent_Register = 0x0B;
-        static constexpr uint8_t MixCap_Register = 0x0F;
-        static constexpr uint8_t FullCapRep_Register = 0x10;
-        static constexpr uint8_t TTE_Register = 0x11; // 0x11 is TTE
-        static constexpr uint8_t QRTable00_Register = 0x12;
-        static constexpr uint8_t FullSOCThr_Register = 0x13;
-        static constexpr uint8_t Cycles_Register = 0x17;
-        static constexpr uint8_t DesignCap_Register = 0x18;
-        static constexpr uint8_t Config_Register = 0x1D;
-        static constexpr uint8_t IChgTerm_Register = 0x1E;
-        static constexpr uint8_t AvCap_Register = 0x1F;
-        static constexpr uint8_t TTF_Register = 0x20;
-        static constexpr uint8_t DevName_Register = 0x21;
-        static constexpr uint8_t QRTable10_Register = 0x22;
-        static constexpr uint8_t FullCapNom_Register = 0x23;
-        static constexpr uint8_t LearnCfg_Register = 0x28;
-        static constexpr uint8_t RelaxCfg_Register = 0x2A;
-        static constexpr uint8_t MiscCfg_Register = 0x2B;
-        static constexpr uint8_t TGain_Register = 0x2C;
-        static constexpr uint8_t TOff_Register = 0x2D;
-        static constexpr uint8_t QRTable20_Register = 0x32;
-        static constexpr uint8_t RComp0_Register = 0x38;
-        static constexpr uint8_t TempCo_Register = 0x39;
-        static constexpr uint8_t VEmpty_Register = 0x3A;
-        static constexpr uint8_t QRTable30_Register = 0x42;
-        static constexpr uint8_t dQAcc_Register = 0x45;
-        static constexpr uint8_t dPAcc_Register = 0x46;
-        static constexpr uint8_t Command_Register = 0x60;
-        static constexpr uint8_t UnlockModel1_Register = 0x62;
-        static constexpr uint8_t UnlockModel2_Register = 0x63;
-        static constexpr uint8_t ModelTableStart_Register = 0x80;
-        static constexpr uint8_t RCompSeg_Register = 0xAF;
-        static constexpr uint8_t Curve_Register = 0xB9;
-        static constexpr uint8_t HibCfg_Register = 0xBA;
-        static constexpr uint8_t Config2_Register = 0xBB;
-        static constexpr uint8_t ModelCfg_Register = 0xDB;
-        static constexpr uint8_t VFSOC_Register = 0xFF;
+        enum class Register : uint8_t
+        {
+            Status = 0x00,
+            VAlrtTh = 0x01,
+            SAlrtTh = 0x03,
+            RepCap = 0x05,
+            RepSOC = 0x06,
+            Temp = 0x08,
+            VCell = 0x09,
+            Current = 0x0A,
+            AvgCurrent = 0x0B,
+            MixCap = 0x0F,
+            FullCapRep = 0x10,
+            TTE = 0x11,
+            QRTable00 = 0x12,
+            FullSOCThr = 0x13,
+            Cycles = 0x17,
+            DesignCap = 0x18,
+            Config = 0x1D,
+            IChgTerm = 0x1E,
+            AvCap = 0x1F,
+            TTF = 0x20,
+            DevName = 0x21,
+            QRTable10 = 0x22,
+            FullCapNom = 0x23,
+            LearnCfg = 0x28,
+            RelaxCfg = 0x2A,
+            MiscCfg = 0x2B,
+            TGain = 0x2C,
+            TOff = 0x2D,
+            QRTable20 = 0x32,
+            RComp0 = 0x38,
+            TempCo = 0x39,
+            VEmpty = 0x3A,
+            FStat = 0x3D,
+            QRTable30 = 0x42,
+            dQAcc = 0x45,
+            dPAcc = 0x46,
+            Command = 0x60,
+            UnlockModel1 = 0x62,
+            UnlockModel2 = 0x63,
+            ModelTableStart = 0x80,
+            RCompSeg = 0xAF,
+            Curve = 0xB9,
+            HibCfg = 0xBA,
+            Config2 = 0xBB,
+            ModelCfg = 0xDB,
+            VFSOC = 0xFF
+        };
 
         static constexpr uint16_t DevName_MAX17260 = 0x4031;
         static constexpr uint16_t UnlockKey1 = 0x0059;
@@ -115,15 +120,23 @@ namespace PowerFeather
     public:
         static constexpr uint8_t ModelID_LiCoO2 = 0;
         static constexpr uint8_t ModelID_LFP = 6;
-        const Field FStat_DNR =             { 0x3D, 0, 0 };
-        const Field Status_POR =            { 0x00, 1, 1 };
-        const Field Status_Vmn =            { 0x00, 8, 8 };
-        const Field Status_Vmx =            { 0x00, 12, 12 };
-        const Field Status_Smn =            { 0x00, 10, 10 };
-        const Field Config_SHDN =           { 0x1D, 7, 7 };
+        const Field FStat_DNR =             { static_cast<uint8_t>(Register::FStat), 0, 0 };
+        const Field Status_POR =            { static_cast<uint8_t>(Register::Status), 1, 1 };
+        const Field Status_Vmn =            { static_cast<uint8_t>(Register::Status), 8, 8 };
+        const Field Status_Vmx =            { static_cast<uint8_t>(Register::Status), 12, 12 };
+        const Field Status_Smn =            { static_cast<uint8_t>(Register::Status), 10, 10 };
+        const Field Config_SHDN =           { static_cast<uint8_t>(Register::Config), 7, 7 };
 
         bool readRegister(uint8_t address, uint16_t &value) override;
         bool writeRegister(uint8_t address, uint16_t value) override;
+        bool readRegister(Register address, uint16_t &value)
+        {
+            return readRegister(static_cast<uint8_t>(address), value);
+        }
+        bool writeRegister(Register address, uint16_t value)
+        {
+            return writeRegister(static_cast<uint8_t>(address), value);
+        }
         bool _waitForDNRClear();
 
     public:

@@ -70,6 +70,8 @@ namespace PowerFeather
             FuelGauge *candidates[2];
             size_t candidateCount = 0;
 
+            // Comment: check fuel guage first, then check if battery type is appropriate. 
+            // LC709204F does not support LFP at all.
             if (_batteryType == BatteryType::Generic_LFP)
             {
                 candidates[candidateCount++] = &_fuelGaugeMax;
@@ -111,6 +113,7 @@ namespace PowerFeather
         FuelGauge *gauge = _getActiveFuelGauge();
         if (!gauge)
         {
+            // Comment: fallback does not make sense
             ESP_LOGW(TAG, "Fuel gauge requested but none detected; falling back to LC709204F instance.");
             return _fuelGaugeLc;
         }

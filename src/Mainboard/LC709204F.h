@@ -57,7 +57,7 @@ namespace PowerFeather
         static constexpr uint16_t MinTemperatureRaw = 0x0980;
         static constexpr uint16_t MaxTemperatureRaw = 0x0DCC;
 
-        enum class Registers
+        enum class Register : uint8_t
         {
             TimeToEmpty = 0x03,
             TimeToFull = 0x05,
@@ -165,19 +165,19 @@ namespace PowerFeather
         using Field = RegisterFuelGauge::RegisterField;
 
         const Field BatteryStatusInitialized = {
-            static_cast<uint8_t>(Registers::BatteryStatus),
+            static_cast<uint8_t>(Register::BatteryStatus),
             static_cast<uint8_t>(BatteryStatus::Initialized),
             static_cast<uint8_t>(BatteryStatus::Initialized)};
         const Field BatteryStatusLowVoltage = {
-            static_cast<uint8_t>(Registers::BatteryStatus),
+            static_cast<uint8_t>(Register::BatteryStatus),
             static_cast<uint8_t>(BatteryStatus::LowCellVoltage),
             static_cast<uint8_t>(BatteryStatus::LowCellVoltage)};
         const Field BatteryStatusHighVoltage = {
-            static_cast<uint8_t>(Registers::BatteryStatus),
+            static_cast<uint8_t>(Register::BatteryStatus),
             static_cast<uint8_t>(BatteryStatus::HighCellVoltage),
             static_cast<uint8_t>(BatteryStatus::HighCellVoltage)};
         const Field BatteryStatusLowRSOC = {
-            static_cast<uint8_t>(Registers::BatteryStatus),
+            static_cast<uint8_t>(Register::BatteryStatus),
             static_cast<uint8_t>(BatteryStatus::LowRSOC),
             static_cast<uint8_t>(BatteryStatus::LowRSOC)};
 
@@ -186,7 +186,7 @@ namespace PowerFeather
 
         uint8_t _computeCRC8(uint8_t *data, int len);
 
-        bool _setVoltageAlarm(Registers reg, uint16_t voltage);
+        bool _setVoltageAlarm(Register reg, uint16_t voltage);
         bool _clearAlarm(const Field &alarmField);
     };
 }
