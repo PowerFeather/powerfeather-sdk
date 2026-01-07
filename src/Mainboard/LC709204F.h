@@ -43,39 +43,8 @@ namespace PowerFeather
     class LC709204F : public RegisterFuelGauge
     {
     public:
-
-        static constexpr uint16_t MinVoltageAlarm = 2500;
-        static constexpr uint16_t MaxVoltageAlarm = 5000;
         static constexpr uint16_t MaxBatteryCapacity = 6000;
         static constexpr uint16_t MinBatteryCapacity = 50;
-        static constexpr float MaxTerminationFactor = 0.3f;
-        static constexpr float MinTerminationFactor = 0.02f;
-
-        static constexpr float MinTemperature = -30.0f;
-        static constexpr float MaxTemperature = 80.0f;
-
-        static constexpr uint16_t MinTemperatureRaw = 0x0980;
-        static constexpr uint16_t MaxTemperatureRaw = 0x0DCC;
-
-        enum class Register : uint8_t
-        {
-            TimeToEmpty = 0x03,
-            TimeToFull = 0x05,
-            TSENSE1 = 0x08,
-            Cell_Voltage = 0x09,
-            APA = 0x0b,
-            RSOC = 0x0d,
-            Change_Of_The_Parameter = 0x12,
-            Alarm_Low_RSOC = 0x13,
-            Alarm_Low_Cell_Voltage = 0x14,
-            IC_Power_Mode = 0x15,
-            Status_Bit = 0x16,
-            Cycle_Count = 0x17,
-            BatteryStatus = 0x19,
-            Termination_Current_Rate = 0x1c,
-            Alarm_High_Cell_Voltage = 0x1f,
-            State_Of_Health = 0x32
-        };
 
         enum class ChangeOfParameter : uint8_t
         {
@@ -85,8 +54,6 @@ namespace PowerFeather
             Nominal_3V8_Charging_4V35 = 0x03,
             Nominal_3V85_Charging_4V4 = 0x04,
         };
-
-        static constexpr uint8_t RegisterSize = 2;
 
         LC709204F(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
 
@@ -132,6 +99,39 @@ namespace PowerFeather
         bool clearLowRSOCAlarm() override;
 
     private:
+        static constexpr uint16_t MinVoltageAlarm = 2500;
+        static constexpr uint16_t MaxVoltageAlarm = 5000;
+        static constexpr float MaxTerminationFactor = 0.3f;
+        static constexpr float MinTerminationFactor = 0.02f;
+
+        static constexpr float MinTemperature = -30.0f;
+        static constexpr float MaxTemperature = 80.0f;
+
+        static constexpr uint16_t MinTemperatureRaw = 0x0980;
+        static constexpr uint16_t MaxTemperatureRaw = 0x0DCC;
+
+        enum class Register : uint8_t
+        {
+            TimeToEmpty = 0x03,
+            TimeToFull = 0x05,
+            TSENSE1 = 0x08,
+            Cell_Voltage = 0x09,
+            APA = 0x0b,
+            RSOC = 0x0d,
+            Change_Of_The_Parameter = 0x12,
+            Alarm_Low_RSOC = 0x13,
+            Alarm_Low_Cell_Voltage = 0x14,
+            IC_Power_Mode = 0x15,
+            Status_Bit = 0x16,
+            Cycle_Count = 0x17,
+            BatteryStatus = 0x19,
+            Termination_Current_Rate = 0x1c,
+            Alarm_High_Cell_Voltage = 0x1f,
+            State_Of_Health = 0x32
+        };
+
+        static constexpr uint8_t RegisterSize = 2;
+
         enum class BatteryStatus : uint8_t
         {
             LowRSOC = 9,

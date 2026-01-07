@@ -43,7 +43,80 @@ namespace PowerFeather
     class MAX17260 : public RegisterFuelGauge
     {
     public:
+        struct Model
+        {
+            std::array<uint16_t, 32> modelTable{};
+            uint16_t rComp0{0};
+            uint16_t tempCo{0};
+            uint16_t rCompSeg{0};
+            uint16_t designCap{0};
+            uint16_t ichgTerm{0};
+            uint16_t vEmpty{0};
+            uint16_t modelCfg{0};
+            uint16_t learnCfg{0};
+            uint16_t relaxCfg{0};
+            uint16_t config{0};
+            uint16_t config2{0};
+            uint16_t miscCfg{0};
+            uint16_t fullSocThr{0};
+            uint16_t tGain{0};
+            uint16_t tOff{0};
+            uint16_t curve{0};
+            std::array<uint16_t, 4> qrTable{{0, 0, 0, 0}};
+            uint16_t chargeVoltageMv{0};
+        };
 
+        static constexpr uint8_t ModelID_LiCoO2 = 0;
+        static constexpr uint8_t ModelID_LFP = 6;
+
+        MAX17260(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
+
+        bool init();
+
+        bool probe() override;
+        const char *getName() const override { return "MAX17260"; }
+        void getVoltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const override
+        {
+            minMv = MinVoltageAlarm;
+            maxMv = MaxVoltageAlarm;
+        }
+        void getTemperatureRange(float &minC, float &maxC) const override
+        {
+            minC = MinTemperature;
+            maxC = MaxTemperature;
+        }
+        void getTerminationFactorRange(float &minFactor, float &maxFactor) const override
+        {
+            minFactor = MinTermination;
+            maxFactor = MaxTermination;
+        }
+
+        bool setModelID(uint8_t modelId);
+        bool loadModel(const Model &model);
+
+        bool getEnabled(bool &enabled) override;
+        bool getCellVoltage(uint16_t &voltage) override;
+        bool getRSOC(uint8_t &percent) override;
+        bool getTimeToEmpty(uint16_t &minutes) override;
+        bool getTimeToFull(uint16_t &minutes) override;
+        bool getCellTemperature(float &temperature) override;
+        bool getCycles(uint16_t &cycles) override;
+        bool getSOH(uint8_t &percent) override;
+        bool getInitialized(bool& state) override;
+        bool setEnabled(bool enable) override;
+        bool setCellTemperature(float temperature) override;
+        bool enableTSENSE(bool enableTsense1, bool enableTsense2) override;
+        bool setLowVoltageAlarm(uint16_t voltage) override;
+        bool setHighVoltageAlarm(uint16_t voltage) override;
+        bool setLowRSOCAlarm(uint8_t percent) override;
+        bool setTerminationFactor(float factor) override;
+        bool setInitialized() override;
+        bool clearLowVoltageAlarm() override;
+        bool clearHighVoltageAlarm() override;
+        bool clearLowRSOCAlarm() override;
+
+    private:
+        static constexpr uint8_t RegisterSize = 2;
         static constexpr uint16_t MinVoltageAlarm = 0;
         static constexpr uint16_t MaxVoltageAlarm = 5120;
         static constexpr float MinTemperature = -128.0f;
@@ -101,80 +174,6 @@ namespace PowerFeather
             VFSOC = 0xFF
         };
 
-        struct Model
-        {
-            std::array<uint16_t, 32> modelTable{};
-            uint16_t rComp0{0};
-            uint16_t tempCo{0};
-            uint16_t rCompSeg{0};
-            uint16_t designCap{0};
-            uint16_t ichgTerm{0};
-            uint16_t vEmpty{0};
-            uint16_t modelCfg{0};
-            uint16_t learnCfg{0};
-            uint16_t relaxCfg{0};
-            uint16_t config{0};
-            uint16_t config2{0};
-            uint16_t miscCfg{0};
-            uint16_t fullSocThr{0};
-            uint16_t tGain{0};
-            uint16_t tOff{0};
-            uint16_t curve{0};
-            std::array<uint16_t, 4> qrTable{{0, 0, 0, 0}};
-            uint16_t chargeVoltageMv{0};
-        };
-
-        static constexpr uint8_t RegisterSize = 2;
-        static constexpr uint8_t ModelID_LiCoO2 = 0;
-        static constexpr uint8_t ModelID_LFP = 6;
-
-        MAX17260(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
-
-        bool init();
-
-        bool probe() override;
-        const char *getName() const override { return "MAX17260"; }
-        void getVoltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const override
-        {
-            minMv = MinVoltageAlarm;
-            maxMv = MaxVoltageAlarm;
-        }
-        void getTemperatureRange(float &minC, float &maxC) const override
-        {
-            minC = MinTemperature;
-            maxC = MaxTemperature;
-        }
-        void getTerminationFactorRange(float &minFactor, float &maxFactor) const override
-        {
-            minFactor = MinTermination;
-            maxFactor = MaxTermination;
-        }
-
-        bool setModelID(uint8_t modelId);
-        bool loadModel(const Model &model);
-
-        bool getEnabled(bool &enabled) override;
-        bool getCellVoltage(uint16_t &voltage) override;
-        bool getRSOC(uint8_t &percent) override;
-        bool getTimeToEmpty(uint16_t &minutes) override;
-        bool getTimeToFull(uint16_t &minutes) override;
-        bool getCellTemperature(float &temperature) override;
-        bool getCycles(uint16_t &cycles) override;
-        bool getSOH(uint8_t &percent) override;
-        bool getInitialized(bool& state) override;
-        bool setEnabled(bool enable) override;
-        bool setCellTemperature(float temperature) override;
-        bool enableTSENSE(bool enableTsense1, bool enableTsense2) override;
-        bool setLowVoltageAlarm(uint16_t voltage) override;
-        bool setHighVoltageAlarm(uint16_t voltage) override;
-        bool setLowRSOCAlarm(uint8_t percent) override;
-        bool setTerminationFactor(float factor) override;
-        bool setInitialized() override;
-        bool clearLowVoltageAlarm() override;
-        bool clearHighVoltageAlarm() override;
-        bool clearLowRSOCAlarm() override;
-
-    private:
         using Field = RegisterFuelGauge::RegisterField;
 
         static constexpr uint8_t _i2cAddress = 0x36;
