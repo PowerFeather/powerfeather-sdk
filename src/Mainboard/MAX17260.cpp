@@ -121,7 +121,7 @@ namespace PowerFeather
 bool MAX17260::setModelID(uint8_t modelId)
 {
     uint16_t cfg = 0;
-    if (!readRegister(ModelCfg_Register, cfg))
+    if (!readRegister(Register::ModelCfg, cfg))
     {
         return false;
         }
@@ -130,7 +130,7 @@ bool MAX17260::setModelID(uint8_t modelId)
         cfg |= static_cast<uint16_t>((modelId & 0x7u) << 5);
         cfg |= static_cast<uint16_t>(1u << 15); // Refresh
 
-        if (!writeRegister(ModelCfg_Register, cfg))
+        if (!writeRegister(Register::ModelCfg, cfg))
         {
             return false;
         }
@@ -146,21 +146,22 @@ bool MAX17260::loadModel(const Model &model)
     }
 
     uint16_t hibCfg = 0;
-    if (!readRegister(HibCfg_Register, hibCfg))
+    if (!readRegister(Register::HibCfg, hibCfg))
     {
         return false;
     }
 
-    if (!writeRegister(Command_Register, HibernateExit_Command1)) return false;
-    if (!writeRegister(HibCfg_Register, HibernateExit_Command2)) return false;
-    if (!writeRegister(Command_Register, HibernateExit_Command2)) return false;
+    if (!writeRegister(Register::Command, HibernateExit_Command1)) return false;
+    if (!writeRegister(Register::HibCfg, HibernateExit_Command2)) return false;
+    if (!writeRegister(Register::Command, HibernateExit_Command2)) return false;
 
-    if (!writeRegister(UnlockModel1_Register, UnlockKey1)) return false;
-    if (!writeRegister(UnlockModel2_Register, UnlockKey2)) return false;
+    if (!writeRegister(Register::UnlockModel1, UnlockKey1)) return false;
+    if (!writeRegister(Register::UnlockModel2, UnlockKey2)) return false;
 
+    const uint8_t modelTableBase = static_cast<uint8_t>(Register::ModelTableStart);
     for (size_t i = 0; i < 16; ++i)
     {
-        if (!writeRegister(static_cast<uint8_t>(ModelTableStart_Register + i), model.modelTable[i]))
+        if (!writeRegister(static_cast<uint8_t>(modelTableBase + i), model.modelTable[i]))
         {
             return false;
         }
@@ -168,42 +169,42 @@ bool MAX17260::loadModel(const Model &model)
 
     for (size_t i = 0; i < 16; ++i)
     {
-        if (!writeRegister(static_cast<uint8_t>(ModelTableStart_Register + 16 + i), model.modelTable[16 + i]))
+        if (!writeRegister(static_cast<uint8_t>(modelTableBase + 16 + i), model.modelTable[16 + i]))
         {
             return false;
         }
     }
 
-    if (!writeRegister(RCompSeg_Register, model.rCompSeg)) return false;
+    if (!writeRegister(Register::RCompSeg, model.rCompSeg)) return false;
 
-    if (!writeRegister(UnlockModel1_Register, 0x0000)) return false;
-    if (!writeRegister(UnlockModel2_Register, 0x0000)) return false;
+    if (!writeRegister(Register::UnlockModel1, 0x0000)) return false;
+    if (!writeRegister(Register::UnlockModel2, 0x0000)) return false;
 
-    if (!writeRegister(RepCap_Register, 0x0000)) return false;
+    if (!writeRegister(Register::RepCap, 0x0000)) return false;
     vTaskDelay(pdMS_TO_TICKS(100));
-    if (!writeRegister(DesignCap_Register, model.designCap)) return false;
+    if (!writeRegister(Register::DesignCap, model.designCap)) return false;
 
     const uint16_t fullCapNom = model.designCap;
     const uint16_t fullCapRep = model.designCap;
 
-    if (!writeRegister(FullCapRep_Register, fullCapRep)) return false;
+    if (!writeRegister(Register::FullCapRep, fullCapRep)) return false;
 
     const uint16_t dQAcc = static_cast<uint16_t>(fullCapNom / 2);
     constexpr uint16_t dPAcc = 0x0C80;
     bool verified = false;
     for (int attempt = 0; attempt < 3; ++attempt)
     {
-        if (!writeRegister(dQAcc_Register, dQAcc)) return false;
-        if (!writeRegister(dPAcc_Register, dPAcc)) return false;
+        if (!writeRegister(Register::dQAcc, dQAcc)) return false;
+        if (!writeRegister(Register::dPAcc, dPAcc)) return false;
         vTaskDelay(pdMS_TO_TICKS(10));
-        if (!writeRegister(FullCapNom_Register, fullCapNom)) return false;
+        if (!writeRegister(Register::FullCapNom, fullCapNom)) return false;
 
         uint16_t checkFullCapNom = 0;
         uint16_t checkDQAcc = 0;
         uint16_t checkDPAcc = 0;
-        if (!readRegister(FullCapNom_Register, checkFullCapNom) ||
-            !readRegister(dQAcc_Register, checkDQAcc) ||
-            !readRegister(dPAcc_Register, checkDPAcc))
+        if (!readRegister(Register::FullCapNom, checkFullCapNom) ||
+            !readRegister(Register::dQAcc, checkDQAcc) ||
+            !readRegister(Register::dPAcc, checkDPAcc))
         {
             return false;
         }
@@ -221,24 +222,29 @@ bool MAX17260::loadModel(const Model &model)
     }
 
     uint16_t vfsoc = 0;
-    if (!readRegister(VFSOC_Register, vfsoc))
+    if (!readRegister(Register::VFSOC, vfsoc))
     {
         return false;
     }
 
     uint32_t updateCapacity = (static_cast<uint32_t>(vfsoc) * fullCapNom) / 25600u;
     uint16_t updateCapacity16 = static_cast<uint16_t>(std::min<uint32_t>(updateCapacity, 0xFFFFu));
-    if (!writeRegister(MixCap_Register, updateCapacity16)) return false;
-    if (!writeRegister(AvCap_Register, updateCapacity16)) return false;
+    if (!writeRegister(Register::MixCap, updateCapacity16)) return false;
+    if (!writeRegister(Register::AvCap, updateCapacity16)) return false;
 
     vTaskDelay(pdMS_TO_TICKS(200));
 
-    if (!writeRegister(IChgTerm_Register, model.ichgTerm)) return false;
-    if (!writeRegister(VEmpty_Register, model.vEmpty)) return false;
-    if (!writeRegister(RComp0_Register, model.rComp0)) return false;
-    if (!writeRegister(TempCo_Register, model.tempCo)) return false;
+    if (!writeRegister(Register::IChgTerm, model.ichgTerm)) return false;
+    if (!writeRegister(Register::VEmpty, model.vEmpty)) return false;
+    if (!writeRegister(Register::RComp0, model.rComp0)) return false;
+    if (!writeRegister(Register::TempCo, model.tempCo)) return false;
 
-    const uint8_t qrAddresses[4] = { QRTable00_Register, QRTable10_Register, QRTable20_Register, QRTable30_Register };
+    const uint8_t qrAddresses[4] = {
+        static_cast<uint8_t>(Register::QRTable00),
+        static_cast<uint8_t>(Register::QRTable10),
+        static_cast<uint8_t>(Register::QRTable20),
+        static_cast<uint8_t>(Register::QRTable30),
+    };
     for (size_t i = 0; i < model.qrTable.size(); ++i)
     {
         if (!writeRegister(qrAddresses[i], model.qrTable[i]))
@@ -247,21 +253,21 @@ bool MAX17260::loadModel(const Model &model)
         }
     }
 
-    if (!writeRegister(LearnCfg_Register, model.learnCfg)) return false;
-    if (!writeRegister(RelaxCfg_Register, model.relaxCfg)) return false;
-    if (!writeRegister(Config_Register, model.config)) return false;
-    if (!writeRegister(MiscCfg_Register, model.miscCfg)) return false;
-    if (!writeRegister(FullSOCThr_Register, model.fullSocThr)) return false;
-    if (!writeRegister(TGain_Register, model.tGain)) return false;
-    if (!writeRegister(TOff_Register, model.tOff)) return false;
-    if (!writeRegister(Curve_Register, model.curve)) return false;
+    if (!writeRegister(Register::LearnCfg, model.learnCfg)) return false;
+    if (!writeRegister(Register::RelaxCfg, model.relaxCfg)) return false;
+    if (!writeRegister(Register::Config, model.config)) return false;
+    if (!writeRegister(Register::MiscCfg, model.miscCfg)) return false;
+    if (!writeRegister(Register::FullSOCThr, model.fullSocThr)) return false;
+    if (!writeRegister(Register::TGain, model.tGain)) return false;
+    if (!writeRegister(Register::TOff, model.tOff)) return false;
+    if (!writeRegister(Register::Curve, model.curve)) return false;
 
-    if (!writeRegister(ModelCfg_Register, model.modelCfg)) return false;
+    if (!writeRegister(Register::ModelCfg, model.modelCfg)) return false;
 
     for (int i = 0; i < 50; ++i)
     {
         uint16_t cfg = 0;
-        if (!readRegister(ModelCfg_Register, cfg))
+        if (!readRegister(Register::ModelCfg, cfg))
         {
             return false;
         }
@@ -279,12 +285,12 @@ bool MAX17260::loadModel(const Model &model)
     }
 
     uint16_t config2 = model.config2;
-    if (!writeRegister(Config2_Register, static_cast<uint16_t>(config2 | 0x0020))) return false;
+    if (!writeRegister(Register::Config2, static_cast<uint16_t>(config2 | 0x0020))) return false;
 
     for (int i = 0; i < 200; ++i)
     {
         uint16_t cfg2 = 0;
-        if (!readRegister(Config2_Register, cfg2))
+        if (!readRegister(Register::Config2, cfg2))
         {
             return false;
         }
@@ -294,8 +300,8 @@ bool MAX17260::loadModel(const Model &model)
             break;
         }
 
-        if (!writeRegister(Current_Register, 0x0000)) return false;
-        if (!writeRegister(AvgCurrent_Register, 0x0000)) return false;
+        if (!writeRegister(Register::Current, 0x0000)) return false;
+        if (!writeRegister(Register::AvgCurrent, 0x0000)) return false;
         vTaskDelay(pdMS_TO_TICKS(10));
 
         if (i == 199)
@@ -304,13 +310,13 @@ bool MAX17260::loadModel(const Model &model)
         }
     }
 
-    if (!writeRegister(Config2_Register, config2)) return false;
+    if (!writeRegister(Register::Config2, config2)) return false;
 
-    if (!writeRegister(QRTable20_Register, model.qrTable[2])) return false;
-    if (!writeRegister(QRTable30_Register, model.qrTable[3])) return false;
-    if (!writeRegister(Cycles_Register, 0x0000)) return false;
+    if (!writeRegister(Register::QRTable20, model.qrTable[2])) return false;
+    if (!writeRegister(Register::QRTable30, model.qrTable[3])) return false;
+    if (!writeRegister(Register::Cycles, 0x0000)) return false;
 
-    if (!writeRegister(HibCfg_Register, hibCfg)) return false;
+    if (!writeRegister(Register::HibCfg, hibCfg)) return false;
 
     return _waitForDNRClear();
 }
@@ -329,7 +335,7 @@ bool MAX17260::loadModel(const Model &model)
     bool MAX17260::getCellVoltage(uint16_t &voltage)
     {
         uint16_t raw = 0;
-        if (readRegister(VCell_Register, raw))
+        if (readRegister(Register::VCell, raw))
         {
             uint32_t mv = static_cast<uint32_t>(raw) * 5u;
             voltage = static_cast<uint16_t>((mv + 32u) >> 6); // divide by 64 with rounding
@@ -341,7 +347,7 @@ bool MAX17260::loadModel(const Model &model)
     bool MAX17260::getRSOC(uint8_t &percent)
     {
         uint16_t raw = 0;
-        if (readRegister(RepSOC_Register, raw))
+        if (readRegister(Register::RepSOC, raw))
         {
             percent = static_cast<uint8_t>(std::min<uint16_t>(100, (raw + 0x80) >> 8));
             return true;
@@ -352,7 +358,7 @@ bool MAX17260::loadModel(const Model &model)
     bool MAX17260::getTimeToEmpty(uint16_t &minutes)
     {
         uint16_t raw = 0;
-        if (readRegister(TTE_Register, raw))
+        if (readRegister(Register::TTE, raw))
         {
             uint32_t value = (static_cast<uint32_t>(raw) * 3u + 16u) >> 5;
             minutes = static_cast<uint16_t>(std::min<uint32_t>(value, 0xFFFFu));
@@ -364,7 +370,7 @@ bool MAX17260::loadModel(const Model &model)
     bool MAX17260::getTimeToFull(uint16_t &minutes)
     {
         uint16_t raw = 0;
-        if (readRegister(TTF_Register, raw))
+        if (readRegister(Register::TTF, raw))
         {
             uint32_t value = (static_cast<uint32_t>(raw) * 3u + 16u) >> 5;
             minutes = static_cast<uint16_t>(std::min<uint32_t>(value, 0xFFFFu));
@@ -376,7 +382,7 @@ bool MAX17260::loadModel(const Model &model)
     bool MAX17260::getCellTemperature(float &temperature)
     {
         uint16_t raw = 0;
-        if (readRegister(Temp_Register, raw))
+        if (readRegister(Register::Temp, raw))
         {
             int16_t signedRaw = static_cast<int16_t>(raw);
             temperature = static_cast<float>(signedRaw) / 256.0f;
@@ -388,7 +394,7 @@ bool MAX17260::loadModel(const Model &model)
     bool MAX17260::getCycles(uint16_t &cycles)
     {
         uint16_t raw = 0;
-        if (readRegister(Cycles_Register, raw))
+        if (readRegister(Register::Cycles, raw))
         {
             cycles = static_cast<uint16_t>((raw + 50u) / 100u);
             return true;
@@ -400,7 +406,9 @@ bool MAX17260::loadModel(const Model &model)
     {
         uint16_t fullCap = 0;
         uint16_t designCap = 0;
-        if (readRegister(FullCapRep_Register, fullCap) && readRegister(DesignCap_Register, designCap) && designCap != 0)
+        if (readRegister(Register::FullCapRep, fullCap) &&
+            readRegister(Register::DesignCap, designCap) &&
+            designCap != 0)
         {
             uint32_t value = (static_cast<uint32_t>(fullCap) * 100u + (designCap / 2u)) / designCap;
             percent = static_cast<uint8_t>(std::min<uint32_t>(value, 100u));
@@ -437,13 +445,13 @@ bool MAX17260::loadModel(const Model &model)
             raw = 32767;
         }
         uint16_t encoded = static_cast<uint16_t>(static_cast<int16_t>(raw));
-        return writeRegister(Temp_Register, encoded);
+        return writeRegister(Register::Temp, encoded);
     }
 
     bool MAX17260::enableTSENSE(bool enableTsense1, bool enableTsense2)
     {
         uint16_t config = 0;
-        if (!readRegister(Config_Register, config))
+        if (!readRegister(Register::Config, config))
         {
             return false;
         }
@@ -473,13 +481,13 @@ bool MAX17260::loadModel(const Model &model)
             newConfig |= ConfigBit_TEx;
         }
 
-        return (newConfig == config) ? true : writeRegister(Config_Register, newConfig);
+        return (newConfig == config) ? true : writeRegister(Register::Config, newConfig);
     }
 
     bool MAX17260::setLowVoltageAlarm(uint16_t voltage)
     {
         uint16_t current = 0;
-        if (!readRegister(VAlrtTh_Register, current))
+        if (!readRegister(Register::VAlrtTh, current))
         {
             return false;
         }
@@ -493,13 +501,13 @@ bool MAX17260::loadModel(const Model &model)
         }
 
         uint16_t updated = static_cast<uint16_t>((static_cast<uint16_t>(high) << 8) | raw);
-        return (updated == current) ? true : writeRegister(VAlrtTh_Register, updated);
+        return (updated == current) ? true : writeRegister(Register::VAlrtTh, updated);
     }
 
     bool MAX17260::setHighVoltageAlarm(uint16_t voltage)
     {
         uint16_t current = 0;
-        if (!readRegister(VAlrtTh_Register, current))
+        if (!readRegister(Register::VAlrtTh, current))
         {
             return false;
         }
@@ -513,13 +521,13 @@ bool MAX17260::loadModel(const Model &model)
         }
 
         uint16_t updated = static_cast<uint16_t>((static_cast<uint16_t>(raw) << 8) | low);
-        return (updated == current) ? true : writeRegister(VAlrtTh_Register, updated);
+        return (updated == current) ? true : writeRegister(Register::VAlrtTh, updated);
     }
 
     bool MAX17260::setLowRSOCAlarm(uint8_t percent)
     {
         uint16_t current = 0;
-        if (!readRegister(SAlrtTh_Register, current))
+        if (!readRegister(Register::SAlrtTh, current))
         {
             return false;
         }
@@ -532,7 +540,7 @@ bool MAX17260::loadModel(const Model &model)
         }
 
         uint16_t updated = static_cast<uint16_t>((static_cast<uint16_t>(high) << 8) | raw);
-        return (updated == current) ? true : writeRegister(SAlrtTh_Register, updated);
+        return (updated == current) ? true : writeRegister(Register::SAlrtTh, updated);
     }
 
     bool MAX17260::setTerminationFactor(float factor)
@@ -543,7 +551,7 @@ bool MAX17260::loadModel(const Model &model)
         }
 
         uint16_t designCap = 0;
-        if (!readRegister(DesignCap_Register, designCap) || designCap == 0)
+        if (!readRegister(Register::DesignCap, designCap) || designCap == 0)
         {
             return false;
         }
@@ -551,7 +559,7 @@ bool MAX17260::loadModel(const Model &model)
         float scaled = static_cast<float>(designCap) * factor * 3.2f;
         uint32_t raw = static_cast<uint32_t>(std::lround(scaled));
         raw = std::min<uint32_t>(raw, 0xFFFFu);
-        return writeRegister(IChgTerm_Register, static_cast<uint16_t>(raw));
+        return writeRegister(Register::IChgTerm, static_cast<uint16_t>(raw));
     }
 
     bool MAX17260::setInitialized()

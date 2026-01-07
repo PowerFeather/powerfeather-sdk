@@ -38,6 +38,7 @@
 
 namespace PowerFeather
 {
+    // Comment: Is not not a fully abstract class?
     static const char *TAG = "PowerFeather::Mainboard::FuelGauge";
 
     bool FuelGauge::getEnabled(bool &enabled)
