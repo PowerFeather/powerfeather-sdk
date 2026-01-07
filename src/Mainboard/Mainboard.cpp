@@ -89,7 +89,7 @@ namespace PowerFeather
                 if (candidate->probe())
                 {
                     _activeFuelGauge = candidate;
-                    ESP_LOGI(TAG, "Detected fuel gauge: %s.", candidate->name());
+                    ESP_LOGI(TAG, "Detected fuel gauge: %s.", candidate->getName());
                     break;
                 }
             }
@@ -177,30 +177,28 @@ namespace PowerFeather
                 }
             }
 
-            const float minFactor = gauge->minTerminationFactor();
-            const float maxFactor = gauge->maxTerminationFactor();
+            float minFactor = 0.0f;
+            float maxFactor = 0.0f;
+            gauge->getTerminationFactorRange(minFactor, maxFactor);
             float terminationFactor = _terminationCurrent/static_cast<float>(_batteryCapacity);
+            if (minFactor > 0.0f)
+            {
+                terminationFactor = std::max(terminationFactor, minFactor);
+            }
             if (maxFactor > 0.0f)
             {
-                terminationFactor = std::min(std::max(terminationFactor, minFactor), maxFactor);
+                terminationFactor = std::min(terminationFactor, maxFactor);
             }
-            if (minFactor > 0.0f || maxFactor > 0.0f)
-            {
-                RET_IF_FALSE(gauge->setTerminationFactor(terminationFactor), Result::Failure);
-            }
-            else
-            {
-                gauge->setTerminationFactor(terminationFactor);
-            }
+            RET_IF_FALSE(gauge->setTerminationFactor(terminationFactor), Result::Failure);
 
             RET_IF_FALSE(gauge->enableTSENSE(false, false), Result::Failure);
             RET_IF_FALSE(gauge->setEnabled(true), Result::Failure);
             RET_IF_FALSE(gauge->setInitialized(), Result::Failure);
-            ESP_LOGD(TAG, "Fuel gauge initialized (%s).", gauge->name());
+            ESP_LOGD(TAG, "Fuel gauge initialized (%s).", gauge->getName());
         }
         else
         {
-            ESP_LOGD(TAG, "Fuel gauge already initialized (%s).", gauge->name());
+            ESP_LOGD(TAG, "Fuel gauge already initialized (%s).", gauge->getName());
         }
 
 
@@ -737,7 +735,7 @@ namespace PowerFeather
         RET_IF_FALSE(gauge != nullptr, Result::Failure);
         uint16_t minAlarm = 0;
         uint16_t maxAlarm = 0;
-        RET_IF_FALSE(gauge->voltageAlarmRange(minAlarm, maxAlarm), Result::InvalidState);
+        gauge->getVoltageAlarmRange(minAlarm, maxAlarm);
         RET_IF_FALSE((voltage == 0) || (voltage >= minAlarm && voltage <= maxAlarm), Result::InvalidArg);
         RET_IF_FALSE(gauge->setLowVoltageAlarm(voltage), Result::Failure);
         if (voltage == 0)
@@ -760,7 +758,7 @@ namespace PowerFeather
         RET_IF_FALSE(gauge != nullptr, Result::Failure);
         uint16_t minAlarm = 0;
         uint16_t maxAlarm = 0;
-        RET_IF_FALSE(gauge->voltageAlarmRange(minAlarm, maxAlarm), Result::InvalidState);
+        gauge->getVoltageAlarmRange(minAlarm, maxAlarm);
         RET_IF_FALSE((voltage == 0) || (voltage >= minAlarm && voltage <= maxAlarm), Result::InvalidArg);
         RET_IF_FALSE(gauge->setHighVoltageAlarm(voltage), Result::Failure);
         if (voltage == 0)
@@ -802,7 +800,7 @@ namespace PowerFeather
         RET_IF_FALSE(gauge != nullptr, Result::Failure);
         float minTemp = 0;
         float maxTemp = 0;
-        RET_IF_FALSE(gauge->temperatureRange(minTemp, maxTemp), Result::InvalidState);
+        gauge->getTemperatureRange(minTemp, maxTemp);
         RET_IF_FALSE(temperature >= minTemp && temperature <= maxTemp, Result::InvalidArg);
         RET_IF_FALSE(gauge->setCellTemperature(temperature), Result::Failure);
         ESP_LOGD(TAG, "Fuel guage temperature updated to: %f °C.", temperature);
