@@ -42,11 +42,8 @@ namespace PowerFeather
 {
     class MAX17260 : public RegisterFuelGauge
     {
-    private:
-        using Field = RegisterFuelGauge::RegisterField;
+    public:
 
-        static constexpr uint8_t RegisterSize = 2;
-        static constexpr uint16_t _fStatDNRWaitTime = 10; // from software implementation guide
         static constexpr uint16_t MinVoltageAlarm = 0;
         static constexpr uint16_t MaxVoltageAlarm = 5120;
         static constexpr float MinTemperature = -128.0f;
@@ -54,7 +51,6 @@ namespace PowerFeather
         static constexpr float MinTermination = 0.01f;
         static constexpr float MaxTermination = 1.0f;
 
-        static constexpr uint8_t _i2cAddress = 0x36;
         enum class Register : uint8_t
         {
             Status = 0x00,
@@ -105,54 +101,6 @@ namespace PowerFeather
             VFSOC = 0xFF
         };
 
-        static constexpr uint16_t DevName_MAX17260 = 0x4031;
-        static constexpr uint16_t UnlockKey1 = 0x0059;
-        static constexpr uint16_t UnlockKey2 = 0x00C4;
-        static constexpr uint16_t HibernateExit_Command1 = 0x0090;
-        static constexpr uint16_t HibernateExit_Command2 = 0x0000;
-
-        static constexpr uint16_t ConfigBit_TSel = 1u << 15;
-        static constexpr uint16_t ConfigBit_TEn = 1u << 9;
-        static constexpr uint16_t ConfigBit_TEx = 1u << 8;
-        static constexpr uint16_t ConfigBit_ETHRM = 1u << 4;
-        static constexpr uint16_t ConfigBit_FTHRM = 1u << 3;
-
-        struct Fields
-        {
-            struct FStat
-            {
-                static constexpr Field DNR = { static_cast<uint8_t>(Register::FStat), 0, 0 };
-            };
-            struct Status
-            {
-                static constexpr Field POR = { static_cast<uint8_t>(Register::Status), 1, 1 };
-                static constexpr Field Vmn = { static_cast<uint8_t>(Register::Status), 8, 8 };
-                static constexpr Field Smn = { static_cast<uint8_t>(Register::Status), 10, 10 };
-                static constexpr Field Vmx = { static_cast<uint8_t>(Register::Status), 12, 12 };
-            };
-            struct Config
-            {
-                static constexpr Field SHDN = { static_cast<uint8_t>(Register::Config), 7, 7 };
-            };
-        };
-
-    public:
-        static constexpr uint8_t ModelID_LiCoO2 = 0;
-        static constexpr uint8_t ModelID_LFP = 6;
-
-        bool readRegister(uint8_t address, uint16_t &value) override;
-        bool writeRegister(uint8_t address, uint16_t value) override;
-        bool readRegister(Register address, uint16_t &value)
-        {
-            return readRegister(static_cast<uint8_t>(address), value);
-        }
-        bool writeRegister(Register address, uint16_t value)
-        {
-            return writeRegister(static_cast<uint8_t>(address), value);
-        }
-        bool _waitForDNRClear();
-
-    public:
         struct Model
         {
             std::array<uint16_t, 32> modelTable{};
@@ -175,6 +123,10 @@ namespace PowerFeather
             std::array<uint16_t, 4> qrTable{{0, 0, 0, 0}};
             uint16_t chargeVoltageMv{0};
         };
+
+        static constexpr uint8_t RegisterSize = 2;
+        static constexpr uint8_t ModelID_LiCoO2 = 0;
+        static constexpr uint8_t ModelID_LFP = 6;
 
         MAX17260(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
 
@@ -220,5 +172,53 @@ namespace PowerFeather
         bool clearLowVoltageAlarm() override;
         bool clearHighVoltageAlarm() override;
         bool clearLowRSOCAlarm() override;
+
+    private:
+        using Field = RegisterFuelGauge::RegisterField;
+
+        static constexpr uint8_t _i2cAddress = 0x36;
+        static constexpr uint16_t _fStatDNRWaitTime = 10; // from software implementation guide
+        static constexpr uint16_t DevName_MAX17260 = 0x4031;
+        static constexpr uint16_t UnlockKey1 = 0x0059;
+        static constexpr uint16_t UnlockKey2 = 0x00C4;
+        static constexpr uint16_t HibernateExit_Command1 = 0x0090;
+        static constexpr uint16_t HibernateExit_Command2 = 0x0000;
+
+        static constexpr uint16_t ConfigBit_TSel = 1u << 15;
+        static constexpr uint16_t ConfigBit_TEn = 1u << 9;
+        static constexpr uint16_t ConfigBit_TEx = 1u << 8;
+        static constexpr uint16_t ConfigBit_ETHRM = 1u << 4;
+        static constexpr uint16_t ConfigBit_FTHRM = 1u << 3;
+
+        struct Fields
+        {
+            struct FStat
+            {
+                static constexpr Field DNR = { static_cast<uint8_t>(Register::FStat), 0, 0 };
+            };
+            struct Status
+            {
+                static constexpr Field POR = { static_cast<uint8_t>(Register::Status), 1, 1 };
+                static constexpr Field Vmn = { static_cast<uint8_t>(Register::Status), 8, 8 };
+                static constexpr Field Smn = { static_cast<uint8_t>(Register::Status), 10, 10 };
+                static constexpr Field Vmx = { static_cast<uint8_t>(Register::Status), 12, 12 };
+            };
+            struct Config
+            {
+                static constexpr Field SHDN = { static_cast<uint8_t>(Register::Config), 7, 7 };
+            };
+        };
+
+        bool readRegister(uint8_t address, uint16_t &value) override;
+        bool writeRegister(uint8_t address, uint16_t value) override;
+        bool readRegister(Register address, uint16_t &value)
+        {
+            return readRegister(static_cast<uint8_t>(address), value);
+        }
+        bool writeRegister(Register address, uint16_t value)
+        {
+            return writeRegister(static_cast<uint8_t>(address), value);
+        }
+        bool _waitForDNRClear();
     };
 }
