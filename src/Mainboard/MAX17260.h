@@ -133,21 +133,22 @@ namespace PowerFeather
         bool init();
 
         bool probe() override;
-        const char *name() const override { return "MAX17260"; }
-        bool voltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const override
+        const char *getName() const override { return "MAX17260"; }
+        void getVoltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const override
         {
             minMv = MinVoltageAlarm;
             maxMv = MaxVoltageAlarm;
-            return true;
         }
-        bool temperatureRange(float &minC, float &maxC) const override
+        void getTemperatureRange(float &minC, float &maxC) const override
         {
             minC = MinTemperature;
             maxC = MaxTemperature;
-            return true;
         }
-        float minTerminationFactor() const override { return MinTermination; }
-        float maxTerminationFactor() const override { return MaxTermination; }
+        void getTerminationFactorRange(float &minFactor, float &maxFactor) const override
+        {
+            minFactor = MinTermination;
+            maxFactor = MaxTermination;
+        }
 
         bool setModelID(uint8_t modelId);
         bool loadModel(const Model &model);

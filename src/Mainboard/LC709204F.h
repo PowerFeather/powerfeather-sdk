@@ -91,21 +91,22 @@ namespace PowerFeather
         LC709204F(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
 
         bool probe() override;
-        const char *name() const override { return "LC709204F"; }
-        bool voltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const override
+        const char *getName() const override { return "LC709204F"; }
+        void getVoltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const override
         {
             minMv = MinVoltageAlarm;
             maxMv = MaxVoltageAlarm;
-            return true;
         }
-        bool temperatureRange(float &minC, float &maxC) const override
+        void getTemperatureRange(float &minC, float &maxC) const override
         {
             minC = MinTemperature;
             maxC = MaxTemperature;
-            return true;
         }
-        float minTerminationFactor() const override { return MinTerminationFactor; }
-        float maxTerminationFactor() const override { return MaxTerminationFactor; }
+        void getTerminationFactorRange(float &minFactor, float &maxFactor) const override
+        {
+            minFactor = MinTerminationFactor;
+            maxFactor = MaxTerminationFactor;
+        }
 
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(uint16_t &voltage) override;

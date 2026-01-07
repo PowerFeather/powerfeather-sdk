@@ -72,11 +72,10 @@ namespace PowerFeather
         virtual bool clearLowRSOCAlarm();
 
         virtual bool probe() = 0;
-        virtual const char *name() const = 0;
-        virtual bool voltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const { (void)minMv; (void)maxMv; return false; }
-        virtual bool temperatureRange(float &minC, float &maxC) const { (void)minC; (void)maxC; return false; }
-        virtual float minTerminationFactor() const { return 0.0f; }
-        virtual float maxTerminationFactor() const { return 0.0f; }
+        virtual const char *getName() const = 0;
+        virtual void getVoltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const = 0;
+        virtual void getTemperatureRange(float &minC, float &maxC) const = 0;
+        virtual void getTerminationFactorRange(float &minFactor, float &maxFactor) const = 0;
     };
 }
 
