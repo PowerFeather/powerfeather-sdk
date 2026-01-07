@@ -117,15 +117,28 @@ namespace PowerFeather
         static constexpr uint16_t ConfigBit_ETHRM = 1u << 4;
         static constexpr uint16_t ConfigBit_FTHRM = 1u << 3;
 
+        struct Fields
+        {
+            struct FStat
+            {
+                static constexpr Field DNR = { static_cast<uint8_t>(Register::FStat), 0, 0 };
+            };
+            struct Status
+            {
+                static constexpr Field POR = { static_cast<uint8_t>(Register::Status), 1, 1 };
+                static constexpr Field Vmn = { static_cast<uint8_t>(Register::Status), 8, 8 };
+                static constexpr Field Smn = { static_cast<uint8_t>(Register::Status), 10, 10 };
+                static constexpr Field Vmx = { static_cast<uint8_t>(Register::Status), 12, 12 };
+            };
+            struct Config
+            {
+                static constexpr Field SHDN = { static_cast<uint8_t>(Register::Config), 7, 7 };
+            };
+        };
+
     public:
         static constexpr uint8_t ModelID_LiCoO2 = 0;
         static constexpr uint8_t ModelID_LFP = 6;
-        const Field FStat_DNR =             { static_cast<uint8_t>(Register::FStat), 0, 0 };
-        const Field Status_POR =            { static_cast<uint8_t>(Register::Status), 1, 1 };
-        const Field Status_Vmn =            { static_cast<uint8_t>(Register::Status), 8, 8 };
-        const Field Status_Vmx =            { static_cast<uint8_t>(Register::Status), 12, 12 };
-        const Field Status_Smn =            { static_cast<uint8_t>(Register::Status), 10, 10 };
-        const Field Config_SHDN =           { static_cast<uint8_t>(Register::Config), 7, 7 };
 
         bool readRegister(uint8_t address, uint16_t &value) override;
         bool writeRegister(uint8_t address, uint16_t value) override;
