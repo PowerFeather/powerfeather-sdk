@@ -68,6 +68,8 @@ namespace PowerFeather
 
         static constexpr uint8_t ModelID_LiCoO2 = 0;
         static constexpr uint8_t ModelID_LFP = 6;
+        static constexpr bool SupportsProfile = true;
+        static constexpr bool SupportsLfp = true;
 
         MAX17260(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
 

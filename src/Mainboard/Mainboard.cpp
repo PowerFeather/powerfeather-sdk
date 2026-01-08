@@ -188,7 +188,7 @@ namespace PowerFeather
 
     uint16_t Mainboard::_capacityFromProfile(const MAX17260::Model &profile) const
     {
-        if (!_boardHasMax17260)
+        if (!FuelGaugeImpl::SupportsProfile)
         {
             return 0;
         }
@@ -224,7 +224,11 @@ namespace PowerFeather
 
         _initDone = false;
 
-        if ((type == BatteryType::Generic_LFP || type == BatteryType::Profile) && !_boardHasMax17260)
+        if (type == BatteryType::Generic_LFP && !FuelGaugeImpl::SupportsLfp)
+        {
+            return Result::InvalidArg;
+        }
+        if (type == BatteryType::Profile && !FuelGaugeImpl::SupportsProfile)
         {
             return Result::InvalidArg;
         }

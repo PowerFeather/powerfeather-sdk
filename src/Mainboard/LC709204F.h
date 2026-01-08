@@ -52,6 +52,9 @@ namespace PowerFeather
             Nominal_3V85_Charging_4V4 = 0x04,
         };
 
+        static constexpr bool SupportsProfile = false;
+        static constexpr bool SupportsLfp = false;
+
         LC709204F(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
 
         bool probe() override;
