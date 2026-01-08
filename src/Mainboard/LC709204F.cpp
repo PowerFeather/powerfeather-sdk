@@ -90,6 +90,27 @@ namespace PowerFeather
         return readRegister(static_cast<uint8_t>(Register::IC_Power_Mode), value);
     }
 
+    bool LC709204F::initImpl(const InitConfig &config)
+    {
+        if (config.batteryType == FuelGauge::BatteryType::Generic_LFP ||
+            config.batteryType == FuelGauge::BatteryType::Profile)
+        {
+            return false;
+        }
+
+        ChangeOfParameter param = ChangeOfParameter::Nominal_3V7_Charging_4V2;
+        if (config.batteryType == FuelGauge::BatteryType::ICR18650_26H)
+        {
+            param = ChangeOfParameter::ICR18650_26H;
+        }
+        else if (config.batteryType == FuelGauge::BatteryType::UR18650ZY)
+        {
+            param = ChangeOfParameter::UR18650ZY;
+        }
+
+        return setAPA(config.capacityMah, param) && setChangeOfParameter(param);
+    }
+
     uint8_t LC709204F::_computeCRC8(uint8_t *data, int len)
     {
         const uint8_t polynomial = 0x07;

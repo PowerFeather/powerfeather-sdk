@@ -138,69 +138,37 @@ namespace PowerFeather
         FuelGauge *gauge = _getActiveFuelGauge();
         RET_IF_FALSE(gauge != nullptr, Result::Failure);
 
-        bool inited = false;
-        RET_IF_FALSE(gauge->getInitialized(inited), Result::Failure); // check if already initialized
+        FuelGauge::InitConfig config;
+        config.capacityMah = _batteryCapacity;
+        config.terminationCurrentMa = _terminationCurrent;
 
-        if (!inited)
+        switch (_batteryType)
         {
-            if (gauge == &_fuelGaugeLc)
-            {
-                auto *lc = &_fuelGaugeLc;
-                LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650_26H ? LC709204F::ChangeOfParameter::ICR18650_26H :
-                                                    _batteryType == BatteryType::UR18650ZY ? LC709204F::ChangeOfParameter::UR18650ZY :
-                                                    LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
-                RET_IF_FALSE(lc->setAPA(_batteryCapacity, param), Result::Failure);
-                RET_IF_FALSE(lc->setChangeOfParameter(param), Result::Failure);
-            }
-            else if (gauge == &_fuelGaugeMax)
-            {
-                if (_maxModelProfile)
-                {
-                    RET_IF_FALSE(_fuelGaugeMax.loadModel(*_maxModelProfile), Result::Failure);
-                }
-                else
-                {
-                    uint8_t modelId = 0;
-                    if (_batteryType == BatteryType::Generic_LFP)
-                    {
-                        modelId = MAX17260::ModelID_LFP;
-                    }
-                    else if (_batteryType == BatteryType::ICR18650_26H || _batteryType == BatteryType::UR18650ZY)
-                    {
-                        modelId = MAX17260::ModelID_LiCoO2;
-                    }
-
-                    if (modelId)
-                    {
-                        RET_IF_FALSE(_fuelGaugeMax.setModelID(modelId), Result::Failure);
-                    }
-                }
-            }
-
-            float minFactor = 0.0f;
-            float maxFactor = 0.0f;
-            gauge->getTerminationFactorRange(minFactor, maxFactor);
-            float terminationFactor = _terminationCurrent/static_cast<float>(_batteryCapacity);
-            if (minFactor > 0.0f)
-            {
-                terminationFactor = std::max(terminationFactor, minFactor);
-            }
-            if (maxFactor > 0.0f)
-            {
-                terminationFactor = std::min(terminationFactor, maxFactor);
-            }
-            RET_IF_FALSE(gauge->setTerminationFactor(terminationFactor), Result::Failure);
-
-            RET_IF_FALSE(gauge->enableTSENSE(false, false), Result::Failure);
-            RET_IF_FALSE(gauge->setEnabled(true), Result::Failure);
-            RET_IF_FALSE(gauge->setInitialized(), Result::Failure);
-            ESP_LOGD(TAG, "Fuel gauge initialized (%s).", gauge->getName());
-        }
-        else
-        {
-            ESP_LOGD(TAG, "Fuel gauge already initialized (%s).", gauge->getName());
+            case BatteryType::Generic_3V7:
+                config.batteryType = FuelGauge::BatteryType::Generic_3V7;
+                break;
+            case BatteryType::ICR18650_26H:
+                config.batteryType = FuelGauge::BatteryType::ICR18650_26H;
+                break;
+            case BatteryType::UR18650ZY:
+                config.batteryType = FuelGauge::BatteryType::UR18650ZY;
+                break;
+            case BatteryType::Generic_LFP:
+                config.batteryType = FuelGauge::BatteryType::Generic_LFP;
+                break;
+            case BatteryType::Profile:
+                config.batteryType = FuelGauge::BatteryType::Profile;
+                break;
         }
 
+        if (_maxModelProfile)
+        {
+            config.profileKind = FuelGauge::ProfileKind::Max17260;
+            config.profile = _maxModelProfile;
+        }
+
+        RET_IF_FALSE(gauge->init(config), Result::Failure);
+        ESP_LOGD(TAG, "Fuel gauge init complete (%s).", gauge->getName());
 
         return Result::Ok;
     }
@@ -430,7 +398,6 @@ namespace PowerFeather
                 _initFuelGauge();
             }
 
-            _fuelGaugeMax.init();
             RET_IF_FALSE(getCharger().setChargeVoltageLimit(chargeVoltageMv), Result::Failure);
         }
 
