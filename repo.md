@@ -11,11 +11,11 @@ The support for **MAX17260** is integrated into the SDK, but it is **not yet fea
 2. **SDK Integration (`src/Mainboard/Mainboard.cpp`)**
    - Auto-detects LC709204F vs MAX17260 and selects a fuel gauge at runtime.
    - LFP batteries prioritize MAX17260 and apply a model ID.
-   - `BatteryType::Profile` allows passing a custom `MAX17260::Model`.
+   - `Mainboard::init(const MAX17260::Model &profile)` allows passing a custom `MAX17260::Model`.
 
 ### Gaps / Risks (Why It Is Not Feature-Complete)
 
-- **No shipped profile data or example usage** for `BatteryType::Profile`, so the API is hard to use in practice.
+- **No shipped profile data or example usage** for `Mainboard::init(const MAX17260::Model &profile)`, so the API is hard to use in practice.
 - **Documentation is missing** (README/examples do not mention MAX17260 behavior, profile loading, or selection rules).
 - **Probe logic is minimal** (relies on POR bit read), which risks false positives.
 - **Magic values are embedded** (model IDs and many register addresses without named constants or notes).
@@ -25,7 +25,7 @@ The support for **MAX17260** is integrated into the SDK, but it is **not yet fea
 
 1. **Docs update**
    - Add README section for MAX17260: detection order, LFP behavior, profile loading.
-   - Add a short note in examples or a minimal snippet showing `BatteryType::Profile`.
+   - Add a short note in examples or a minimal snippet showing `Mainboard::init(const MAX17260::Model &profile)`.
 
 2. **Constants cleanup**
    - Replace hardcoded model IDs with named constants in `MAX17260.h`.

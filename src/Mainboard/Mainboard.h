@@ -58,8 +58,7 @@ namespace PowerFeather
             Generic_3V7, // Generic Li-ion/LiPo, 3.7 V nominal and 4.2 V max
             ICR18650_26H, // Samsung ICR18650-26H
             UR18650ZY, // Panasonic UR18650ZY
-            Generic_LFP,
-            Profile
+            Generic_LFP
         };
 
         class Pin
@@ -695,6 +694,7 @@ namespace PowerFeather
         uint16_t _batteryCapacity{0};
         uint16_t _terminationCurrent{0};
         BatteryType _batteryType{BatteryType::Generic_3V7};
+        bool _usesProfile{false};
         Mutex _mutex{100};
 
         bool _isFirst();
