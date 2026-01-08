@@ -662,10 +662,8 @@ namespace PowerFeather
         Mainboard() {}
 
     #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-        static constexpr bool _boardHasMax17260 = true;
         using FuelGaugeImpl = MAX17260;
     #else
-        static constexpr bool _boardHasMax17260 = false;
         using FuelGaugeImpl = LC709204F;
     #endif
 
