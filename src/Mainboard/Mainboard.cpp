@@ -33,7 +33,6 @@
  */
 
 #include <algorithm>
-#include <cstddef>
 #include <climits>
 #include <cstdint>
 #include <cstring>
@@ -61,82 +60,21 @@ namespace PowerFeather
     static RTC_NOINIT_ATTR uint32_t first;
     static const uint32_t firstMagic = 0xdeadbeef;
 
-    FuelGauge *Mainboard::_selectFuelGauge()
-    {
-        if (!_fuelGaugeProbeAttempted)
-        {
-            _fuelGaugeProbeAttempted = true;
-
-            FuelGauge *candidates[2];
-            size_t candidateCount = 0;
-
-            // Comment: check fuel guage first, then check if battery type is appropriate. 
-            // LC709204F does not support LFP at all.
-            if (_batteryType == BatteryType::Generic_LFP)
-            {
-                candidates[candidateCount++] = &_fuelGaugeMax;
-                candidates[candidateCount++] = &_fuelGaugeLc;
-            }
-            else
-            {
-                candidates[candidateCount++] = &_fuelGaugeLc;
-                candidates[candidateCount++] = &_fuelGaugeMax;
-            }
-
-            for (size_t i = 0; i < candidateCount; ++i)
-            {
-                auto *candidate = candidates[i];
-                if (candidate->probe())
-                {
-                    _activeFuelGauge = candidate;
-                    ESP_LOGI(TAG, "Detected fuel gauge: %s.", candidate->getName());
-                    break;
-                }
-            }
-
-            if (!_activeFuelGauge)
-            {
-                ESP_LOGW(TAG, "Unable to detect a supported fuel gauge.");
-            }
-        }
-
-        return _activeFuelGauge;
-    }
-
-    FuelGauge *Mainboard::_getActiveFuelGauge()
-    {
-        return _activeFuelGauge ? _activeFuelGauge : _selectFuelGauge();
-    }
-
     FuelGauge &Mainboard::getFuelGauge()
     {
-        FuelGauge *gauge = _getActiveFuelGauge();
-        if (!gauge)
-        {
-            // Comment: fallback does not make sense
-            ESP_LOGW(TAG, "Fuel gauge requested but none detected; falling back to LC709204F instance.");
-            return _fuelGaugeLc;
-        }
-        return *gauge;
+        return _fuelGauge;
     }
 
     bool Mainboard::_isFuelGaugeEnabled()
     {
-        FuelGauge *gauge = _getActiveFuelGauge();
-        if (!gauge)
-        {
-            return false;
-        }
-
         bool enabled = false;
-        gauge->getEnabled(enabled); // failure here means false is returned
+        getFuelGauge().getEnabled(enabled); // failure here means false is returned
         return enabled;
     }
 
     Result Mainboard::_initFuelGauge()
     {
-        FuelGauge *gauge = _getActiveFuelGauge();
-        RET_IF_FALSE(gauge != nullptr, Result::Failure);
+        FuelGauge &gauge = getFuelGauge();
 
         FuelGauge::InitConfig config;
         config.capacityMah = _batteryCapacity;
@@ -167,8 +105,8 @@ namespace PowerFeather
             config.profile = _maxModelProfile;
         }
 
-        RET_IF_FALSE(gauge->init(config), Result::Failure);
-        ESP_LOGD(TAG, "Fuel gauge init complete (%s).", gauge->getName());
+        RET_IF_FALSE(gauge.init(config), Result::Failure);
+        ESP_LOGD(TAG, "Fuel gauge init complete (%s).", gauge.getName());
 
         return Result::Ok;
     }
@@ -250,6 +188,11 @@ namespace PowerFeather
 
     uint16_t Mainboard::_capacityFromProfile(const MAX17260::Model &profile) const
     {
+        if (!_boardHasMax17260)
+        {
+            return 0;
+        }
+
         if (profile.designCap == 0)
         {
             return 0;
@@ -257,7 +200,7 @@ namespace PowerFeather
 
         uint16_t minMah = 0;
         uint16_t maxMah = 0;
-        _fuelGaugeMax.getBatteryCapacityRange(minMah, maxMah);
+        _fuelGauge.getBatteryCapacityRange(minMah, maxMah);
         if (maxMah == 0)
         {
             return 0;
@@ -281,6 +224,11 @@ namespace PowerFeather
 
         _initDone = false;
 
+        if ((type == BatteryType::Generic_LFP || type == BatteryType::Profile) && !_boardHasMax17260)
+        {
+            return Result::InvalidArg;
+        }
+
         if (type == BatteryType::Profile)
         {
             RET_IF_FALSE(profile != nullptr, Result::InvalidArg);
@@ -297,22 +245,13 @@ namespace PowerFeather
 
         uint16_t minCapacity = 0;
         uint16_t maxCapacity = 0;
-        if (type == BatteryType::Generic_LFP || type == BatteryType::Profile)
-        {
-            _fuelGaugeMax.getBatteryCapacityRange(minCapacity, maxCapacity);
-        }
-        else
-        {
-            _fuelGaugeLc.getBatteryCapacityRange(minCapacity, maxCapacity);
-        }
+        _fuelGauge.getBatteryCapacityRange(minCapacity, maxCapacity);
         // Capacity should either be 0, in which case it indicates to the SDK that there is no battery expected
         // to be connected to the system; or within range inclusive.
         RET_IF_FALSE(!capacity || (capacity >= minCapacity && capacity <= maxCapacity), Result::InvalidArg);
 
         _batteryCapacity = capacity;
         _batteryType = type;
-        _activeFuelGauge = nullptr;
-        _fuelGaugeProbeAttempted = false;
         ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
         // Set termination current to C / 10, or within limits of the IC.
         uint16_t minCurrent = BQ2562x::MinITERMCurrent;
@@ -343,21 +282,6 @@ namespace PowerFeather
 
             bool wdOn = true;
             RET_IF_FALSE(getCharger().getWD(wdOn), Result::Failure);
-
-            FuelGauge *detectedGauge = _selectFuelGauge();
-            if (_batteryType == BatteryType::Generic_LFP)
-            {
-                RET_IF_FALSE(detectedGauge == &_fuelGaugeMax, Result::InvalidArg);
-            }
-            if (_maxModelProfile)
-            {
-                RET_IF_FALSE(detectedGauge == &_fuelGaugeMax, Result::InvalidArg);
-            }
-
-            if (_batteryCapacity && !detectedGauge)
-            {
-                return Result::Failure;
-            }
 
             if (wdOn) // watchdog enabled means that the initiatialization was not done previously
             {
@@ -590,9 +514,7 @@ namespace PowerFeather
             // the finally this function is called.
             RET_IF_ERR(_initFuelGauge());
         }
-        FuelGauge *gauge = _getActiveFuelGauge();
-        RET_IF_FALSE(gauge != nullptr, Result::Failure);
-        RET_IF_FALSE(gauge->setEnabled(enable), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().setEnabled(enable), Result::Failure);
         ESP_LOGD(TAG, "Fuel gauge set to: %d.", enable);
         return Result::Ok;
     }
@@ -605,10 +527,9 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         // If fuel gauge is available, use the reading from it.
         bool usedFuelGauge = false;
-        FuelGauge *gauge = _getActiveFuelGauge();
-        if (gauge && _isFuelGaugeEnabled() && _initFuelGauge() == Result::Ok)
+        if (_isFuelGaugeEnabled() && _initFuelGauge() == Result::Ok)
         {
-            usedFuelGauge = gauge->getCellVoltage(voltage);
+            usedFuelGauge = getFuelGauge().getCellVoltage(voltage);
         }
 
         if (!usedFuelGauge)
@@ -639,8 +560,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        FuelGauge *gauge = _getActiveFuelGauge();
-        RET_IF_FALSE(gauge != nullptr && gauge->getRSOC(percent), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().getRSOC(percent), Result::Failure);
         ESP_LOGD(TAG, "Estimated battery charge: %d %%.", percent);
         return Result::Ok;
     }
@@ -653,8 +573,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        FuelGauge *gauge = _getActiveFuelGauge();
-        RET_IF_FALSE(gauge != nullptr && gauge->getSOH(percent), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().getSOH(percent), Result::Failure);
         ESP_LOGD(TAG, "Estimated battery health: %d %%.", percent);
         return Result::Ok;
     }
@@ -667,8 +586,7 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        FuelGauge *gauge = _getActiveFuelGauge();
-        RET_IF_FALSE(gauge != nullptr && gauge->getCycles(cycles), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().getCycles(cycles), Result::Failure);
         ESP_LOGD(TAG, "Estimated battery cycles: %d.", cycles);
         return Result::Ok;
     }
@@ -693,8 +611,7 @@ namespace PowerFeather
         // Get the time-to-empty or time-to-full depending on battery is charging
         // or discharging.
         uint16_t mins = 0;
-        FuelGauge *gauge = _getActiveFuelGauge();
-        RET_IF_FALSE(gauge != nullptr && (discharging ? gauge->getTimeToEmpty(mins) : gauge->getTimeToFull(mins)), Result::Failure);
+        RET_IF_FALSE(discharging ? getFuelGauge().getTimeToEmpty(mins) : getFuelGauge().getTimeToFull(mins), Result::Failure);
 
         if (mins != 0xFFFF) // check if already the required 10 % rise/drop in charge
         {
@@ -736,16 +653,14 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        FuelGauge *gauge = _getActiveFuelGauge();
-        RET_IF_FALSE(gauge != nullptr, Result::Failure);
         uint16_t minAlarm = 0;
         uint16_t maxAlarm = 0;
-        gauge->getVoltageAlarmRange(minAlarm, maxAlarm);
+        getFuelGauge().getVoltageAlarmRange(minAlarm, maxAlarm);
         RET_IF_FALSE((voltage == 0) || (voltage >= minAlarm && voltage <= maxAlarm), Result::InvalidArg);
-        RET_IF_FALSE(gauge->setLowVoltageAlarm(voltage), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().setLowVoltageAlarm(voltage), Result::Failure);
         if (voltage == 0)
         {
-            RET_IF_FALSE(gauge->clearLowVoltageAlarm(), Result::Failure);
+            RET_IF_FALSE(getFuelGauge().clearLowVoltageAlarm(), Result::Failure);
         }
         ESP_LOGD(TAG, "Low battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
@@ -759,16 +674,14 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        FuelGauge *gauge = _getActiveFuelGauge();
-        RET_IF_FALSE(gauge != nullptr, Result::Failure);
         uint16_t minAlarm = 0;
         uint16_t maxAlarm = 0;
-        gauge->getVoltageAlarmRange(minAlarm, maxAlarm);
+        getFuelGauge().getVoltageAlarmRange(minAlarm, maxAlarm);
         RET_IF_FALSE((voltage == 0) || (voltage >= minAlarm && voltage <= maxAlarm), Result::InvalidArg);
-        RET_IF_FALSE(gauge->setHighVoltageAlarm(voltage), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().setHighVoltageAlarm(voltage), Result::Failure);
         if (voltage == 0)
         {
-            RET_IF_FALSE(gauge->clearHighVoltageAlarm(), Result::Failure);
+            RET_IF_FALSE(getFuelGauge().clearHighVoltageAlarm(), Result::Failure);
         }
         ESP_LOGD(TAG, "High battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
@@ -783,11 +696,10 @@ namespace PowerFeather
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(percent <= 100, Result::InvalidArg);
-        FuelGauge *gauge = _getActiveFuelGauge();
-        RET_IF_FALSE(gauge != nullptr && gauge->setLowRSOCAlarm(percent), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().setLowRSOCAlarm(percent), Result::Failure);
         if (percent == 0)
         {
-            RET_IF_FALSE(gauge->clearLowRSOCAlarm(), Result::Failure);
+            RET_IF_FALSE(getFuelGauge().clearLowRSOCAlarm(), Result::Failure);
         }
         ESP_LOGD(TAG, "Low charge alarm set to: %d %%.", (int)percent);
         return Result::Ok;
@@ -801,13 +713,11 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        FuelGauge *gauge = _getActiveFuelGauge();
-        RET_IF_FALSE(gauge != nullptr, Result::Failure);
         float minTemp = 0;
         float maxTemp = 0;
-        gauge->getTemperatureRange(minTemp, maxTemp);
+        getFuelGauge().getTemperatureRange(minTemp, maxTemp);
         RET_IF_FALSE(temperature >= minTemp && temperature <= maxTemp, Result::InvalidArg);
-        RET_IF_FALSE(gauge->setCellTemperature(temperature), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().setCellTemperature(temperature), Result::Failure);
         ESP_LOGD(TAG, "Fuel guage temperature updated to: %f °C.", temperature);
         return Result::Ok;
     }

@@ -649,12 +649,25 @@ namespace PowerFeather
         Result updateBatteryFuelGaugeTemp(float temperature);
 
         BQ2562x &getCharger() { return _charger; }
+        /**
+         * @brief Get the active fuel gauge instance.
+         *
+         * Returns the fuel gauge instance configured at compile time for this board revision.
+         */
         FuelGauge &getFuelGauge();
 
         static Mainboard &get();
 
     private:
         Mainboard() {}
+
+    #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        static constexpr bool _boardHasMax17260 = true;
+        using FuelGaugeImpl = MAX17260;
+    #else
+        static constexpr bool _boardHasMax17260 = false;
+        using FuelGaugeImpl = LC709204F;
+    #endif
 
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 100000;
@@ -676,11 +689,8 @@ namespace PowerFeather
 #endif
 
         BQ2562x _charger{_i2c};
-        LC709204F _fuelGaugeLc{_i2c};
-        MAX17260 _fuelGaugeMax{_i2c};
+        FuelGaugeImpl _fuelGauge{_i2c};
         const MAX17260::Model *_maxModelProfile{nullptr};
-        FuelGauge *_activeFuelGauge{nullptr};
-        bool _fuelGaugeProbeAttempted{false};
 
         bool _sqtEnabled{false};
         bool _initDone{false};
@@ -700,8 +710,6 @@ namespace PowerFeather
 
         bool _isFuelGaugeEnabled();
         Result _initFuelGauge();
-        FuelGauge *_selectFuelGauge();
-        FuelGauge *_getActiveFuelGauge();
     };
 
     extern Mainboard &Board; // singleton instance of Mainboard
