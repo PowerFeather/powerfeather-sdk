@@ -33,6 +33,7 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <climits>
 #include <cstdint>
@@ -48,7 +49,33 @@ namespace PowerFeather
         MasterI2C &_i2c;
 
     public:
+        enum class BatteryType
+        {
+            Generic_3V7,
+            ICR18650_26H,
+            UR18650ZY,
+            Generic_LFP,
+            Profile
+        };
+
+        enum class ProfileKind
+        {
+            None,
+            Max17260
+        };
+
+        struct InitConfig
+        {
+            BatteryType batteryType{BatteryType::Generic_3V7};
+            uint16_t capacityMah{0};
+            uint16_t terminationCurrentMa{0};
+            ProfileKind profileKind{ProfileKind::None};
+            const void *profile{nullptr};
+        };
+
         FuelGauge(MasterI2C &i2c) : _i2c(i2c) {}
+
+        bool init(const InitConfig &config);
 
         virtual bool getEnabled(bool &enabled) = 0;
         virtual bool getCellVoltage(uint16_t &voltage) = 0;
@@ -77,6 +104,12 @@ namespace PowerFeather
         virtual void getTemperatureRange(float &minC, float &maxC) const = 0;
         virtual void getTerminationFactorRange(float &minFactor, float &maxFactor) const = 0;
         virtual void getBatteryCapacityRange(uint16_t &minMah, uint16_t &maxMah) const = 0;
+
+    protected:
+        virtual bool initImpl(const InitConfig &config) = 0;
+
+    private:
+        bool _finalizeInit(const InitConfig &config);
     };
 }
 
@@ -152,5 +185,69 @@ namespace PowerFeather
         uint16_t fieldMask = static_cast<uint16_t>(valueMask << field.start);
         data = static_cast<uint16_t>((data & ~fieldMask) | ((maskedValue << field.start) & fieldMask));
         return writeRegister(field.address, data);
+    }
+}
+
+namespace PowerFeather
+{
+    inline bool FuelGauge::init(const InitConfig &config)
+    {
+        bool inited = false;
+        if (!getInitialized(inited))
+        {
+            return false;
+        }
+
+        if (inited)
+        {
+            return true;
+        }
+
+        if (!initImpl(config))
+        {
+            return false;
+        }
+
+        return _finalizeInit(config);
+    }
+
+    inline bool FuelGauge::_finalizeInit(const InitConfig &config)
+    {
+        if (config.capacityMah == 0 || config.terminationCurrentMa == 0)
+        {
+            return false;
+        }
+
+        float minFactor = 0.0f;
+        float maxFactor = 0.0f;
+        getTerminationFactorRange(minFactor, maxFactor);
+
+        float terminationFactor = static_cast<float>(config.terminationCurrentMa) /
+                                  static_cast<float>(config.capacityMah);
+        if (minFactor > 0.0f)
+        {
+            terminationFactor = std::max(terminationFactor, minFactor);
+        }
+        if (maxFactor > 0.0f)
+        {
+            terminationFactor = std::min(terminationFactor, maxFactor);
+        }
+
+        if (!setTerminationFactor(terminationFactor))
+        {
+            return false;
+        }
+
+        if (!enableTSENSE(false, false))
+        {
+            return false;
+        }
+
+        if (!setEnabled(true))
+        {
+            return false;
+        }
+
+        return setInitialized();
     }
 }

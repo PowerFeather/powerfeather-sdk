@@ -102,7 +102,43 @@ namespace PowerFeather
         return readField(Fields::Status::POR, value);
     }
 
-    bool MAX17260::init()
+    bool MAX17260::initImpl(const InitConfig &config)
+    {
+        if (!_initHardware())
+        {
+            return false;
+        }
+
+        if (config.profileKind == FuelGauge::ProfileKind::Max17260)
+        {
+            auto model = static_cast<const Model *>(config.profile);
+            if (!model)
+            {
+                return false;
+            }
+            return loadModel(*model);
+        }
+
+        uint8_t modelId = 0;
+        if (config.batteryType == FuelGauge::BatteryType::Generic_LFP)
+        {
+            modelId = ModelID_LFP;
+        }
+        else if (config.batteryType == FuelGauge::BatteryType::ICR18650_26H ||
+                 config.batteryType == FuelGauge::BatteryType::UR18650ZY)
+        {
+            modelId = ModelID_LiCoO2;
+        }
+
+        if (modelId)
+        {
+            return setModelID(modelId);
+        }
+
+        return true;
+    }
+
+    bool MAX17260::_initHardware()
     {
         uint16_t por = 0;
         if (!readField(Fields::Status::POR, por))

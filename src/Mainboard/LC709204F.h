@@ -202,5 +202,6 @@ namespace PowerFeather
 
         bool _setVoltageAlarm(Register reg, uint16_t voltage);
         bool _clearAlarm(const Field &alarmField);
+        bool initImpl(const InitConfig &config) override;
     };
 }

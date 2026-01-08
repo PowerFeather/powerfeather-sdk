@@ -71,8 +71,6 @@ namespace PowerFeather
 
         MAX17260(MasterI2C &i2c) : RegisterFuelGauge(i2c, RegisterSize) {}
 
-        bool init();
-
         bool probe() override;
         const char *getName() const override { return "MAX17260"; }
         void getVoltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const override
@@ -229,6 +227,8 @@ namespace PowerFeather
         {
             return writeRegister(static_cast<uint8_t>(address), value);
         }
+        bool initImpl(const InitConfig &config) override;
+        bool _initHardware();
         bool _waitForDNRClear();
     };
 }
