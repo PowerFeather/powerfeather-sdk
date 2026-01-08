@@ -115,13 +115,11 @@ namespace PowerFeather
             case BatteryType::Generic_LFP:
                 config.batteryType = FuelGauge::BatteryType::Generic_LFP;
                 break;
-            case BatteryType::Profile:
-                config.batteryType = FuelGauge::BatteryType::Profile;
-                break;
         }
 
-        if (_batteryType == BatteryType::Profile)
+        if (_usesProfile)
         {
+            config.batteryType = FuelGauge::BatteryType::Profile;
             config.profileKind = FuelGauge::ProfileKind::Max17260;
         }
 
@@ -203,7 +201,7 @@ namespace PowerFeather
     Result Mainboard::init(const MAX17260::Model &profile)
     {
         uint16_t capacity = _capacityFromProfile(profile);
-        return _initInternal(capacity, BatteryType::Profile, &profile);
+        return _initInternal(capacity, BatteryType::Generic_3V7, &profile);
     }
 
     uint16_t Mainboard::_capacityFromProfile(const MAX17260::Model &profile) const
@@ -244,18 +242,18 @@ namespace PowerFeather
 
         _initDone = false;
 
+        const bool useProfile = (profile != nullptr);
         if (type == BatteryType::Generic_LFP && !FuelGaugeImpl::SupportsLfp)
         {
             return Result::InvalidArg;
         }
-        if (type == BatteryType::Profile && !FuelGaugeImpl::SupportsProfile)
+        if (useProfile && !FuelGaugeImpl::SupportsProfile)
         {
             return Result::InvalidArg;
         }
 
-        if (type == BatteryType::Profile)
+        if (useProfile)
         {
-            RET_IF_FALSE(profile != nullptr, Result::InvalidArg);
             if (capacity == 0)
             {
                 capacity = _capacityFromProfile(*profile);
@@ -271,8 +269,9 @@ namespace PowerFeather
 
         _batteryCapacity = capacity;
         _batteryType = type;
+        _usesProfile = useProfile;
         ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
-        if (type == BatteryType::Profile)
+        if (useProfile)
         {
             FuelGaugeProfileHelper<FuelGaugeImpl>::setProfile(_fuelGauge, profile);
         }
@@ -284,7 +283,7 @@ namespace PowerFeather
         ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
         uint16_t chargeVoltageMv = 4200;
-        if (type == BatteryType::Profile && profile && profile->chargeVoltageMv)
+        if (useProfile && profile->chargeVoltageMv)
         {
             chargeVoltageMv = profile->chargeVoltageMv;
         }
