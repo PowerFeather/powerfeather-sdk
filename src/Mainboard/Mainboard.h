@@ -688,7 +688,6 @@ namespace PowerFeather
 
         BQ2562x _charger{_i2c};
         FuelGaugeImpl _fuelGauge{_i2c};
-        const MAX17260::Model *_maxModelProfile{nullptr};
 
         bool _sqtEnabled{false};
         bool _initDone{false};

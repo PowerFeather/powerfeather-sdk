@@ -111,10 +111,14 @@ namespace PowerFeather
 
         if (config.profileKind == FuelGauge::ProfileKind::Max17260)
         {
-            auto model = static_cast<const Model *>(config.profile);
+            const Model *model = static_cast<const Model *>(config.profile);
             if (!model)
             {
-                return false;
+                if (!_hasProfile)
+                {
+                    return false;
+                }
+                model = &_profile;
             }
             return loadModel(*model);
         }
@@ -136,6 +140,12 @@ namespace PowerFeather
         }
 
         return true;
+    }
+
+    void MAX17260::setProfile(const Model &model)
+    {
+        _profile = model;
+        _hasProfile = true;
     }
 
     bool MAX17260::_initHardware()

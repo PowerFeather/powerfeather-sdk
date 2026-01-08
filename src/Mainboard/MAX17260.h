@@ -98,6 +98,7 @@ namespace PowerFeather
 
         bool setModelID(uint8_t modelId);
         bool loadModel(const Model &model);
+        void setProfile(const Model &model);
 
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(uint16_t &voltage) override;
@@ -232,5 +233,8 @@ namespace PowerFeather
         bool initImpl(const InitConfig &config) override;
         bool _initHardware();
         bool _waitForDNRClear();
+
+        Model _profile{};
+        bool _hasProfile{false};
     };
 }

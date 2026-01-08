@@ -51,6 +51,27 @@ namespace PowerFeather
 
     /*extern*/ Mainboard &Board = Mainboard::get();
 
+    namespace
+    {
+        template <typename Gauge>
+        struct FuelGaugeProfileHelper
+        {
+            static void setProfile(Gauge &, const MAX17260::Model *) {}
+        };
+
+        template <>
+        struct FuelGaugeProfileHelper<MAX17260>
+        {
+            static void setProfile(MAX17260 &gauge, const MAX17260::Model *profile)
+            {
+                if (profile)
+                {
+                    gauge.setProfile(*profile);
+                }
+            }
+        };
+    }
+
     #define LOG_FAIL(r)                 ESP_LOGD(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
     #define RET_IF_ERR(f)               { Result r = (f); if (r != Result::Ok) { LOG_FAIL(1); return r; } }
     #define RET_IF_NOK(f)               { esp_err_t r = (f); if (r != ESP_OK) { LOG_FAIL(r); return false; } }
@@ -99,10 +120,9 @@ namespace PowerFeather
                 break;
         }
 
-        if (_maxModelProfile)
+        if (_batteryType == BatteryType::Profile)
         {
             config.profileKind = FuelGauge::ProfileKind::Max17260;
-            config.profile = _maxModelProfile;
         }
 
         RET_IF_FALSE(gauge.init(config), Result::Failure);
@@ -236,15 +256,10 @@ namespace PowerFeather
         if (type == BatteryType::Profile)
         {
             RET_IF_FALSE(profile != nullptr, Result::InvalidArg);
-            _maxModelProfile = profile;
             if (capacity == 0)
             {
-                capacity = _capacityFromProfile(*_maxModelProfile);
+                capacity = _capacityFromProfile(*profile);
             }
-        }
-        else
-        {
-            _maxModelProfile = nullptr;
         }
 
         uint16_t minCapacity = 0;
@@ -257,6 +272,10 @@ namespace PowerFeather
         _batteryCapacity = capacity;
         _batteryType = type;
         ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
+        if (type == BatteryType::Profile)
+        {
+            FuelGaugeProfileHelper<FuelGaugeImpl>::setProfile(_fuelGauge, profile);
+        }
         // Set termination current to C / 10, or within limits of the IC.
         uint16_t minCurrent = BQ2562x::MinITERMCurrent;
         uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
@@ -265,9 +284,9 @@ namespace PowerFeather
         ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
         uint16_t chargeVoltageMv = 4200;
-        if (_maxModelProfile && _maxModelProfile->chargeVoltageMv)
+        if (type == BatteryType::Profile && profile && profile->chargeVoltageMv)
         {
-            chargeVoltageMv = _maxModelProfile->chargeVoltageMv;
+            chargeVoltageMv = profile->chargeVoltageMv;
         }
         if (_batteryType == BatteryType::Generic_LFP)
         {
