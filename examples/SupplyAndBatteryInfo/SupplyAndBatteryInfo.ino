@@ -1,7 +1,6 @@
 #include <PowerFeather.h>
 
-// Battery capacity in mAh; a value of 0 means there is no battery.
-// Replace with the actual capacity of the battery connected to the board.
+// Battery capacity in mAh; set to 0 when no battery is connected.
 #define BATTERY_CAPACITY 500
 
 using namespace PowerFeather; // for PowerFeather::Board
@@ -20,7 +19,11 @@ void setup()
   printf("===============================\n");
   printf("\n\n");
 
+#if BATTERY_CAPACITY == 0
+  if (Board.init() == Result::Ok) // check if initialization succeeded
+#else
   if (Board.init(BATTERY_CAPACITY) == Result::Ok) // check if initialization succeeded
+#endif
   {
     printf("Board initialized successfully\n\n");
     Board.setBatteryChargingMaxCurrent(100); // set max charging current to 100 mA
@@ -63,7 +66,7 @@ void loop()
     }
     else if (res == Result::InvalidState)
     {
-      printf("Charge: <BATTERY_CAPACITY set to 0>\n");
+      printf("Charge: <no battery configured>\n");
     }
     else
     {

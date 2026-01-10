@@ -124,6 +124,16 @@ namespace PowerFeather
         };
 
         /**
+         * @brief Initialize the board power management and monitoring features with no battery expected.
+         *
+         * Initializes the board with battery monitoring disabled. Use this when no battery is connected.
+         * See \c init(uint16_t, BatteryType) for the full default list.
+         *
+         * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.
+         */
+        Result init();
+
+        /**
          * @brief Initialize the board power management and monitoring features.
          *
          * Initializes the battery charger, battery fuel gauge and other hardware related to power management and monitoring.
@@ -135,7 +145,7 @@ namespace PowerFeather
          *  - Charging: disabled
          *  - Maximum battery charging current: 50 mA
          *  - Maintain supply voltage: 4600 mV
-         *  - Fuel gauge: enabled if \p capacity is non-zero; disabled if \p capacity is zero
+         *  - Fuel gauge: enabled (use \c init() to disable)
          *  - Battery temperature sense: disabled
          *  - Battery alarms (low charge, high/low voltage): disabled
          *
@@ -143,16 +153,15 @@ namespace PowerFeather
          *
          * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh).
          * Valid range depends on the active fuel gauge; see \c FuelGauge::getBatteryCapacityRange().
-         * A value of zero indicates that no battery is connected, and therefore some of the other \c Mainboard functions
-         * will return \c Result::InvalidState. If using multiple batteries connected in parallel, specify
-         * only the capacity for one cell. Ignored when \p type is \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY.
-         * @param[in] type Type of Li-ion/LiPo battery; ignored when \p capacity is zero, except when value is
-         * \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY. Use \c init(const MAX17260::Model &profile)
-         * for MAX17260 profiles.
+         * Must be non-zero; use \c init() when no battery is expected. If using multiple batteries connected
+         * in parallel, specify only the capacity for one cell. Ignored when \p type is
+         * \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY.
+         * @param[in] type Type of Li-ion/LiPo battery; ignored when value is \c BatteryType::ICR18650_26H or
+         * \c BatteryType::UR18650ZY. Use \c init(const MAX17260::Model &profile) for MAX17260 profiles.
          *
          * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.
          */
-        Result init(uint16_t capacity = 0, BatteryType type = BatteryType::Generic_3V7);
+        Result init(uint16_t capacity, BatteryType type = BatteryType::Generic_3V7);
 
         /**
          * @brief Initialize the board using a MAX17260 model profile.

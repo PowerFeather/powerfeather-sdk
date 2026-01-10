@@ -195,12 +195,19 @@ namespace PowerFeather
 
     Result Mainboard::init(uint16_t capacity, BatteryType type)
     {
+        RET_IF_FALSE(capacity, Result::InvalidArg);
         return _initInternal(capacity, type, nullptr);
+    }
+
+    Result Mainboard::init()
+    {
+        return _initInternal(0, BatteryType::Generic_3V7, nullptr);
     }
 
     Result Mainboard::init(const MAX17260::Model &profile)
     {
         uint16_t capacity = _capacityFromProfile(profile);
+        RET_IF_FALSE(capacity, Result::InvalidArg);
         return _initInternal(capacity, BatteryType::Generic_3V7, &profile);
     }
 
@@ -263,8 +270,8 @@ namespace PowerFeather
         uint16_t minCapacity = 0;
         uint16_t maxCapacity = 0;
         _fuelGauge.getBatteryCapacityRange(minCapacity, maxCapacity);
-        // Capacity should either be 0, in which case it indicates to the SDK that there is no battery expected
-        // to be connected to the system; or within range inclusive.
+        // Capacity should either be 0 (from init()) to indicate no battery is expected,
+        // or within range inclusive.
         RET_IF_FALSE(!capacity || (capacity >= minCapacity && capacity <= maxCapacity), Result::InvalidArg);
 
         _batteryCapacity = capacity;
