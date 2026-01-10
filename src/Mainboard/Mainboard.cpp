@@ -97,7 +97,11 @@ namespace PowerFeather
     {
         FuelGauge &gauge = getFuelGauge();
 
+        // review: main branch checks if the guage is already inited, is that handled here as well? is it important to?
         FuelGauge::InitConfig config;
+
+        // review: as it stands, battery capacity + type & profile are mutually exlusive methods of fuel gauge init.
+        // can this be reflected in structure of code?
         config.capacityMah = _batteryCapacity;
         config.terminationCurrentMa = _terminationCurrent;
 
@@ -231,6 +235,7 @@ namespace PowerFeather
             return 0;
         }
 
+        // review: can you explain this formula? i thought for max17260 at least, you needed rsense value?
         uint32_t value = (static_cast<uint32_t>(profile.designCap) * maxMah + 0x7FFFu) / 0xFFFFu;
         return static_cast<uint16_t>(std::min<uint32_t>(value, maxMah));
     }
@@ -262,7 +267,8 @@ namespace PowerFeather
         if (useProfile)
         {
             if (capacity == 0)
-            {
+            {   
+                // review: there is no redundancy here? _capacityFromProfile is already computed if called from init(profile) overload
                 capacity = _capacityFromProfile(*profile);
             }
         }
@@ -351,6 +357,7 @@ namespace PowerFeather
                 _initFuelGauge();
             }
 
+            // review: should this be done here or inside wdOn check? consider esp32 deep sleeping or charger entering into ship mode or shutdown mode
             RET_IF_FALSE(getCharger().setChargeVoltageLimit(chargeVoltageMv), Result::Failure);
         }
 

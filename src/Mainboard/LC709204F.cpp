@@ -98,6 +98,7 @@ namespace PowerFeather
             return false;
         }
 
+		// review: would a switch be better here?
         ChangeOfParameter param = ChangeOfParameter::Nominal_3V7_Charging_4V2;
         if (config.batteryType == FuelGauge::BatteryType::ICR18650_26H)
         {
