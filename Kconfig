@@ -2,11 +2,11 @@ menu "PowerFeather-SDK"
 
 choice ESP32S3_POWERFEATHER_REV
     prompt "ESP32-S3 PowerFeather board revision"
-    default ESP32S3_POWERFEATHER_V1
+    default ESP32S3_POWERFEATHER
     help
         Select the ESP32-S3 PowerFeather board revision for this build.
 
-config ESP32S3_POWERFEATHER_V1
+config ESP32S3_POWERFEATHER
     bool "ESP32-S3 PowerFeather"
 
 config ESP32S3_POWERFEATHER_V2
