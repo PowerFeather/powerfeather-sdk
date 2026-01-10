@@ -52,6 +52,7 @@ namespace PowerFeather
             Nominal_3V85_Charging_4V4 = 0x04,
         };
 
+        // review: are these better as functions?
         static constexpr bool SupportsProfile = false;
         static constexpr bool SupportsLfp = false;
 

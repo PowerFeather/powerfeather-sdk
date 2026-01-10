@@ -45,10 +45,12 @@ namespace PowerFeather
 {
     class FuelGauge
     {
+    // review: order members by public, protected and private
     protected:
         MasterI2C &_i2c;
 
     public:
+        // review: can BatteryType and ProfileKind be combined, and would that result to cleaner code
         enum class BatteryType
         {
             Generic_3V7,
@@ -66,9 +68,11 @@ namespace PowerFeather
 
         struct InitConfig
         {
+            // review: can batteryType, capacity be a union with profile
             BatteryType batteryType{BatteryType::Generic_3V7};
             uint16_t capacityMah{0};
             uint16_t terminationCurrentMa{0};
+            // review: create Profile struct, with kind and data as members (check how that interacts with possibility of combining BatteryType and ProfileKind)
             ProfileKind profileKind{ProfileKind::None};
             const void *profile{nullptr};
         };
@@ -106,6 +110,7 @@ namespace PowerFeather
         virtual void getBatteryCapacityRange(uint16_t &minMah, uint16_t &maxMah) const = 0;
 
     protected:
+        // review: why two protected blocks    
         virtual bool initImpl(const InitConfig &config) = 0;
 
     private:
@@ -125,6 +130,7 @@ namespace PowerFeather
             uint8_t end;
         };
 
+        // review: should registerSizeBytes be a template param
         RegisterFuelGauge(MasterI2C &i2c, uint8_t registerSizeBytes)
             : FuelGauge(i2c), _registerSizeBytes(registerSizeBytes)
         {
@@ -213,6 +219,7 @@ namespace PowerFeather
 
     inline bool FuelGauge::_finalizeInit(const InitConfig &config)
     {
+        // review: should these not be checked super early into init?
         if (config.capacityMah == 0 || config.terminationCurrentMa == 0)
         {
             return false;
@@ -224,6 +231,7 @@ namespace PowerFeather
 
         float terminationFactor = static_cast<float>(config.terminationCurrentMa) /
                                   static_cast<float>(config.capacityMah);
+        // review: can you add a comment explaining this logic
         if (minFactor > 0.0f)
         {
             terminationFactor = std::max(terminationFactor, minFactor);
