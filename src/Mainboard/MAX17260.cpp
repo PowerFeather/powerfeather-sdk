@@ -476,7 +476,30 @@ namespace PowerFeather
 
     bool MAX17260::setEnabled(bool enable)
     {
-        return writeField(Fields::Config::SHDN, enable ? 0 : 1);
+        if (enable)
+        {
+            if (!writeField(Fields::Config::SHDN, 0))
+            {
+                return false;
+            }
+
+            uint16_t hibCfg = 0;
+            if (!readRegister(Register::HibCfg, hibCfg))
+            {
+                return false;
+            }
+
+            uint16_t newHibCfg = static_cast<uint16_t>(hibCfg | HibCfgBit_EnHib);
+            if (newHibCfg != hibCfg)
+            {
+                return writeRegister(Register::HibCfg, newHibCfg);
+            }
+            return true;
+        }
+
+        if (!writeRegister(Register::ShdnTimer, ShdnTimer_ShutdownWithin22s)) return false;
+
+        return writeField(Fields::Config::SHDN, 1);
     }
 
     bool MAX17260::setCellTemperature(float temperature)

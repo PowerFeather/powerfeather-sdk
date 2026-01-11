@@ -170,6 +170,7 @@ namespace PowerFeather
             TempCo = 0x39,
             VEmpty = 0x3A,
             FStat = 0x3D,
+            ShdnTimer = 0x3F,
             QRTable30 = 0x42,
             dQAcc = 0x45,
             dPAcc = 0x46,
@@ -194,7 +195,9 @@ namespace PowerFeather
         static constexpr uint16_t UnlockKey2 = 0x00C4;
         static constexpr uint16_t HibernateExit_Command1 = 0x0090;
         static constexpr uint16_t HibernateExit_Command2 = 0x0000;
+        static constexpr uint16_t ShdnTimer_ShutdownWithin22s = 0x001E;
 
+        static constexpr uint16_t HibCfgBit_EnHib = 1u << 15;
         static constexpr uint16_t ConfigBit_TSel = 1u << 15;
         static constexpr uint16_t ConfigBit_TEn = 1u << 9;
         static constexpr uint16_t ConfigBit_TEx = 1u << 8;
