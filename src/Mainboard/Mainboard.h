@@ -35,6 +35,10 @@
 
 #include <driver/rtc_io.h>
 
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+#include <esp_timer.h>
+#endif
+
 #ifdef ARDUINO
 #include "Utils/ArduinoMasterI2C.h"
 #else
@@ -705,6 +709,18 @@ namespace PowerFeather
         BatteryType _batteryType{BatteryType::Generic_3V7};
         bool _usesProfile{false};
         Mutex _mutex{100};
+
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        static constexpr uint32_t _max17260AlarmPollPeriodUs = 500000; // 500 ms
+        void _updateMax17260AlarmPoll();
+        void _pollMax17260VoltageAlarms();
+        static void _max17260AlarmTimerCallback(void *arg);
+
+        esp_timer_handle_t _max17260AlarmTimer{nullptr};
+        uint16_t _max17260LowAlarmMv{0};
+        uint16_t _max17260HighAlarmMv{0};
+        bool _max17260AlarmTimerActive{false};
+#endif
 
         bool _isFirst();
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);

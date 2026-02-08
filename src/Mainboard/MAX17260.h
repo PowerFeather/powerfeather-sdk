@@ -220,6 +220,7 @@ namespace PowerFeather
             struct Config
             {
                 static constexpr Field SHDN = { static_cast<uint8_t>(Register::Config), 7, 7 };
+                static constexpr Field Aen = { static_cast<uint8_t>(Register::Config), 2, 2 };
             };
         };
 

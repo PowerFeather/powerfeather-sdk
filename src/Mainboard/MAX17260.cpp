@@ -574,11 +574,17 @@ namespace PowerFeather
         }
 
         uint16_t updated = static_cast<uint16_t>((static_cast<uint16_t>(high) << 8) | raw);
-        if (updated == current)
+        if (updated != current && !writeRegister(Register::VAlrtTh, updated))
         {
-            return true;
+            return false;
         }
-        return writeRegister(Register::VAlrtTh, updated);
+
+        if (voltage != 0 && !writeField(Fields::Config::Aen, 1))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     bool MAX17260::setHighVoltageAlarm(uint16_t voltage)
@@ -598,11 +604,17 @@ namespace PowerFeather
         }
 
         uint16_t updated = static_cast<uint16_t>((static_cast<uint16_t>(raw) << 8) | low);
-        if (updated == current)
+        if (updated != current && !writeRegister(Register::VAlrtTh, updated))
         {
-            return true;
+            return false;
         }
-        return writeRegister(Register::VAlrtTh, updated);
+
+        if (voltage != 0 && !writeField(Fields::Config::Aen, 1))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     bool MAX17260::setLowRSOCAlarm(uint8_t percent)
@@ -621,11 +633,17 @@ namespace PowerFeather
         }
 
         uint16_t updated = static_cast<uint16_t>((static_cast<uint16_t>(high) << 8) | raw);
-        if (updated == current)
+        if (updated != current && !writeRegister(Register::SAlrtTh, updated))
         {
-            return true;
+            return false;
         }
-        return writeRegister(Register::SAlrtTh, updated);
+
+        if (percent != 0 && !writeField(Fields::Config::Aen, 1))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     bool MAX17260::setTerminationFactor(float factor)

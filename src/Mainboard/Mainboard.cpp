@@ -133,6 +133,99 @@ namespace PowerFeather
         return Result::Ok;
     }
 
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+    void Mainboard::_max17260AlarmTimerCallback(void *arg)
+    {
+        auto *self = static_cast<Mainboard *>(arg);
+        if (self)
+        {
+            self->_pollMax17260VoltageAlarms();
+        }
+    }
+
+    void Mainboard::_updateMax17260AlarmPoll()
+    {
+        bool shouldRun = (_max17260LowAlarmMv != 0) || (_max17260HighAlarmMv != 0);
+        if (!shouldRun)
+        {
+            if (_max17260AlarmTimer && _max17260AlarmTimerActive)
+            {
+                esp_timer_stop(_max17260AlarmTimer);
+                _max17260AlarmTimerActive = false;
+            }
+            return;
+        }
+
+        if (!_max17260AlarmTimer)
+        {
+            esp_timer_create_args_t args = {};
+            args.callback = &Mainboard::_max17260AlarmTimerCallback;
+            args.arg = this;
+            args.dispatch_method = ESP_TIMER_TASK;
+            args.name = "pf_v_alrt";
+            if (esp_timer_create(&args, &_max17260AlarmTimer) != ESP_OK)
+            {
+                _max17260AlarmTimer = nullptr;
+                return;
+            }
+        }
+
+        if (!_max17260AlarmTimerActive)
+        {
+            if (esp_timer_start_periodic(_max17260AlarmTimer, _max17260AlarmPollPeriodUs) == ESP_OK)
+            {
+                _max17260AlarmTimerActive = true;
+            }
+        }
+    }
+
+    void Mainboard::_pollMax17260VoltageAlarms()
+    {
+        Mutex::Lock lock(_mutex);
+        if (!lock.isLocked())
+        {
+            return;
+        }
+
+        if (!_initDone || !_sqtEnabled || !_batteryCapacity)
+        {
+            return;
+        }
+
+        if (!_isFuelGaugeEnabled())
+        {
+            return;
+        }
+
+        if (_initFuelGauge() != Result::Ok)
+        {
+            return;
+        }
+
+        uint16_t vbat = 0;
+        if (!getFuelGauge().getCellVoltage(vbat))
+        {
+            return;
+        }
+
+        bool inRange = true;
+        if (_max17260LowAlarmMv && vbat < _max17260LowAlarmMv)
+        {
+            inRange = false;
+        }
+        if (_max17260HighAlarmMv && vbat > _max17260HighAlarmMv)
+        {
+            inRange = false;
+        }
+
+        if (inRange)
+        {
+            getFuelGauge().clearLowVoltageAlarm();
+            getFuelGauge().clearHighVoltageAlarm();
+        }
+    }
+#endif
+
 
     bool Mainboard::_isFirst()
     {
@@ -551,6 +644,20 @@ namespace PowerFeather
             RET_IF_ERR(_initFuelGauge());
         }
         RET_IF_FALSE(getFuelGauge().setEnabled(enable), Result::Failure);
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        if (!enable)
+        {
+            if (_max17260AlarmTimer && _max17260AlarmTimerActive)
+            {
+                esp_timer_stop(_max17260AlarmTimer);
+                _max17260AlarmTimerActive = false;
+            }
+        }
+        else
+        {
+            _updateMax17260AlarmPoll();
+        }
+#endif
         ESP_LOGD(TAG, "Fuel gauge set to: %d.", enable);
         return Result::Ok;
     }
@@ -698,6 +805,17 @@ namespace PowerFeather
         {
             RET_IF_FALSE(getFuelGauge().clearLowVoltageAlarm(), Result::Failure);
         }
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        if (voltage == 0)
+        {
+            _max17260LowAlarmMv = 0;
+        }
+        else
+        {
+            _max17260LowAlarmMv = static_cast<uint16_t>(((voltage + 10u) / 20u) * 20u);
+        }
+        _updateMax17260AlarmPoll();
+#endif
         ESP_LOGD(TAG, "Low battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
     };
@@ -719,6 +837,17 @@ namespace PowerFeather
         {
             RET_IF_FALSE(getFuelGauge().clearHighVoltageAlarm(), Result::Failure);
         }
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        if (voltage == 0)
+        {
+            _max17260HighAlarmMv = 0;
+        }
+        else
+        {
+            _max17260HighAlarmMv = static_cast<uint16_t>(((voltage + 10u) / 20u) * 20u);
+        }
+        _updateMax17260AlarmPoll();
+#endif
         ESP_LOGD(TAG, "High battery voltage alarm set to: %d mV.", voltage);
         return Result::Ok;
     };
