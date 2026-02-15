@@ -420,9 +420,12 @@ namespace PowerFeather
 
         // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
-        _sqtEnabled = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT);
-        RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, _sqtEnabled), Result::Failure)
-        ESP_LOGD(TAG, "VSQT detected as %d during initialization", _sqtEnabled);
+        bool sqtEnabled = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT);
+        RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, sqtEnabled), Result::Failure)
+        ESP_LOGD(TAG, "VSQT detected as %d during initialization", sqtEnabled);
+#if !defined(CONFIG_ESP32S3_POWERFEATHER_V2) && !defined(POWERFEATHER_BOARD_V2)
+        _sqtEnabled = sqtEnabled;
+#endif
 
         if (_canAccessPowerI2C())
         {
@@ -520,11 +523,12 @@ namespace PowerFeather
         RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, enable), Result::Failure);
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
         // On V2, power-management I2C remains usable even with VSQT disabled.
+        ESP_LOGD(TAG, "VSQT set to: %d.", enable);
 #else
         RET_IF_FALSE(enable ? (_sqtEnabled || _i2c.start()) : !_sqtEnabled || _i2c.end(), Result::Failure);
-#endif
         _sqtEnabled = enable;
         ESP_LOGD(TAG, "VSQT set to: %d.", _sqtEnabled);
+#endif
         return Result::Ok;
     }
 

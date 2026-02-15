@@ -734,7 +734,9 @@ namespace PowerFeather
         BQ2562x _charger{_i2c};
         FuelGaugeImpl _fuelGauge{_i2c};
 
+#if !defined(CONFIG_ESP32S3_POWERFEATHER_V2) && !defined(POWERFEATHER_BOARD_V2)
         bool _sqtEnabled{false};
+#endif
         bool _initDone{false};
         uint32_t _chargerADCTime{0};
         uint16_t _batteryCapacity{0};
