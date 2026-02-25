@@ -196,8 +196,11 @@ namespace PowerFeather
         static constexpr uint16_t HibernateExit_Command1 = 0x0090;
         static constexpr uint16_t HibernateExit_Command2 = 0x0000;
         static constexpr uint16_t ShdnTimer_ShutdownWithin22s = 0x001E;
+        static constexpr uint16_t VEmpty_Default = 0xA561;
 
         static constexpr uint16_t HibCfgBit_EnHib = 1u << 15;
+        static constexpr uint16_t ModelCfgBit_Refresh = 1u << 15;
+        static constexpr uint16_t ModelCfgMask_ModelID = 0x7u << 5;
         static constexpr uint16_t ConfigBit_TSel = 1u << 15;
         static constexpr uint16_t ConfigBit_TEn = 1u << 9;
         static constexpr uint16_t ConfigBit_TEx = 1u << 8;
@@ -235,8 +238,13 @@ namespace PowerFeather
             return writeRegister(static_cast<uint8_t>(address), value);
         }
         bool initImpl(const InitConfig &config) override;
+        bool _initEZConfig(const InitConfig &config, uint8_t modelId);
         bool _initHardware();
         bool _waitForDNRClear();
+        bool _waitForModelRefreshClear();
+
+        static uint16_t _capacityMahToDesignCapRaw(uint16_t capacityMah);
+        static uint16_t _currentMaToRaw(uint16_t currentMa);
 
         Model _profile{};
         bool _hasProfile{false};

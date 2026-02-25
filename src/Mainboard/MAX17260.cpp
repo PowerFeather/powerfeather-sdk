@@ -96,6 +96,46 @@ namespace PowerFeather
         return false;
     }
 
+    bool MAX17260::_waitForModelRefreshClear()
+    {
+        constexpr uint16_t maxAttempts = 50;
+        for (uint16_t attempts = 0; attempts < maxAttempts; ++attempts)
+        {
+            uint16_t cfg = 0;
+            if (!readRegister(Register::ModelCfg, cfg))
+            {
+                return false;
+            }
+
+            if ((cfg & ModelCfgBit_Refresh) == 0)
+            {
+                return true;
+            }
+
+            vTaskDelay(pdMS_TO_TICKS(_fStatDNRWaitTime));
+        }
+
+        ESP_LOGW(TAG, "ModelCFG.Refresh remained set after waiting.");
+        return false;
+    }
+
+    uint16_t MAX17260::_capacityMahToDesignCapRaw(uint16_t capacityMah)
+    {
+        // Capacity LSB is 5uVh/RSENSE.
+        // With RSENSE in milliohms, DesignCap = mAh * RSENSE_mOhm / 5.
+        uint32_t raw = (static_cast<uint32_t>(capacityMah) * SenseResistorMilliohms + 2u) / 5u;
+        return static_cast<uint16_t>(std::min<uint32_t>(raw, 0xFFFFu));
+    }
+
+    uint16_t MAX17260::_currentMaToRaw(uint16_t currentMa)
+    {
+        // Current LSB is 1.5625uV/RSENSE.
+        // With RSENSE in milliohms, raw = mA * RSENSE_mOhm * 16 / 25.
+        uint32_t scaled = static_cast<uint32_t>(currentMa) * SenseResistorMilliohms * 16u;
+        uint32_t raw = (scaled + 12u) / 25u;
+        return static_cast<uint16_t>(std::min<uint32_t>(raw, 0xFFFFu));
+    }
+
     bool MAX17260::probe()
     {
         uint16_t value = 0;
@@ -123,23 +163,71 @@ namespace PowerFeather
             return loadModel(*model);
         }
 
-        uint8_t modelId = 0;
-        if (config.source == FuelGauge::InitSource::Generic_LFP)
+        uint8_t modelId = ModelID_LiCoO2;
+        switch (config.source)
         {
-            modelId = ModelID_LFP;
-        }
-        else if (config.source == FuelGauge::InitSource::ICR18650_26H ||
-                 config.source == FuelGauge::InitSource::UR18650ZY)
-        {
-            modelId = ModelID_LiCoO2;
+            case FuelGauge::InitSource::Generic_3V7:
+            case FuelGauge::InitSource::ICR18650_26H:
+            case FuelGauge::InitSource::UR18650ZY:
+                modelId = ModelID_LiCoO2;
+                break;
+            case FuelGauge::InitSource::Generic_LFP:
+                modelId = ModelID_LFP;
+                break;
+            case FuelGauge::InitSource::Profile_Max17260:
+                return false;
         }
 
-        if (modelId)
+        return _initEZConfig(config, modelId);
+    }
+
+    bool MAX17260::_initEZConfig(const InitConfig &config, uint8_t modelId)
+    {
+        if (!_waitForDNRClear())
         {
-            return setModelID(modelId);
+            return false;
         }
 
-        return true;
+        uint16_t hibCfg = 0;
+        if (!readRegister(Register::HibCfg, hibCfg))
+        {
+            return false;
+        }
+
+        if (!writeRegister(Register::Command, HibernateExit_Command1)) return false;
+        if (!writeRegister(Register::HibCfg, HibernateExit_Command2)) return false;
+        if (!writeRegister(Register::Command, HibernateExit_Command2)) return false;
+
+        if (!writeRegister(Register::DesignCap, _capacityMahToDesignCapRaw(config.capacityMah))) return false;
+        if (!writeRegister(Register::IChgTerm, _currentMaToRaw(config.terminationCurrentMa))) return false;
+        if (!writeRegister(Register::VEmpty, VEmpty_Default)) return false;
+
+        uint16_t modelCfg = 0;
+        if (!readRegister(Register::ModelCfg, modelCfg))
+        {
+            return false;
+        }
+
+        modelCfg &= static_cast<uint16_t>(~ModelCfgMask_ModelID);
+        modelCfg |= static_cast<uint16_t>((modelId & 0x7u) << 5);
+        modelCfg |= ModelCfgBit_Refresh;
+
+        if (!writeRegister(Register::ModelCfg, modelCfg))
+        {
+            return false;
+        }
+
+        if (!_waitForModelRefreshClear())
+        {
+            return false;
+        }
+
+        if (!writeRegister(Register::HibCfg, hibCfg))
+        {
+            return false;
+        }
+
+        return _waitForDNRClear();
     }
 
     void MAX17260::setProfile(const Model &model)
@@ -172,11 +260,16 @@ namespace PowerFeather
             return false;
         }
 
-        cfg &= static_cast<uint16_t>(~(0x7u << 5));
+        cfg &= static_cast<uint16_t>(~ModelCfgMask_ModelID);
         cfg |= static_cast<uint16_t>((modelId & 0x7u) << 5);
-        cfg |= static_cast<uint16_t>(1u << 15); // Refresh
+        cfg |= ModelCfgBit_Refresh;
 
         if (!writeRegister(Register::ModelCfg, cfg))
+        {
+            return false;
+        }
+
+        if (!_waitForModelRefreshClear())
         {
             return false;
         }
