@@ -117,7 +117,6 @@ namespace PowerFeather
             uint8_t end;
         };
 
-        // review: should registerSizeBytes be a template param
         RegisterFuelGauge(MasterI2C &i2c, uint8_t registerSizeBytes)
             : FuelGauge(i2c), _registerSizeBytes(registerSizeBytes)
         {
@@ -217,7 +216,7 @@ namespace PowerFeather
 
         float terminationFactor = static_cast<float>(config.terminationCurrentMa) /
                                   static_cast<float>(config.capacityMah);
-        // review: can you add a comment explaining this logic
+        // Clamp the C-rate based termination factor to the gauge's supported range.
         if (minFactor > 0.0f)
         {
             terminationFactor = std::max(terminationFactor, minFactor);

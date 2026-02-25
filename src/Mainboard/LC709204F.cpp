@@ -98,15 +98,20 @@ namespace PowerFeather
             return false;
         }
 
-		// review: would a switch be better here?
         ChangeOfParameter param = ChangeOfParameter::Nominal_3V7_Charging_4V2;
-        if (config.source == FuelGauge::InitSource::ICR18650_26H)
+        switch (config.source)
         {
-            param = ChangeOfParameter::ICR18650_26H;
-        }
-        else if (config.source == FuelGauge::InitSource::UR18650ZY)
-        {
-            param = ChangeOfParameter::UR18650ZY;
+            case FuelGauge::InitSource::ICR18650_26H:
+                param = ChangeOfParameter::ICR18650_26H;
+                break;
+            case FuelGauge::InitSource::UR18650ZY:
+                param = ChangeOfParameter::UR18650ZY;
+                break;
+            case FuelGauge::InitSource::Generic_3V7:
+                break;
+            case FuelGauge::InitSource::Generic_LFP:
+            case FuelGauge::InitSource::Profile_Max17260:
+                return false;
         }
 
         return setAPA(config.capacityMah, param) && setChangeOfParameter(param);

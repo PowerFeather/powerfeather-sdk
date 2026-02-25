@@ -445,7 +445,7 @@ namespace PowerFeather
                 _initFuelGauge();
             }
 
-            // review: should this be done here or inside wdOn check? consider esp32 deep sleeping or charger entering into ship mode or shutdown mode
+            // Enforce charge voltage target on every init path, including wake/re-init.
             RET_IF_FALSE(getCharger().setChargeVoltageLimit(chargeVoltageMv), Result::Failure);
         }
 
