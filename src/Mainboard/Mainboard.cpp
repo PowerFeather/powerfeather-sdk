@@ -70,6 +70,15 @@ namespace PowerFeather
                 }
             }
         };
+
+        static uint16_t designCapToMah(uint16_t designCapRaw, uint16_t maxMah)
+        {
+            // MAX17260 profile DesignCap is a normalized 16-bit value.
+            // getBatteryCapacityRange() already reflects the active gauge's mAh limits, including
+            // hardware parameters (for example, RSENSE). Scale the normalized value to mAh.
+            uint32_t scaled = (static_cast<uint32_t>(designCapRaw) * maxMah + 0x7FFFu) / 0xFFFFu;
+            return static_cast<uint16_t>(std::min<uint32_t>(scaled, maxMah));
+        }
     }
 
     #define LOG_FAIL(r)                 ESP_LOGD(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
@@ -324,9 +333,7 @@ namespace PowerFeather
             return 0;
         }
 
-        // review: can you explain this formula? i thought for max17260 at least, you needed rsense value?
-        uint32_t value = (static_cast<uint32_t>(profile.designCap) * maxMah + 0x7FFFu) / 0xFFFFu;
-        return static_cast<uint16_t>(std::min<uint32_t>(value, maxMah));
+        return designCapToMah(profile.designCap, maxMah);
     }
 
     Result Mainboard::_initInternal(uint16_t capacity, BatteryType type, const MAX17260::Model *profile)
