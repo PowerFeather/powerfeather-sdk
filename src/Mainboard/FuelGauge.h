@@ -45,9 +45,6 @@ namespace PowerFeather
 {
     class FuelGauge
     {
-    // review: order members by public, protected and private
-    protected:
-        MasterI2C &_i2c;
 
     public:
         // review: can BatteryType and ProfileKind be combined, and would that result to cleaner code
@@ -110,7 +107,7 @@ namespace PowerFeather
         virtual void getBatteryCapacityRange(uint16_t &minMah, uint16_t &maxMah) const = 0;
 
     protected:
-        // review: why two protected blocks    
+        MasterI2C &_i2c;
         virtual bool initImpl(const InitConfig &config) = 0;
 
     private:
