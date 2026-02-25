@@ -109,7 +109,7 @@ namespace PowerFeather
             return false;
         }
 
-        if (config.profileKind == FuelGauge::ProfileKind::Max17260)
+        if (config.source == FuelGauge::InitSource::Profile_Max17260)
         {
             const Model *model = static_cast<const Model *>(config.profile);
             if (!model)
@@ -124,12 +124,12 @@ namespace PowerFeather
         }
 
         uint8_t modelId = 0;
-        if (config.batteryType == FuelGauge::BatteryType::Generic_LFP)
+        if (config.source == FuelGauge::InitSource::Generic_LFP)
         {
             modelId = ModelID_LFP;
         }
-        else if (config.batteryType == FuelGauge::BatteryType::ICR18650_26H ||
-                 config.batteryType == FuelGauge::BatteryType::UR18650ZY)
+        else if (config.source == FuelGauge::InitSource::ICR18650_26H ||
+                 config.source == FuelGauge::InitSource::UR18650ZY)
         {
             modelId = ModelID_LiCoO2;
         }

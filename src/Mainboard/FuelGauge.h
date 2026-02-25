@@ -47,30 +47,20 @@ namespace PowerFeather
     {
 
     public:
-        // review: can BatteryType and ProfileKind be combined, and would that result to cleaner code
-        enum class BatteryType
+        enum class InitSource
         {
             Generic_3V7,
             ICR18650_26H,
             UR18650ZY,
             Generic_LFP,
-            Profile
-        };
-
-        enum class ProfileKind
-        {
-            None,
-            Max17260
+            Profile_Max17260
         };
 
         struct InitConfig
         {
-            // review: can batteryType, capacity be a union with profile
-            BatteryType batteryType{BatteryType::Generic_3V7};
+            InitSource source{InitSource::Generic_3V7};
             uint16_t capacityMah{0};
             uint16_t terminationCurrentMa{0};
-            // review: create Profile struct, with kind and data as members (check how that interacts with possibility of combining BatteryType and ProfileKind)
-            ProfileKind profileKind{ProfileKind::None};
             const void *profile{nullptr};
         };
 

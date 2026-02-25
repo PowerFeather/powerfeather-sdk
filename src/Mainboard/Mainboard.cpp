@@ -99,32 +99,30 @@ namespace PowerFeather
 
         // review: main branch checks if the guage is already inited, is that handled here as well? is it important to?
         FuelGauge::InitConfig config;
-
-        // review: as it stands, battery capacity + type & profile are mutually exlusive methods of fuel gauge init.
-        // can this be reflected in structure of code?
         config.capacityMah = _batteryCapacity;
         config.terminationCurrentMa = _terminationCurrent;
 
-        switch (_batteryType)
-        {
-            case BatteryType::Generic_3V7:
-                config.batteryType = FuelGauge::BatteryType::Generic_3V7;
-                break;
-            case BatteryType::ICR18650_26H:
-                config.batteryType = FuelGauge::BatteryType::ICR18650_26H;
-                break;
-            case BatteryType::UR18650ZY:
-                config.batteryType = FuelGauge::BatteryType::UR18650ZY;
-                break;
-            case BatteryType::Generic_LFP:
-                config.batteryType = FuelGauge::BatteryType::Generic_LFP;
-                break;
-        }
-
         if (_usesProfile)
         {
-            config.batteryType = FuelGauge::BatteryType::Profile;
-            config.profileKind = FuelGauge::ProfileKind::Max17260;
+            config.source = FuelGauge::InitSource::Profile_Max17260;
+        }
+        else
+        {
+            switch (_batteryType)
+            {
+                case BatteryType::Generic_3V7:
+                    config.source = FuelGauge::InitSource::Generic_3V7;
+                    break;
+                case BatteryType::ICR18650_26H:
+                    config.source = FuelGauge::InitSource::ICR18650_26H;
+                    break;
+                case BatteryType::UR18650ZY:
+                    config.source = FuelGauge::InitSource::UR18650ZY;
+                    break;
+                case BatteryType::Generic_LFP:
+                    config.source = FuelGauge::InitSource::Generic_LFP;
+                    break;
+            }
         }
 
         RET_IF_FALSE(gauge.init(config), Result::Failure);

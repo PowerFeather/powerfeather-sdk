@@ -92,19 +92,19 @@ namespace PowerFeather
 
     bool LC709204F::initImpl(const InitConfig &config)
     {
-        if (config.batteryType == FuelGauge::BatteryType::Generic_LFP ||
-            config.batteryType == FuelGauge::BatteryType::Profile)
+        if (config.source == FuelGauge::InitSource::Generic_LFP ||
+            config.source == FuelGauge::InitSource::Profile_Max17260)
         {
             return false;
         }
 
 		// review: would a switch be better here?
         ChangeOfParameter param = ChangeOfParameter::Nominal_3V7_Charging_4V2;
-        if (config.batteryType == FuelGauge::BatteryType::ICR18650_26H)
+        if (config.source == FuelGauge::InitSource::ICR18650_26H)
         {
             param = ChangeOfParameter::ICR18650_26H;
         }
-        else if (config.batteryType == FuelGauge::BatteryType::UR18650ZY)
+        else if (config.source == FuelGauge::InitSource::UR18650ZY)
         {
             param = ChangeOfParameter::UR18650ZY;
         }
