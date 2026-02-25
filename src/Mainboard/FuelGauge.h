@@ -196,6 +196,11 @@ namespace PowerFeather
             return true;
         }
 
+        if (config.capacityMah == 0 || config.terminationCurrentMa == 0)
+        {
+            return false;
+        }
+
         if (!initImpl(config))
         {
             return false;
@@ -206,12 +211,6 @@ namespace PowerFeather
 
     inline bool FuelGauge::_finalizeInit(const InitConfig &config)
     {
-        // review: should these not be checked super early into init?
-        if (config.capacityMah == 0 || config.terminationCurrentMa == 0)
-        {
-            return false;
-        }
-
         float minFactor = 0.0f;
         float maxFactor = 0.0f;
         getTerminationFactorRange(minFactor, maxFactor);

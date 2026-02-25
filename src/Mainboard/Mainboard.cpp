@@ -96,8 +96,6 @@ namespace PowerFeather
     Result Mainboard::_initFuelGauge()
     {
         FuelGauge &gauge = getFuelGauge();
-
-        // review: main branch checks if the guage is already inited, is that handled here as well? is it important to?
         FuelGauge::InitConfig config;
         config.capacityMah = _batteryCapacity;
         config.terminationCurrentMa = _terminationCurrent;
@@ -354,15 +352,7 @@ namespace PowerFeather
         {
             return Result::InvalidArg;
         }
-
-        if (useProfile)
-        {
-            if (capacity == 0)
-            {   
-                // review: there is no redundancy here? _capacityFromProfile is already computed if called from init(profile) overload
-                capacity = _capacityFromProfile(*profile);
-            }
-        }
+        RET_IF_FALSE(!useProfile || capacity, Result::InvalidArg);
 
         uint16_t minCapacity = 0;
         uint16_t maxCapacity = 0;
