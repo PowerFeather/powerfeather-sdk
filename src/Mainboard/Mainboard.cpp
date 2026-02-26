@@ -133,6 +133,13 @@ namespace PowerFeather
         }
 
         RET_IF_FALSE(gauge.init(config), Result::Failure);
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        // Default to IC-managed temperature until the host starts providing external temperature updates.
+        if (!_fuelGaugeUsingExternalTemp)
+        {
+            RET_IF_FALSE(gauge.enableTSENSE(true, false), Result::Failure);
+        }
+#endif
         ESP_LOGD(TAG, "Fuel gauge init complete (%s).", gauge.getName());
 
         return Result::Ok;
@@ -371,6 +378,9 @@ namespace PowerFeather
         _batteryCapacity = capacity;
         _batteryType = type;
         _usesProfile = useProfile;
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        _fuelGaugeUsingExternalTemp = false;
+#endif
         ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
         if (useProfile)
         {
@@ -877,9 +887,23 @@ namespace PowerFeather
         float maxTemp = 0;
         getFuelGauge().getTemperatureRange(minTemp, maxTemp);
         RET_IF_FALSE(temperature >= minTemp && temperature <= maxTemp, Result::InvalidArg);
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        if (!_fuelGaugeUsingExternalTemp)
+        {
+            RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
+            _fuelGaugeUsingExternalTemp = true;
+        }
+#endif
         RET_IF_FALSE(getFuelGauge().setCellTemperature(temperature), Result::Failure);
         ESP_LOGD(TAG, "Fuel guage temperature updated to: %f °C.", temperature);
         return Result::Ok;
+    }
+
+    Result Mainboard::updateBatteryFuelGaugeTemp()
+    {
+        float temperature = 0.0f;
+        RET_IF_ERR(getBatteryTemperature(temperature));
+        return updateBatteryFuelGaugeTemp(temperature);
     }
 
     /*static*/ Mainboard &Mainboard::get()

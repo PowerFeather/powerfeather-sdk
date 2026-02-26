@@ -650,6 +650,11 @@ namespace PowerFeather
          * In order to increase fuel gauge accuracy, you can update the fuel gauge with the battery
          * temperature obtained from getBatteryTemperature() or other sources.
          *
+         * Temperature mode behavior depends on board revision:
+         *  - V1: after initialization, fuel gauge temperature is host-updated (this API writes the value used for gauging).
+         *  - V2: after initialization, fuel gauge temperature defaults to on-IC measurement until the first call to
+         *        this API (or its no-arg overload), after which host-updated temperature is used.
+         *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
@@ -663,6 +668,27 @@ namespace PowerFeather
          * returns a value other than \c Result::Ok if not.
          */
         Result updateBatteryFuelGaugeTemp(float temperature);
+
+        /**
+         * @brief Update fuel gauge temperature using the current battery thermistor measurement.
+         *
+         * Equivalent to calling \c getBatteryTemperature() then \c updateBatteryFuelGaugeTemp(float).
+         * See \c updateBatteryFuelGaugeTemp(float) for V1/V2 temperature mode behavior details.
+         *
+         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
+         *
+         * Battery temperature measurement must be enabled prior calling this function, else \c Result::InvalidState
+         * is returned.
+         *
+         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * @return Result Returns \c Result::Ok if the fuel gauge's battery temperature has been updated successfully;
+         * returns a value other than \c Result::Ok if not.
+         */
+        Result updateBatteryFuelGaugeTemp();
 
         BQ2562x &getCharger() { return _charger; }
         /**
@@ -724,6 +750,7 @@ namespace PowerFeather
         uint16_t _max17260LowAlarmMv{0};
         uint16_t _max17260HighAlarmMv{0};
         bool _max17260AlarmTimerActive{false};
+        bool _fuelGaugeUsingExternalTemp{false};
 #endif
 
         bool _isFirst();
