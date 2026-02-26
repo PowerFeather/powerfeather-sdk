@@ -156,7 +156,7 @@ namespace PowerFeather
          * This function should be called once, before calling all other \c Mainboard functions.
          *
          * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh).
-         * Valid range depends on the active fuel gauge; see \c FuelGauge::getBatteryCapacityRange().
+         * Valid range depends on board revision: V1 supports 50-6000 mAh, V2 supports 1-16383 mAh.
          * Must be non-zero; use \c init() when no battery is expected. If using multiple batteries connected
          * in parallel, specify only the capacity for one cell. Ignored when \p type is
          * \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY.
@@ -592,8 +592,10 @@ namespace PowerFeather
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The voltage at which the low voltage alarm will trigger in millivolts (mV), from 2500 mV to 5000 mV.
-         * If zero, triggering of the alarm is disabled and any existing low voltage alarm is cleared.
+         * @param[in] voltage The voltage at which the low voltage alarm will trigger in millivolts (mV).
+         * Valid non-zero range depends on board revision (2500-5000 mV for V1, 20-5100 mV for V2). If zero,
+         * triggering of the alarm is disabled and any existing low voltage
+         * alarm is cleared.
          *
          * @return Result Returns \c Result::Ok if the battery low voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
@@ -612,8 +614,10 @@ namespace PowerFeather
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The voltage at which the high voltage alarm will trigger in millovolts (mV), from 2500 mV to 5000 mV.
-         * If zero, triggering of the alarm is disabled and any existing high voltage alarm is cleared.
+         * @param[in] voltage The voltage at which the high voltage alarm will trigger in millovolts (mV).
+         * Valid non-zero range depends on board revision (2500-5000 mV for V1, 20-5100 mV for V2). If zero,
+         * triggering of the alarm is disabled and any existing high voltage
+         * alarm is cleared.
          *
          * @return Result Returns \c Result::Ok if the battery high voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.

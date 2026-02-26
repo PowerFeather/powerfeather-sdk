@@ -652,6 +652,11 @@ namespace PowerFeather
 
     bool MAX17260::setLowVoltageAlarm(uint16_t voltage)
     {
+        if (voltage != 0 && (voltage < MinVoltageAlarm || voltage > MaxVoltageAlarm))
+        {
+            return false;
+        }
+
         uint16_t current = 0;
         if (!readRegister(Register::VAlrtTh, current))
         {
@@ -682,6 +687,11 @@ namespace PowerFeather
 
     bool MAX17260::setHighVoltageAlarm(uint16_t voltage)
     {
+        if (voltage != 0 && (voltage < MinVoltageAlarm || voltage > MaxVoltageAlarm))
+        {
+            return false;
+        }
+
         uint16_t current = 0;
         if (!readRegister(Register::VAlrtTh, current))
         {
