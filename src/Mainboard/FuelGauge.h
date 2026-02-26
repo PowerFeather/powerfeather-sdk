@@ -210,25 +210,28 @@ namespace PowerFeather
 
     inline bool FuelGauge::_finalizeInit(const InitConfig &config)
     {
-        float minFactor = 0.0f;
-        float maxFactor = 0.0f;
-        getTerminationFactorRange(minFactor, maxFactor);
+        if (config.source != InitSource::Profile_Max17260)
+        {
+            float minFactor = 0.0f;
+            float maxFactor = 0.0f;
+            getTerminationFactorRange(minFactor, maxFactor);
 
-        float terminationFactor = static_cast<float>(config.terminationCurrentMa) /
-                                  static_cast<float>(config.capacityMah);
-        // Clamp the C-rate based termination factor to the gauge's supported range.
-        if (minFactor > 0.0f)
-        {
-            terminationFactor = std::max(terminationFactor, minFactor);
-        }
-        if (maxFactor > 0.0f)
-        {
-            terminationFactor = std::min(terminationFactor, maxFactor);
-        }
+            float terminationFactor = static_cast<float>(config.terminationCurrentMa) /
+                                      static_cast<float>(config.capacityMah);
+            // Clamp the C-rate based termination factor to the gauge's supported range.
+            if (minFactor > 0.0f)
+            {
+                terminationFactor = std::max(terminationFactor, minFactor);
+            }
+            if (maxFactor > 0.0f)
+            {
+                terminationFactor = std::min(terminationFactor, maxFactor);
+            }
 
-        if (!setTerminationFactor(terminationFactor))
-        {
-            return false;
+            if (!setTerminationFactor(terminationFactor))
+            {
+                return false;
+            }
         }
 
         if (!enableTSENSE(false, false))
