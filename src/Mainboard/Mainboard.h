@@ -172,6 +172,9 @@ namespace PowerFeather
          *
          * The battery capacity is inferred from the profile.
          *
+         * The profile must provide a valid charger constant-voltage target in \c chargeVoltageMv.
+         * Accepted range is 3500-4800 mV.
+         *
          * @param[in] profile MAX17260 model profile.
          *
          * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.

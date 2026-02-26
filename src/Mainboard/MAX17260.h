@@ -63,6 +63,8 @@ namespace PowerFeather
             uint16_t tOff{0};
             uint16_t curve{0};
             std::array<uint16_t, 4> qrTable{{0, 0, 0, 0}};
+            // Charger CV target used by Mainboard::init(const Model&), in mV.
+            // Required by profile init: valid range is 3500-4800 mV.
             uint16_t chargeVoltageMv{0};
         };
 

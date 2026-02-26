@@ -317,6 +317,11 @@ namespace PowerFeather
     {
         uint16_t capacity = _capacityFromProfile(profile);
         RET_IF_FALSE(capacity, Result::InvalidArg);
+        // Profile init must explicitly provide the charger CV target.
+        static constexpr uint16_t minProfileChargeVoltageMv = 3500;
+        static constexpr uint16_t maxProfileChargeVoltageMv = 4800;
+        RET_IF_FALSE(profile.chargeVoltageMv >= minProfileChargeVoltageMv &&
+                     profile.chargeVoltageMv <= maxProfileChargeVoltageMv, Result::InvalidArg);
         return _initInternal(capacity, BatteryType::Generic_3V7, &profile);
     }
 
