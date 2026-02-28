@@ -106,15 +106,16 @@ namespace PowerFeather
     {
         FuelGauge &gauge = getFuelGauge();
         FuelGauge::InitConfig config;
-        config.capacityMah = _batteryCapacity;
-        config.terminationCurrentMa = _terminationCurrent;
 
         if (_usesProfile)
         {
             config.source = FuelGauge::InitSource::Profile_Max17260;
+            config.data.profile.model = nullptr;
         }
         else
         {
+            config.data.capacity.capacityMah = _batteryCapacity;
+            config.data.capacity.terminationCurrentMa = _terminationCurrent;
             switch (_batteryType)
             {
                 case BatteryType::Generic_3V7:

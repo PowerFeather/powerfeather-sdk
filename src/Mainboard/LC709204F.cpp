@@ -114,7 +114,7 @@ namespace PowerFeather
                 return false;
         }
 
-        return setAPA(config.capacityMah, param) && setChangeOfParameter(param);
+        return setAPA(config.data.capacity.capacityMah, param) && setChangeOfParameter(param);
     }
 
     uint8_t LC709204F::_computeCRC8(uint8_t *data, int len)

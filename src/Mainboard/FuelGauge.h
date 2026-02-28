@@ -58,10 +58,27 @@ namespace PowerFeather
 
         struct InitConfig
         {
+            struct CapacityConfig
+            {
+                uint16_t capacityMah;
+                uint16_t terminationCurrentMa;
+            };
+
+            struct ProfileConfig
+            {
+                const void *model;
+            };
+
+            union Payload
+            {
+                CapacityConfig capacity;
+                ProfileConfig profile;
+
+                constexpr Payload() : capacity{0, 0} {}
+            };
+
             InitSource source{InitSource::Generic_3V7};
-            uint16_t capacityMah{0};
-            uint16_t terminationCurrentMa{0};
-            const void *profile{nullptr};
+            Payload data{};
         };
 
         FuelGauge(MasterI2C &i2c) : _i2c(i2c) {}
@@ -195,7 +212,8 @@ namespace PowerFeather
             return true;
         }
 
-        if (config.capacityMah == 0 || config.terminationCurrentMa == 0)
+        if (config.source != InitSource::Profile_Max17260 &&
+            (config.data.capacity.capacityMah == 0 || config.data.capacity.terminationCurrentMa == 0))
         {
             return false;
         }
@@ -216,8 +234,8 @@ namespace PowerFeather
             float maxFactor = 0.0f;
             getTerminationFactorRange(minFactor, maxFactor);
 
-            float terminationFactor = static_cast<float>(config.terminationCurrentMa) /
-                                      static_cast<float>(config.capacityMah);
+            float terminationFactor = static_cast<float>(config.data.capacity.terminationCurrentMa) /
+                                      static_cast<float>(config.data.capacity.capacityMah);
             // Clamp the C-rate based termination factor to the gauge's supported range.
             if (minFactor > 0.0f)
             {

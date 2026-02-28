@@ -151,7 +151,7 @@ namespace PowerFeather
 
         if (config.source == FuelGauge::InitSource::Profile_Max17260)
         {
-            const Model *model = static_cast<const Model *>(config.profile);
+            const Model *model = static_cast<const Model *>(config.data.profile.model);
             if (!model)
             {
                 if (!_hasProfile)
@@ -198,8 +198,8 @@ namespace PowerFeather
         if (!writeRegister(Register::HibCfg, HibernateExit_Command2)) return false;
         if (!writeRegister(Register::Command, HibernateExit_Command2)) return false;
 
-        if (!writeRegister(Register::DesignCap, _capacityMahToDesignCapRaw(config.capacityMah))) return false;
-        if (!writeRegister(Register::IChgTerm, _currentMaToRaw(config.terminationCurrentMa))) return false;
+        if (!writeRegister(Register::DesignCap, _capacityMahToDesignCapRaw(config.data.capacity.capacityMah))) return false;
+        if (!writeRegister(Register::IChgTerm, _currentMaToRaw(config.data.capacity.terminationCurrentMa))) return false;
         if (!writeRegister(Register::VEmpty, VEmpty_Default)) return false;
 
         uint16_t modelCfg = 0;
