@@ -26,11 +26,8 @@ extern "C" void app_main()
     printf("===============================\n");
     printf("\n\n");
 
-#if BATTERY_CAPACITY == 0
-    if (Board.init() == Result::Ok) // check if initialization succeeded
-#else
-    if (Board.init(BATTERY_CAPACITY) == Result::Ok) // check if initialization succeeded
-#endif
+    Result initResult = (BATTERY_CAPACITY == 0) ? Board.init() : Board.init(BATTERY_CAPACITY);
+    if (initResult == Result::Ok) // check if initialization succeeded
     {
         printf("Board initialized successfully\n\n");
         Board.setBatteryChargingMaxCurrent(100); // set max charging current to 100 mA
