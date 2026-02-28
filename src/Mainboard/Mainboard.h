@@ -35,6 +35,10 @@
 
 #include <driver/rtc_io.h>
 
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+#include <esp_timer.h>
+#endif
+
 #ifdef ARDUINO
 #include "Utils/ArduinoMasterI2C.h"
 #else
@@ -46,10 +50,10 @@
 
 #include "BQ2562x.h"
 #include "LC709204F.h"
+#include "MAX17260.h"
 
 namespace PowerFeather
 {
-
     class Mainboard
     {
     public:
@@ -57,7 +61,8 @@ namespace PowerFeather
         {
             Generic_3V7, // Generic Li-ion/LiPo, 3.7 V nominal and 4.2 V max
             ICR18650_26H, // Samsung ICR18650-26H
-            UR18650ZY // Panasonic UR18650ZY
+            UR18650ZY, // Panasonic UR18650ZY
+            Generic_LFP
         };
 
         class Pin
@@ -123,6 +128,16 @@ namespace PowerFeather
         };
 
         /**
+         * @brief Initialize the board power management and monitoring features with no battery expected.
+         *
+         * Initializes the board with battery monitoring disabled. Use this when no battery is connected.
+         * See \c init(uint16_t, BatteryType) for the full default list.
+         *
+         * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.
+         */
+        Result init();
+
+        /**
          * @brief Initialize the board power management and monitoring features.
          *
          * Initializes the battery charger, battery fuel gauge and other hardware related to power management and monitoring.
@@ -134,22 +149,37 @@ namespace PowerFeather
          *  - Charging: disabled
          *  - Maximum battery charging current: 50 mA
          *  - Maintain supply voltage: 4600 mV
-         *  - Fuel gauge: enabled if \p capacity is non-zero; disabled if \p capacity is zero
+         *  - Fuel gauge: enabled (use \c init() to disable)
          *  - Battery temperature sense: disabled
          *  - Battery alarms (low charge, high/low voltage): disabled
          *
          * This function should be called once, before calling all other \c Mainboard functions.
          *
-         * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh), from 50 mAh to 6000 mAh.
-         * A value of zero indicates that no battery is connected, and therefore some of the other \c Mainboard functions
-         * will return \c Result::InvalidState. If using multiple batteries connected in parallel, specify
-         * only the capacity for one cell. Ignored when \p type is \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY.
-         * @param[in] type Type of Li-ion/LiPo battery; ignored when \p capacity is zero, except when value is
-         * \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY
+         * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh).
+         * Valid range depends on board revision: V1 supports 50-6000 mAh, V2 supports 1-16383 mAh.
+         * Must be non-zero; use \c init() when no battery is expected. If using multiple batteries connected
+         * in parallel, specify only the capacity for one cell. Ignored when \p type is
+         * \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY.
+         * @param[in] type Type of Li-ion/LiPo battery; ignored when value is \c BatteryType::ICR18650_26H or
+         * \c BatteryType::UR18650ZY. Use \c init(const MAX17260::Model &profile) for MAX17260 profiles.
          *
          * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.
          */
-        Result init(uint16_t capacity = 0, BatteryType type = BatteryType::Generic_3V7);
+        Result init(uint16_t capacity, BatteryType type = BatteryType::Generic_3V7);
+
+        /**
+         * @brief Initialize the board using a MAX17260 model profile.
+         *
+         * The battery capacity is inferred from the profile.
+         *
+         * The profile must provide a valid charger constant-voltage target in \c chargeVoltageMv.
+         * Accepted range is 3500-4800 mV.
+         *
+         * @param[in] profile MAX17260 model profile.
+         *
+         * @return Result Returns \c Result::Ok if the board was initialized successfully; returns a value other than \c Result::Ok if not.
+         */
+        Result init(const MAX17260::Model &profile);
 
         /**
          * @brief Set \a EN pin high or low.
@@ -565,8 +595,10 @@ namespace PowerFeather
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The voltage at which the low voltage alarm will trigger in millivolts (mV), from 2500 mV to 5000 mV.
-         * If zero, triggering of the alarm is disabled and any existing low voltage alarm is cleared.
+         * @param[in] voltage The voltage at which the low voltage alarm will trigger in millivolts (mV).
+         * Valid non-zero range depends on board revision (2500-5000 mV for V1, 20-5100 mV for V2). If zero,
+         * triggering of the alarm is disabled and any existing low voltage
+         * alarm is cleared.
          *
          * @return Result Returns \c Result::Ok if the battery low voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
@@ -585,8 +617,10 @@ namespace PowerFeather
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The voltage at which the high voltage alarm will trigger in millovolts (mV), from 2500 mV to 5000 mV.
-         * If zero, triggering of the alarm is disabled and any existing high voltage alarm is cleared.
+         * @param[in] voltage The voltage at which the high voltage alarm will trigger in millovolts (mV).
+         * Valid non-zero range depends on board revision (2500-5000 mV for V1, 20-5100 mV for V2). If zero,
+         * triggering of the alarm is disabled and any existing high voltage
+         * alarm is cleared.
          *
          * @return Result Returns \c Result::Ok if the battery high voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
@@ -619,6 +653,11 @@ namespace PowerFeather
          * In order to increase fuel gauge accuracy, you can update the fuel gauge with the battery
          * temperature obtained from getBatteryTemperature() or other sources.
          *
+         * Temperature mode behavior depends on board revision:
+         *  - V1: after initialization, fuel gauge temperature is host-updated (this API writes the value used for gauging).
+         *  - V2: after initialization, fuel gauge temperature defaults to on-IC measurement until the first call to
+         *        this API (or its no-arg overload), after which host-updated temperature is used.
+         *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
@@ -633,25 +672,55 @@ namespace PowerFeather
          */
         Result updateBatteryFuelGaugeTemp(float temperature);
 
+        /**
+         * @brief Update fuel gauge temperature using the current battery thermistor measurement.
+         *
+         * Equivalent to calling \c getBatteryTemperature() then \c updateBatteryFuelGaugeTemp(float).
+         * See \c updateBatteryFuelGaugeTemp(float) for V1/V2 temperature mode behavior details.
+         *
+         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
+         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
+         *
+         * Battery temperature measurement must be enabled prior calling this function, else \c Result::InvalidState
+         * is returned.
+         *
+         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         *
+         * @return Result Returns \c Result::Ok if the fuel gauge's battery temperature has been updated successfully;
+         * returns a value other than \c Result::Ok if not.
+         */
+        Result updateBatteryFuelGaugeTemp();
+
         BQ2562x &getCharger() { return _charger; }
-        LC709204F &getFuelGauge() { return _fuelGauge; }
+        /**
+         * @brief Get the active fuel gauge instance.
+         *
+         * Returns the fuel gauge instance configured at compile time for this board revision.
+         */
+        FuelGauge &getFuelGauge();
 
         static Mainboard &get();
 
     private:
         Mainboard() {}
 
+    #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        using FuelGaugeImpl = MAX17260;
+    #else
+        using FuelGaugeImpl = LC709204F;
+    #endif
+
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 100000;
         static constexpr uint32_t _i2cTimeout = 1000;
 
-        static constexpr uint16_t _minBatteryCapacity = LC709204F::MinBatteryCapacity; // higher of charger and fuel gauge limit
-        static constexpr uint16_t _defaultMaxChargingCurrent = _minBatteryCapacity; // minimum charge current at 1C
+        static constexpr uint16_t _defaultMaxChargingCurrent = 50; // minimum charge current at 1C
         static constexpr uint16_t _minSupplyMaintainVoltage = BQ2562x::ResetVINDPMVoltage;
 
         static_assert(_minSupplyMaintainVoltage >= BQ2562x::MinVINDPMVoltage);
-        static_assert(_minBatteryCapacity >= BQ2562x::MinChargingCurrent);
-        static_assert(_minBatteryCapacity >= BQ2562x::MinChargingCurrent);
+        static_assert(_defaultMaxChargingCurrent >= BQ2562x::MinChargingCurrent);
 
         static constexpr uint16_t _chargerADCWaitTime = 100; // 80 ms actual
         static constexpr uint16_t _batfetCtrlWaitTime = 30; // 30 ms actual
@@ -663,22 +732,43 @@ namespace PowerFeather
 #endif
 
         BQ2562x _charger{_i2c};
-        LC709204F _fuelGauge{_i2c};
+        FuelGaugeImpl _fuelGauge{_i2c};
+
+#if !defined(CONFIG_ESP32S3_POWERFEATHER_V2) && !defined(POWERFEATHER_BOARD_V2)
         bool _sqtEnabled{false};
+#endif
         bool _initDone{false};
         uint32_t _chargerADCTime{0};
         uint16_t _batteryCapacity{0};
         uint16_t _terminationCurrent{0};
         BatteryType _batteryType{BatteryType::Generic_3V7};
+        bool _usesProfile{false};
         Mutex _mutex{100};
 
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        static constexpr uint32_t _max17260AlarmPollPeriodUs = 500000; // 500 ms
+        void _updateMax17260AlarmPoll();
+        void _pollMax17260VoltageAlarms();
+        static void _max17260AlarmTimerCallback(void *arg);
+
+        esp_timer_handle_t _max17260AlarmTimer{nullptr};
+        uint16_t _max17260LowAlarmMv{0};
+        uint16_t _max17260HighAlarmMv{0};
+        bool _max17260AlarmTimerActive{false};
+        bool _fuelGaugeUsingExternalTemp{false};
+#endif
+
         bool _isFirst();
+        bool _canAccessPowerI2C() const;
         bool _initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode);
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
-        bool _isFuelGaugeEnabled();
         bool _setRTCPin(gpio_num_t pin, bool value);
-        Result _initFuelGauge();
+        uint16_t _capacityFromProfile(const MAX17260::Model &profile) const;
+        Result _initInternal(uint16_t capacity, BatteryType type, const MAX17260::Model *profile);
         Result _udpateChargerADC();
+
+        bool _isFuelGaugeEnabled();
+        Result _initFuelGauge();
     };
 
     extern Mainboard &Board; // singleton instance of Mainboard
