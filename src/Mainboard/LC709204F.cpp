@@ -92,12 +92,6 @@ namespace PowerFeather
 
     bool LC709204F::initImpl(const InitConfig &config)
     {
-        if (config.source == FuelGauge::InitSource::Generic_LFP ||
-            config.source == FuelGauge::InitSource::Profile_Max17260)
-        {
-            return false;
-        }
-
         ChangeOfParameter param = ChangeOfParameter::Nominal_3V7_Charging_4V2;
         switch (config.source)
         {
