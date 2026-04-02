@@ -35,10 +35,6 @@
 
 #include <driver/rtc_io.h>
 
-#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-#include <esp_timer.h>
-#endif
-
 #ifdef ARDUINO
 #include "Utils/ArduinoMasterI2C.h"
 #else
@@ -600,6 +596,11 @@ namespace PowerFeather
          * triggering of the alarm is disabled and any existing low voltage
          * alarm is cleared.
          *
+         * Alarm handling differs by board revision:
+         *  - V1 (LC709204F): low-voltage status naturally clears once voltage returns above threshold.
+         *  - V2 (MAX17260): low-voltage status is latched until explicitly cleared.
+         *    Use \c setBatteryLowVoltageAlarm(0) to clear, then set a non-zero threshold to re-arm.
+         *
          * @return Result Returns \c Result::Ok if the battery low voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -622,6 +623,11 @@ namespace PowerFeather
          * triggering of the alarm is disabled and any existing high voltage
          * alarm is cleared.
          *
+         * Alarm handling differs by board revision:
+         *  - V1 (LC709204F): high-voltage status naturally clears once voltage returns below threshold.
+         *  - V2 (MAX17260): high-voltage status is latched until explicitly cleared.
+         *    Use \c setBatteryHighVoltageAlarm(0) to clear, then set a non-zero threshold to re-arm.
+         *
          * @return Result Returns \c Result::Ok if the battery high voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
@@ -641,6 +647,11 @@ namespace PowerFeather
          *
          * @param[in] percent The percentage at which the low charge alarm will trigger in percent, from 1% to 100%.
          * If zero, triggering of the alarm is disabled and any existing low charge alarm is cleared.
+         *
+         * Alarm handling differs by board revision:
+         *  - V1 (LC709204F): low-charge status follows gauge behavior.
+         *  - V2 (MAX17260): low-charge status is latched until explicitly cleared.
+         *    Use \c setBatteryLowChargeAlarm(0) to clear, then set a non-zero threshold to re-arm.
          *
          * @return Result Returns \c Result::Ok if the battery low charge alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
@@ -746,15 +757,6 @@ namespace PowerFeather
         Mutex _mutex{100};
 
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-        static constexpr uint32_t _max17260AlarmPollPeriodUs = 500000; // 500 ms
-        void _updateMax17260AlarmPoll();
-        void _pollMax17260VoltageAlarms();
-        static void _max17260AlarmTimerCallback(void *arg);
-
-        esp_timer_handle_t _max17260AlarmTimer{nullptr};
-        uint16_t _max17260LowAlarmMv{0};
-        uint16_t _max17260HighAlarmMv{0};
-        bool _max17260AlarmTimerActive{false};
         bool _fuelGaugeUsingExternalTemp{false};
 #endif
 
