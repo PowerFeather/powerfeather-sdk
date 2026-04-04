@@ -48,6 +48,10 @@
 #include "LC709204F.h"
 #include "MAX17260.h"
 
+#if !defined(CONFIG_ESP32S3_POWERFEATHER_V2) && !defined(POWERFEATHER_BOARD_V2)
+#error "PowerFeather SDK V2 beta currently supports only ESP32-S3 PowerFeather V2. Backward compatibility with V1 will be added later. Select the V2 board revision in Kconfig or define POWERFEATHER_BOARD_V2 for Arduino builds."
+#endif
+
 namespace PowerFeather
 {
     class Mainboard
@@ -457,7 +461,12 @@ namespace PowerFeather
          * @brief Measure battery current.
          *
          * Measures the current to or from the battery during charging and discharging, respectively.
-         * Resolution is 4 mA.
+         *
+         * Resolution and measurement source depend on the board revision:
+         * - V1 uses the charger `IBAT_ADC` measurement with a 4 mA LSb.
+         * - V2 uses the MAX17260 current register with a 20 mOhm sense resistor. The raw current LSb is
+         *   78.125 uA, and this API returns the value rounded to the nearest integer mA.
+         *   The fuel gauge must be enabled on V2 for this function to succeed.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
@@ -466,7 +475,7 @@ namespace PowerFeather
          *
          * This function can block for 100 ms.
          *
-         * @param[out] current Measured battery voltage in milliamps (mA). If battery is discharging,
+         * @param[out] current Measured battery current in milliamps (mA). If battery is discharging,
          * this value is negative; positive if battery is charging.
          *
          * @return Result Returns \c Result::Ok if the battery current was measured successfully;

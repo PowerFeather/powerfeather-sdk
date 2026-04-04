@@ -136,6 +136,15 @@ namespace PowerFeather
         return static_cast<uint16_t>(std::min<uint32_t>(raw, 0xFFFFu));
     }
 
+    int16_t MAX17260::_rawToCurrentMa(uint16_t raw)
+    {
+        // Current LSb is 1.5625uV/RSENSE in signed two's complement format.
+        int32_t scaled = static_cast<int32_t>(static_cast<int16_t>(raw)) * 25;
+        int32_t denom = static_cast<int32_t>(SenseResistorMilliohms) * 16;
+        int32_t value = (scaled >= 0) ? (scaled + denom / 2) / denom : (scaled - denom / 2) / denom;
+        return static_cast<int16_t>(value);
+    }
+
     bool MAX17260::probe()
     {
         uint16_t value = 0;
@@ -489,6 +498,28 @@ namespace PowerFeather
         if (readRegister(Register::RepSOC, raw))
         {
             percent = static_cast<uint8_t>(std::min<uint16_t>(100, (raw + 0x80) >> 8));
+            return true;
+        }
+        return false;
+    }
+
+    bool MAX17260::getCurrent(int16_t &current)
+    {
+        uint16_t raw = 0;
+        if (readRegister(Register::Current, raw))
+        {
+            current = _rawToCurrentMa(raw);
+            return true;
+        }
+        return false;
+    }
+
+    bool MAX17260::getAvgCurrent(int16_t &current)
+    {
+        uint16_t raw = 0;
+        if (readRegister(Register::AvgCurrent, raw))
+        {
+            current = _rawToCurrentMa(raw);
             return true;
         }
         return false;

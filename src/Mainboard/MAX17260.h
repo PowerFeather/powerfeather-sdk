@@ -101,6 +101,8 @@ namespace PowerFeather
         bool setModelID(uint8_t modelId);
         bool loadModel(const Model &model);
         void setProfile(const Model &model);
+        bool getCurrent(int16_t &current);
+        bool getAvgCurrent(int16_t &current);
 
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(uint16_t &voltage) override;
@@ -249,6 +251,7 @@ namespace PowerFeather
 
         static uint16_t _capacityMahToDesignCapRaw(uint16_t capacityMah);
         static uint16_t _currentMaToRaw(uint16_t currentMa);
+        static int16_t _rawToCurrentMa(uint16_t raw);
 
         Model _profile{};
         bool _hasProfile{false};
