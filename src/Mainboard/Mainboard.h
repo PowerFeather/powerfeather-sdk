@@ -48,10 +48,6 @@
 #include "LC709204F.h"
 #include "MAX17260.h"
 
-#if !defined(CONFIG_ESP32S3_POWERFEATHER_V2) && !defined(POWERFEATHER_BOARD_V2)
-#error "PowerFeather SDK V2 beta currently supports only ESP32-S3 PowerFeather V2. Backward compatibility with V1 will be added later. Select the V2 board revision in Kconfig or define POWERFEATHER_BOARD_V2 for Arduino builds."
-#endif
-
 namespace PowerFeather
 {
     class Mainboard
