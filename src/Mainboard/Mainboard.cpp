@@ -611,17 +611,19 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
 
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
-        RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE(_fuelGauge.getCurrent(current), Result::Failure);
-        ESP_LOGD(TAG, "Measured battery current from fuel gauge: %d mA.", current);
-        return Result::Ok;
-#else
+        if (_isFuelGaugeEnabled() && _initFuelGauge() == Result::Ok)
+        {
+            if (_fuelGauge.getCurrent(current))
+            {
+                ESP_LOGD(TAG, "Measured battery current from fuel gauge: %d mA.", current);
+                return Result::Ok;
+            }
+        }
+#endif
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
         ESP_LOGD(TAG, "Measured battery current: %d mA.", current);
         return Result::Ok;
-#endif
     }
 
     Result Mainboard::getBatteryCharge(uint8_t &percent)
@@ -673,19 +675,15 @@ namespace PowerFeather
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
 
+        int16_t ibat = 0;
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-        // MAX17260 TTE is only valid when Current < 0, and TTF is only valid when Current > 0.
-        int16_t ibat = 0;
+        // Treat any non-positive battery current as discharging on V2.
         RET_IF_FALSE(_fuelGauge.getCurrent(ibat), Result::Failure);
-        RET_IF_FALSE(ibat != 0, Result::NotReady);
 #else
-        // Check first the current direction, whether to or from the battery.
-        // Negative means from battery to the board (discharge), positive
-        // means from board to battery (charge).
-        int16_t ibat = 0;
+        // Treat any non-positive battery current as discharging on V1.
         RET_IF_ERR(getBatteryCurrent(ibat));
 #endif
-        bool discharging = ibat < 0;
+        bool discharging = ibat <= 0;
 
         // Get the time-to-empty or time-to-full depending on battery is charging
         // or discharging.

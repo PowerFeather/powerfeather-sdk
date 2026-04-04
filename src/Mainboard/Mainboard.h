@@ -462,7 +462,8 @@ namespace PowerFeather
          * - V1 uses the charger `IBAT_ADC` measurement with a 4 mA LSb.
          * - V2 uses the MAX17260 current register with a 20 mOhm sense resistor. The raw current LSb is
          *   78.125 uA, and this API returns the value rounded to the nearest integer mA.
-         *   The fuel gauge must be enabled on V2 for this function to succeed.
+         *   The MAX17260 reading is preferred on V2. If it is unavailable, the implementation falls back to the
+         *   charger `IBAT_ADC` path.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
@@ -543,8 +544,8 @@ namespace PowerFeather
          * @brief Estimate time left for battery to charge or discharge.
          *
          * Gives an estimate of the battery time-to-empty or time-to-full in minutes. The battery charge must have
-         * previously dropped and/or risen by a certain percentage to be able to estimate time-to-empty or time-to-full, respectively;
-         * else \c Result::NotReady is returned.
+         * previously dropped and/or risen by a certain percentage to be able to estimate time-to-empty or time-to-full, respectively.
+         * If the gauge has not accumulated enough history yet, this function returns \c Result::NotReady.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
