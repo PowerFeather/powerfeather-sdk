@@ -158,12 +158,6 @@ namespace PowerFeather
         return readRegister(static_cast<uint8_t>(Register::Cell_Voltage), voltage);
     }
 
-    bool LC709204F::getCurrent(float &current)
-    {
-        static_cast<void>(current);
-        return false;
-    }
-
     bool LC709204F::getRSOC(uint8_t &percent)
     {
         uint16_t value = 0;

@@ -87,7 +87,6 @@ namespace PowerFeather
 
         virtual bool getEnabled(bool &enabled) = 0;
         virtual bool getCellVoltage(uint16_t &voltage) = 0;
-        virtual bool getCurrent(float &current) = 0;
         virtual bool getRSOC(uint8_t &percent) = 0;
         virtual bool getTimeToEmpty(uint16_t &minutes) = 0;
         virtual bool getTimeToFull(uint16_t &minutes) = 0;

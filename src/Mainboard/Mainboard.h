@@ -476,33 +476,6 @@ namespace PowerFeather
          */
         Result getBatteryCurrent(int16_t &current);
 
-#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-        /**
-         * @brief Measure high-resolution battery current.
-         *
-         * Measures the current to or from the battery during charging and discharging, respectively, using the
-         * MAX17260 current register.
-         *
-         * This overload is only supported on V2. It returns the measured battery current in milliamps (mA) as a
-         * floating-point value, preserving the MAX17260 current register's 78.125 uA LSb with the 20 mOhm sense resistor.
-         *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
-         *
-         * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
-         * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
-         *
-         * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState
-         * is returned.
-         *
-         * @param[out] current Measured battery current in milliamps (mA). If battery is discharging,
-         * this value is negative; positive if battery is charging.
-         *
-         * @return Result Returns \c Result::Ok if the battery current was measured successfully;
-         * returns a value other than \c Result::Ok if not.
-         */
-        Result getBatteryCurrent(float &current);
-#endif
-
         /**
          * @brief Estimate battery charge.
          *

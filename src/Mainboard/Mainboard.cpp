@@ -615,21 +615,6 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-    Result Mainboard::getBatteryCurrent(float &current)
-    {
-        TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
-        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
-        RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE(getFuelGauge().getCurrent(current), Result::Failure);
-        ESP_LOGD(TAG, "Measured battery current from fuel gauge: %.6f mA.", current);
-        return Result::Ok;
-    }
-#endif
-
     Result Mainboard::getBatteryCharge(uint8_t &percent)
     {
         TRY_LOCK(_mutex);
@@ -679,17 +664,9 @@ namespace PowerFeather
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
 
-        float ibat = 0.0f;
-#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-        // Treat any non-positive battery current as discharging on V2.
-        RET_IF_FALSE(getFuelGauge().getCurrent(ibat), Result::Failure);
-#else
-        // Treat any non-positive battery current as discharging on V1.
-        int16_t chargerCurrent = 0;
-        RET_IF_ERR(getBatteryCurrent(chargerCurrent));
-        ibat = static_cast<float>(chargerCurrent);
-#endif
-        bool discharging = ibat <= 0.0f;
+        int16_t ibat = 0;
+        RET_IF_ERR(getBatteryCurrent(ibat));
+        bool discharging = ibat <= 0;
 
         // Get the time-to-empty or time-to-full depending on battery is charging
         // or discharging.

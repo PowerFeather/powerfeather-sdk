@@ -82,7 +82,6 @@ namespace PowerFeather
 
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(uint16_t &voltage) override;
-        bool getCurrent(float &current) override;
         bool getRSOC(uint8_t &percent) override;
         bool getTimeToEmpty(uint16_t &minutes) override;
         bool getTimeToFull(uint16_t &minutes) override;

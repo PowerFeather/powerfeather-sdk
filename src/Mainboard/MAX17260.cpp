@@ -136,13 +136,6 @@ namespace PowerFeather
         return static_cast<uint16_t>(std::min<uint32_t>(raw, 0xFFFFu));
     }
 
-    float MAX17260::_rawCurrentToMa(uint16_t raw)
-    {
-        // Current LSb is 1.5625uV/RSENSE in signed two's complement format.
-        return static_cast<float>(static_cast<int16_t>(raw)) * 25.0f /
-               (static_cast<float>(SenseResistorMilliohms) * 16.0f);
-    }
-
     bool MAX17260::probe()
     {
         uint16_t value = 0;
@@ -496,17 +489,6 @@ namespace PowerFeather
         if (readRegister(Register::RepSOC, raw))
         {
             percent = static_cast<uint8_t>(std::min<uint16_t>(100, (raw + 0x80) >> 8));
-            return true;
-        }
-        return false;
-    }
-
-    bool MAX17260::getCurrent(float &current)
-    {
-        uint16_t raw = 0;
-        if (readRegister(Register::Current, raw))
-        {
-            current = _rawCurrentToMa(raw);
             return true;
         }
         return false;
