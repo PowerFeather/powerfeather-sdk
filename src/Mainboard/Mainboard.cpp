@@ -32,6 +32,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <algorithm>
 #include <climits>
 #include <cstdint>
 #include <cstring>
@@ -50,6 +51,36 @@ namespace PowerFeather
 
     /*extern*/ Mainboard &Board = Mainboard::get();
 
+    namespace
+    {
+        template <typename Gauge>
+        struct FuelGaugeProfileHelper
+        {
+            static void setProfile(Gauge &, const MAX17260::Model *) {}
+        };
+
+        template <>
+        struct FuelGaugeProfileHelper<MAX17260>
+        {
+            static void setProfile(MAX17260 &gauge, const MAX17260::Model *profile)
+            {
+                if (profile)
+                {
+                    gauge.setProfile(*profile);
+                }
+            }
+        };
+
+        static uint16_t designCapToMah(uint16_t designCapRaw, uint16_t maxMah)
+        {
+            // MAX17260 profile DesignCap is a normalized 16-bit value.
+            // getBatteryCapacityRange() already reflects the active gauge's mAh limits, including
+            // hardware parameters (for example, RSENSE). Scale the normalized value to mAh.
+            uint32_t scaled = (static_cast<uint32_t>(designCapRaw) * maxMah + 0x7FFFu) / 0xFFFFu;
+            return static_cast<uint16_t>(std::min<uint32_t>(scaled, maxMah));
+        }
+    }
+
     #define LOG_FAIL(r)                 ESP_LOGD(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
     #define RET_IF_ERR(f)               { Result r = (f); if (r != Result::Ok) { LOG_FAIL(1); return r; } }
     #define RET_IF_NOK(f)               { esp_err_t r = (f); if (r != ESP_OK) { LOG_FAIL(r); return false; } }
@@ -59,6 +90,62 @@ namespace PowerFeather
     static RTC_NOINIT_ATTR uint32_t first;
     static const uint32_t firstMagic = 0xdeadbeef;
 
+    FuelGauge &Mainboard::getFuelGauge()
+    {
+        return _fuelGauge;
+    }
+
+    bool Mainboard::_isFuelGaugeEnabled()
+    {
+        bool enabled = false;
+        getFuelGauge().getEnabled(enabled); // failure here means false is returned
+        return enabled;
+    }
+
+    Result Mainboard::_initFuelGauge()
+    {
+        FuelGauge &gauge = getFuelGauge();
+        FuelGauge::InitConfig config;
+
+        if (_usesProfile)
+        {
+            config.source = FuelGauge::InitSource::Profile_Max17260;
+            config.data.profile.model = nullptr;
+        }
+        else
+        {
+            config.data.capacity.capacityMah = _batteryCapacity;
+            config.data.capacity.terminationCurrentMa = _terminationCurrent;
+            switch (_batteryType)
+            {
+                case BatteryType::Generic_3V7:
+                    config.source = FuelGauge::InitSource::Generic_3V7;
+                    break;
+                case BatteryType::ICR18650_26H:
+                    config.source = FuelGauge::InitSource::ICR18650_26H;
+                    break;
+                case BatteryType::UR18650ZY:
+                    config.source = FuelGauge::InitSource::UR18650ZY;
+                    break;
+                case BatteryType::Generic_LFP:
+                    config.source = FuelGauge::InitSource::Generic_LFP;
+                    break;
+            }
+        }
+
+        RET_IF_FALSE(gauge.init(config), Result::Failure);
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        // Default to IC-managed temperature until the host starts providing external temperature updates.
+        if (!_fuelGaugeUsingExternalTemp)
+        {
+            RET_IF_FALSE(gauge.enableTSENSE(true, false), Result::Failure);
+        }
+#endif
+        ESP_LOGD(TAG, "Fuel gauge init complete (%s).", gauge.getName());
+
+        return Result::Ok;
+    }
+
     bool Mainboard::_isFirst()
     {
         // If the RTC is domain is shutdown, consider next boot as first boot.
@@ -66,6 +153,16 @@ namespace PowerFeather
         ESP_LOGD(TAG, "Check if first boot: %d.", isFirst);
         return isFirst;
     }
+
+    bool Mainboard::_canAccessPowerI2C() const
+    {
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        return true;
+#else
+        return _sqtEnabled;
+#endif
+    }
+
 
     bool Mainboard::_initInternalDigitalPin(gpio_num_t pin, gpio_mode_t mode)
     {
@@ -94,44 +191,6 @@ namespace PowerFeather
         return true;
     }
 
-    bool Mainboard::_isFuelGaugeEnabled()
-    {
-        bool enabled = false;
-        getFuelGauge().getOperationMode(enabled); // failure here means false is returned
-        return enabled;
-    }
-
-    Result Mainboard::_initFuelGauge()
-    {
-        bool inited = false;
-        RET_IF_FALSE(getFuelGauge().getInitialized(inited), Result::Failure); // check if already initialized
-
-        if (!inited)
-        {
-            LC709204F::ChangeOfParameter param = _batteryType == BatteryType::ICR18650_26H ? LC709204F::ChangeOfParameter::ICR18650_26H :
-                                                 _batteryType == BatteryType::UR18650ZY ? LC709204F::ChangeOfParameter::UR18650ZY :
-                                                 LC709204F::ChangeOfParameter::Nominal_3V7_Charging_4V2;
-            RET_IF_FALSE(getFuelGauge().setAPA(_batteryCapacity, param), Result::Failure);
-            RET_IF_FALSE(getFuelGauge().setChangeOfParameter(param), Result::Failure);
-
-            const float minFactor = LC709204F::MinTerminationFactor;
-            const float maxFactor = LC709204F::MaxTerminationFactor;
-            float terminationFactor = _terminationCurrent/static_cast<float>(_batteryCapacity);
-            terminationFactor = std::min(std::max(terminationFactor, minFactor), maxFactor);
-            RET_IF_FALSE(getFuelGauge().setTerminationFactor(terminationFactor), Result::Failure);
-
-            RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
-            RET_IF_FALSE(getFuelGauge().setOperationMode(true), Result::Failure);
-            RET_IF_FALSE(getFuelGauge().setInitialized(), Result::Failure);
-            ESP_LOGD(TAG, "Fuel gauge initialized.");
-        }
-        else
-        {
-            ESP_LOGD(TAG, "Fuel gauge already initialized.");
-        }
-
-        return Result::Ok;
-    }
 
     bool Mainboard::_setRTCPin(gpio_num_t pin, bool value)
     {
@@ -161,6 +220,52 @@ namespace PowerFeather
 
     Result Mainboard::init(uint16_t capacity, BatteryType type)
     {
+        RET_IF_FALSE(capacity, Result::InvalidArg);
+        return _initInternal(capacity, type, nullptr);
+    }
+
+    Result Mainboard::init()
+    {
+        return _initInternal(0, BatteryType::Generic_3V7, nullptr);
+    }
+
+    Result Mainboard::init(const MAX17260::Model &profile)
+    {
+        uint16_t capacity = _capacityFromProfile(profile);
+        RET_IF_FALSE(capacity, Result::InvalidArg);
+        // Profile init must explicitly provide the charger CV target.
+        static constexpr uint16_t minProfileChargeVoltageMv = 3500;
+        static constexpr uint16_t maxProfileChargeVoltageMv = 4800;
+        RET_IF_FALSE(profile.chargeVoltageMv >= minProfileChargeVoltageMv &&
+                     profile.chargeVoltageMv <= maxProfileChargeVoltageMv, Result::InvalidArg);
+        return _initInternal(capacity, BatteryType::Generic_3V7, &profile);
+    }
+
+    uint16_t Mainboard::_capacityFromProfile(const MAX17260::Model &profile) const
+    {
+        if (!FuelGaugeImpl::SupportsProfile)
+        {
+            return 0;
+        }
+
+        if (profile.designCap == 0)
+        {
+            return 0;
+        }
+
+        uint16_t minMah = 0;
+        uint16_t maxMah = 0;
+        _fuelGauge.getBatteryCapacityRange(minMah, maxMah);
+        if (maxMah == 0)
+        {
+            return 0;
+        }
+
+        return designCapToMah(profile.designCap, maxMah);
+    }
+
+    Result Mainboard::_initInternal(uint16_t capacity, BatteryType type, const MAX17260::Model *profile)
+    {
         _mutex.init();
 
         TRY_LOCK(_mutex);
@@ -170,18 +275,38 @@ namespace PowerFeather
             // Ignore set capacity and set 2600 mAh for both ICR18650_26H and UR18650ZY.
             capacity = 2600;
         }
-        else
-        {
-            // Capacity should either be 0, in which case it indicates to the SDK that there is no battery expected
-            // to be connected to the system; or within _minBatteryCapacity and _maxBatteryCapacity inclusive.
-            RET_IF_FALSE(!capacity || (capacity >= _minBatteryCapacity && capacity <= LC709204F::MaxBatteryCapacity), Result::InvalidArg);
-        }
 
         _initDone = false;
 
+        const bool useProfile = (profile != nullptr);
+        if (type == BatteryType::Generic_LFP && !FuelGaugeImpl::SupportsLfp)
+        {
+            return Result::InvalidArg;
+        }
+        if (useProfile && !FuelGaugeImpl::SupportsProfile)
+        {
+            return Result::InvalidArg;
+        }
+        RET_IF_FALSE(!useProfile || capacity, Result::InvalidArg);
+
+        uint16_t minCapacity = 0;
+        uint16_t maxCapacity = 0;
+        _fuelGauge.getBatteryCapacityRange(minCapacity, maxCapacity);
+        // Capacity should either be 0 (from init()) to indicate no battery is expected,
+        // or within range inclusive.
+        RET_IF_FALSE(!capacity || (capacity >= minCapacity && capacity <= maxCapacity), Result::InvalidArg);
+
         _batteryCapacity = capacity;
         _batteryType = type;
+        _usesProfile = useProfile;
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        _fuelGaugeUsingExternalTemp = false;
+#endif
         ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
+        if (useProfile)
+        {
+            FuelGaugeProfileHelper<FuelGaugeImpl>::setProfile(_fuelGauge, profile);
+        }
         // Set termination current to C / 10, or within limits of the IC.
         uint16_t minCurrent = BQ2562x::MinITERMCurrent;
         uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
@@ -189,13 +314,26 @@ namespace PowerFeather
         _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
         ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
+        uint16_t chargeVoltageMv = 4200;
+        if (useProfile && profile->chargeVoltageMv)
+        {
+            chargeVoltageMv = profile->chargeVoltageMv;
+        }
+        if (_batteryType == BatteryType::Generic_LFP)
+        {
+            chargeVoltageMv = 3600;
+        }
+
         // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
-        _sqtEnabled = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT);
-        RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, _sqtEnabled), Result::Failure)
-        ESP_LOGD(TAG, "VSQT detected as %d during initialization", _sqtEnabled);
+        bool sqtEnabled = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT);
+        RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, sqtEnabled), Result::Failure)
+        ESP_LOGD(TAG, "VSQT detected as %d during initialization", sqtEnabled);
+#if !defined(CONFIG_ESP32S3_POWERFEATHER_V2) && !defined(POWERFEATHER_BOARD_V2)
+        _sqtEnabled = sqtEnabled;
+#endif
 
-        if (_sqtEnabled)
+        if (_canAccessPowerI2C())
         {
             RET_IF_FALSE(_i2c.start(), Result::Failure);
 
@@ -220,7 +358,7 @@ namespace PowerFeather
                 RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
                 if (_batteryCapacity)
                 {
-                    RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
+                RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
                 }
                 // Disable the charger watchdog to keep the charger in host mode and to
                 // keep some registers from resetting to their POR values.
@@ -240,6 +378,9 @@ namespace PowerFeather
             {
                 _initFuelGauge();
             }
+
+            // Enforce charge voltage target on every init path, including wake/re-init.
+            RET_IF_FALSE(getCharger().setChargeVoltageLimit(chargeVoltageMv), Result::Failure);
         }
 
         // Initialize the rest of the RTC/digital pins managed by the SDK.
@@ -286,9 +427,14 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, enable), Result::Failure);
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        // On V2, power-management I2C remains usable even with VSQT disabled.
+        ESP_LOGD(TAG, "VSQT set to: %d.", enable);
+#else
         RET_IF_FALSE(enable ? (_sqtEnabled || _i2c.start()) : !_sqtEnabled || _i2c.end(), Result::Failure);
         _sqtEnabled = enable;
         ESP_LOGD(TAG, "VSQT set to: %d.", _sqtEnabled);
+#endif
         return Result::Ok;
     }
 
@@ -296,7 +442,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(getCharger().enableSTAT(enable), Result::Failure);
         ESP_LOGD(TAG, "STAT LED %s", enable ? "enabled" : "disabled");
         return Result::Ok;
@@ -306,7 +452,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getVBUS(voltage), Result::Failure);
         ESP_LOGD(TAG, "Measured supply voltage: %d mV.", voltage);
@@ -317,7 +463,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBUS(current), Result::Failure);
         ESP_LOGD(TAG, "Measured supply current: %d mA.", current);
@@ -337,7 +483,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(voltage >= _minSupplyMaintainVoltage && voltage <= BQ2562x::MaxVINDPMVoltage, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
         ESP_LOGD(TAG, "Maintain supply voltage set to: %d mV.", voltage);
@@ -348,7 +494,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShipMode), Result::Failure);
         // If this executes, then charger did not enter ship mode. Return to normal operation
         // and return failure status.
@@ -362,7 +508,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShutdownMode), Result::Failure);
         // If this executes, then charger did not enter shutdown mode. According to the datasheet,
         // charger automatically returns to normal mode, so just return failure.
@@ -375,7 +521,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset), Result::Failure);
         // If this executes, then charger did not perform power cycle.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
@@ -387,7 +533,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(getCharger().enableCharging(enable), Result::Failure);
         ESP_LOGD(TAG, "Charging set to: %d.", enable);
@@ -398,9 +544,9 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
-        RET_IF_FALSE(current >= _minBatteryCapacity && current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
+        RET_IF_FALSE(current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setChargeCurrentLimit(current), Result::Failure);
         ESP_LOGD(TAG, "Max charging current set to: %d mA.", current);
         return Result::Ok;
@@ -410,7 +556,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
         RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, enable), Result::Failure);
@@ -422,7 +568,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         if (enable)
         {
@@ -431,7 +577,7 @@ namespace PowerFeather
             // the finally this function is called.
             RET_IF_ERR(_initFuelGauge());
         }
-        RET_IF_FALSE(getFuelGauge().setOperationMode(enable), Result::Failure);
+        RET_IF_FALSE(getFuelGauge().setEnabled(enable), Result::Failure);
         ESP_LOGD(TAG, "Fuel gauge set to: %d.", enable);
         return Result::Ok;
     }
@@ -440,10 +586,16 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         // If fuel gauge is available, use the reading from it.
-        if (!(_isFuelGaugeEnabled() && _initFuelGauge() == Result::Ok && getFuelGauge().getCellVoltage(voltage)))
+        bool usedFuelGauge = false;
+        if (_isFuelGaugeEnabled() && _initFuelGauge() == Result::Ok)
+        {
+            usedFuelGauge = getFuelGauge().getCellVoltage(voltage);
+        }
+
+        if (!usedFuelGauge)
         {
             RET_IF_ERR(_udpateChargerADC());
             RET_IF_FALSE(getCharger().getVBAT(voltage), Result::Failure);
@@ -455,11 +607,11 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
-        ESP_LOGD(TAG, "Measured battery current: %d mA.", current);
+        ESP_LOGD(TAG, "Measured battery current from charger: %d mA.", current);
         return Result::Ok;
     }
 
@@ -467,8 +619,9 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getRSOC(percent), Result::Failure);
         ESP_LOGD(TAG, "Estimated battery charge: %d %%.", percent);
@@ -479,8 +632,9 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getSOH(percent), Result::Failure);
         ESP_LOGD(TAG, "Estimated battery health: %d %%.", percent);
@@ -491,8 +645,9 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(getFuelGauge().getCycles(cycles), Result::Failure);
         ESP_LOGD(TAG, "Estimated battery cycles: %d.", cycles);
@@ -504,16 +659,14 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
 
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
 
-        // Check first the current direction, whether to or from the battery.
-        // Negative means from battery to the board (discharge), positive
-        // means from board to battery (charge).
         int16_t ibat = 0;
         RET_IF_ERR(getBatteryCurrent(ibat));
-        bool discharging = ibat < 0;
+        bool discharging = ibat <= 0;
 
         // Get the time-to-empty or time-to-full depending on battery is charging
         // or discharging.
@@ -535,7 +688,7 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
 
         // Temperature sensing must be enabled using enableBatteryTempSense(true), only
@@ -556,10 +709,14 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE((voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm) || voltage == 0, Result::InvalidArg);
+        uint16_t minAlarm = 0;
+        uint16_t maxAlarm = 0;
+        getFuelGauge().getVoltageAlarmRange(minAlarm, maxAlarm);
+        RET_IF_FALSE((voltage == 0) || (voltage >= minAlarm && voltage <= maxAlarm), Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setLowVoltageAlarm(voltage), Result::Failure);
         if (voltage == 0)
         {
@@ -573,10 +730,14 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE((voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm) || voltage == 0, Result::InvalidArg);
+        uint16_t minAlarm = 0;
+        uint16_t maxAlarm = 0;
+        getFuelGauge().getVoltageAlarmRange(minAlarm, maxAlarm);
+        RET_IF_FALSE((voltage == 0) || (voltage >= minAlarm && voltage <= maxAlarm), Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setHighVoltageAlarm(voltage), Result::Failure);
         if (voltage == 0)
         {
@@ -590,8 +751,9 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
         RET_IF_FALSE(percent <= 100, Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setLowRSOCAlarm(percent), Result::Failure);
@@ -607,13 +769,31 @@ namespace PowerFeather
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_sqtEnabled, Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity && _isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        RET_IF_FALSE(temperature >= LC709204F::MinTemperature && temperature <= LC709204F::MaxTemperature, Result::InvalidArg);
+        float minTemp = 0;
+        float maxTemp = 0;
+        getFuelGauge().getTemperatureRange(minTemp, maxTemp);
+        RET_IF_FALSE(temperature >= minTemp && temperature <= maxTemp, Result::InvalidArg);
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        if (!_fuelGaugeUsingExternalTemp)
+        {
+            RET_IF_FALSE(getFuelGauge().enableTSENSE(false, false), Result::Failure);
+            _fuelGaugeUsingExternalTemp = true;
+        }
+#endif
         RET_IF_FALSE(getFuelGauge().setCellTemperature(temperature), Result::Failure);
         ESP_LOGD(TAG, "Fuel guage temperature updated to: %f °C.", temperature);
         return Result::Ok;
+    }
+
+    Result Mainboard::updateBatteryFuelGaugeTemp()
+    {
+        float temperature = 0.0f;
+        RET_IF_ERR(getBatteryTemperature(temperature));
+        return updateBatteryFuelGaugeTemp(temperature);
     }
 
     /*static*/ Mainboard &Mainboard::get()
