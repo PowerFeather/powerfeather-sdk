@@ -237,8 +237,7 @@ namespace PowerFeather
             }
             else
             {
-                auto prev = _apaTable[0];
-                for (int i = 0; i < sizeof(_apaTable) / sizeof(prev); i++)
+                for (int i = 0; i < sizeof(_apaTable) / sizeof(_apaTable[0]); i++)
                 {
                     auto cur = _apaTable[i];
                     uint16_t cap = std::get<0>(cur);
@@ -248,7 +247,7 @@ namespace PowerFeather
                     {
                         apa = (std::get<1>(cur) << 8) | std::get<1>(cur);
                     }
-                    else
+                    else if (i > 0)
                     {
                         auto prev = _apaTable[i - 1];
                         uint16_t prev_cap = std::get<0>(prev);
@@ -263,8 +262,6 @@ namespace PowerFeather
                     {
                         return writeRegister(static_cast<uint8_t>(Register::APA), apa);
                     }
-
-                    prev = cur;
                 }
             }
         }
