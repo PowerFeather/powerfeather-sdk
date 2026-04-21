@@ -755,6 +755,7 @@ namespace PowerFeather
         uint32_t _chargerADCTime{0};
         uint16_t _batteryCapacity{0};
         uint16_t _terminationCurrent{0};
+        uint16_t _chargeVoltageMv{4200};
         BatteryType _batteryType{BatteryType::Generic_3V7};
         bool _usesProfile{false};
         Mutex _mutex{100};

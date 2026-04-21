@@ -116,6 +116,7 @@ namespace PowerFeather
         {
             config.data.capacity.capacityMah = _batteryCapacity;
             config.data.capacity.terminationCurrentMa = _terminationCurrent;
+            config.data.capacity.chargeVoltageMv = _chargeVoltageMv;
             switch (_batteryType)
             {
                 case BatteryType::Generic_3V7:
@@ -323,6 +324,7 @@ namespace PowerFeather
         {
             chargeVoltageMv = 3600;
         }
+        _chargeVoltageMv = chargeVoltageMv;
 
         // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
@@ -370,6 +372,9 @@ namespace PowerFeather
                 ESP_LOGD(TAG, "Charger IC already initialized.");
             }
 
+            // Enforce charge voltage target on every init path, including wake/re-init.
+            RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltageMv), Result::Failure);
+
             // If battery capacity is not 0, initialize the fuel gauge. This can fail if during
             // startup no battery is connected, therefore failures are not checked here. Fuel guage
             // initialization attempts will be made later, during calls to member functions that
@@ -378,9 +383,6 @@ namespace PowerFeather
             {
                 _initFuelGauge();
             }
-
-            // Enforce charge voltage target on every init path, including wake/re-init.
-            RET_IF_FALSE(getCharger().setChargeVoltageLimit(chargeVoltageMv), Result::Failure);
         }
 
         // Initialize the rest of the RTC/digital pins managed by the SDK.

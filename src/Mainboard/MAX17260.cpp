@@ -209,7 +209,12 @@ namespace PowerFeather
         }
 
         modelCfg &= static_cast<uint16_t>(~ModelCfgMask_ModelID);
+        modelCfg &= static_cast<uint16_t>(~ModelCfgBit_VChg);
         modelCfg |= static_cast<uint16_t>((modelId & 0x7u) << 5);
+        if (config.data.capacity.chargeVoltageMv > ModelCfgHighVoltageThresholdMv)
+        {
+            modelCfg |= ModelCfgBit_VChg;
+        }
         modelCfg |= ModelCfgBit_Refresh;
 
         if (!writeRegister(Register::ModelCfg, modelCfg))

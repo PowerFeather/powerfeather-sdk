@@ -62,6 +62,7 @@ namespace PowerFeather
             {
                 uint16_t capacityMah;
                 uint16_t terminationCurrentMa;
+                uint16_t chargeVoltageMv;
             };
 
             struct ProfileConfig
@@ -74,7 +75,7 @@ namespace PowerFeather
                 CapacityConfig capacity;
                 ProfileConfig profile;
 
-                constexpr Payload() : capacity{0, 0} {}
+                constexpr Payload() : capacity{0, 0, 0} {}
             };
 
             InitSource source{InitSource::Generic_3V7};
