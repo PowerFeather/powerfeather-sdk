@@ -33,6 +33,7 @@
  */
 #pragma once
 
+#include <driver/gpio.h>
 #include <driver/rtc_io.h>
 
 #ifdef ARDUINO
