@@ -62,7 +62,7 @@ namespace PowerFeather
             {
                 uint16_t capacityMah;
                 uint16_t terminationCurrentMa;
-                uint16_t chargeVoltageMv;
+                float chargeVoltage;
             };
 
             struct ProfileConfig
@@ -75,7 +75,7 @@ namespace PowerFeather
                 CapacityConfig capacity;
                 ProfileConfig profile;
 
-                constexpr Payload() : capacity{0, 0, 0} {}
+                constexpr Payload() : capacity{0, 0, 0.0f} {}
             };
 
             InitSource source{InitSource::Generic_3V7};
@@ -87,8 +87,9 @@ namespace PowerFeather
 
         bool init(const InitConfig &config, bool forceReinit = false);
 
+        // Voltage APIs use volts (V). Temperature APIs use degrees Celsius.
         virtual bool getEnabled(bool &enabled) = 0;
-        virtual bool getCellVoltage(uint16_t &voltage) = 0;
+        virtual bool getCellVoltage(float &voltage) = 0;
         virtual bool getRSOC(uint8_t &percent) = 0;
         virtual bool getTimeToEmpty(uint16_t &minutes) = 0;
         virtual bool getTimeToFull(uint16_t &minutes) = 0;
@@ -99,8 +100,8 @@ namespace PowerFeather
         virtual bool setEnabled(bool enable) = 0;
         virtual bool setCellTemperature(float temperature) = 0;
         virtual bool enableTSENSE(bool enableTsense1, bool enableTsense2) = 0;
-        virtual bool setLowVoltageAlarm(uint16_t voltage) = 0;
-        virtual bool setHighVoltageAlarm(uint16_t voltage) = 0;
+        virtual bool setLowVoltageAlarm(float voltage) = 0;
+        virtual bool setHighVoltageAlarm(float voltage) = 0;
         virtual bool setLowRSOCAlarm(uint8_t percent) = 0;
         virtual bool setTerminationFactor(float factor) = 0;
         virtual bool setInitialized() = 0;
@@ -110,7 +111,7 @@ namespace PowerFeather
 
         virtual bool probe() = 0;
         virtual const char *getName() const = 0;
-        virtual void getVoltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const = 0;
+        virtual void getVoltageAlarmRange(float &minV, float &maxV) const = 0;
         virtual void getTemperatureRange(float &minC, float &maxC) const = 0;
         virtual void getTerminationFactorRange(float &minFactor, float &maxFactor) const = 0;
         virtual void getBatteryCapacityRange(uint16_t &minMah, uint16_t &maxMah) const = 0;

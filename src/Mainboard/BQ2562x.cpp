@@ -32,7 +32,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <math.h>
+#include <cmath>
 #include <limits.h>
 
 #include <esp_log.h>
@@ -43,6 +43,16 @@
 namespace PowerFeather
 {
     static const char *TAG = "PowerFeather::Mainboard::BQ2562x";
+
+    namespace
+    {
+        static constexpr float MillivoltsPerVolt = 1000.0f;
+
+        static uint16_t toRawNearest(float value, float step)
+        {
+            return static_cast<uint16_t>(std::lround(value / step));
+        }
+    }
 
     template <typename T>
     bool BQ2562x::_readReg(Register reg, T &value)
@@ -102,18 +112,18 @@ namespace PowerFeather
         return _readReg(Charger_Control_0_WATCHDOG, enabled);
     }
 
-    bool BQ2562x::getVBUS(uint16_t &voltage)
+    bool BQ2562x::getVBUS(float &voltage)
     {
         uint16_t value = 0;
         if (_readReg(VBUS_ADC, value))
         {
-            voltage = round(Util::fromRaw(value, 3.97f));
+            voltage = Util::fromRaw(value, 3.97f) / MillivoltsPerVolt;
             return true;
         }
         return false;
     }
 
-    bool BQ2562x::getIBUS(int16_t &current)
+    bool BQ2562x::getIBUS(float &current)
     {
         uint16_t value = 0;
 
@@ -127,18 +137,18 @@ namespace PowerFeather
         return false;
     }
 
-    bool BQ2562x::getVBAT(uint16_t &voltage)
+    bool BQ2562x::getVBAT(float &voltage)
     {
         uint16_t value = 0;
         if (_readReg(VBAT_ADC, value))
         {
-            voltage = round(Util::fromRaw(value, 1.99f));
+            voltage = Util::fromRaw(value, 1.99f) / MillivoltsPerVolt;
             return true;
         }
         return false;
     }
 
-    bool BQ2562x::getIBAT(int16_t &current)
+    bool BQ2562x::getIBAT(float &current)
     {
         // 0x2000 is an invalid value carried over from bq25622e.
         static constexpr uint16_t invalid = 0x2000;
@@ -246,34 +256,34 @@ namespace PowerFeather
         return false;
     }
 
-    bool BQ2562x::getVINDPM(uint16_t& voltage)
+    bool BQ2562x::getVINDPM(float& voltage)
     {
         uint16_t value = 0;
         if (_readReg(Input_Current_Limit_VINDPM, value))
         {
-            voltage = round(Util::fromRaw(value, 40.0f));
+            voltage = Util::fromRaw(value, 40.0f) / MillivoltsPerVolt;
             return true;
         }
         return false;
     }
 
-    bool BQ2562x::getChargeCurrentLimit(uint16_t& current)
+    bool BQ2562x::getChargeCurrentLimit(float& current)
     {
         uint16_t value = 0;
         if (_readReg(Charge_Current_Limit_ICHG, value))
         {
-            current = round(Util::fromRaw(value, 40.0f));
+            current = Util::fromRaw(value, 40.0f);
             return true;
         }
         return false;
     }
 
-    bool BQ2562x::getChargeVoltageLimit(uint16_t& voltage)
+    bool BQ2562x::getChargeVoltageLimit(float& voltage)
     {
         uint16_t value = 0;
         if (_readReg(Charge_Voltage_Limit_VREG, value))
         {
-            voltage = round(Util::fromRaw(value, 10.0f));
+            voltage = Util::fromRaw(value, 10.0f) / MillivoltsPerVolt;
             return true;
         }
         return false;
@@ -352,24 +362,24 @@ namespace PowerFeather
         return _writeReg(reg, !enable);
     }
 
-    bool BQ2562x::setChargeCurrentLimit(uint16_t current)
+    bool BQ2562x::setChargeCurrentLimit(float current)
     {
         if (current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent)
         {
-            uint16_t value = round(Util::toRaw(current, 40.0f));
+            uint16_t value = toRawNearest(current, 40.0f);
             return _writeReg(Charge_Current_Limit_ICHG, value);
         }
         return false;
     }
 
-    bool BQ2562x::setChargeVoltageLimit(uint16_t voltage)
+    bool BQ2562x::setChargeVoltageLimit(float voltage)
     {
-        static constexpr uint16_t minVoltageMv = 3500;
-        static constexpr uint16_t maxVoltageMv = 4800;
+        static constexpr float minVoltage = 3.5f;
+        static constexpr float maxVoltage = 4.8f;
 
-        if (voltage >= minVoltageMv && voltage <= maxVoltageMv)
+        if (voltage >= minVoltage && voltage <= maxVoltage)
         {
-            uint16_t value = round(Util::toRaw(static_cast<float>(voltage), 10.0f));
+            uint16_t value = toRawNearest(voltage * MillivoltsPerVolt, 10.0f);
             return _writeReg(Charge_Voltage_Limit_VREG, value);
         }
         return false;
@@ -387,31 +397,31 @@ namespace PowerFeather
         return _writeReg(Charger_Control_2_BATFET_DLY, value);
     }
 
-    bool BQ2562x::setVINDPM(uint16_t voltage)
+    bool BQ2562x::setVINDPM(float voltage)
     {
         if (voltage >= BQ2562x::MinVINDPMVoltage && voltage <= BQ2562x::MaxVINDPMVoltage)
         {
-            uint16_t value = Util::toRaw(voltage, 40.0f);
+            uint16_t value = toRawNearest(voltage * MillivoltsPerVolt, 40.0f);
             return _writeReg(Input_Current_Limit_VINDPM, value);
         }
         return false;
     }
 
-    bool BQ2562x::setIINDPM(uint16_t current)
+    bool BQ2562x::setIINDPM(float current)
     {
         if (current >= BQ2562x::MinIINDPMCurrent && current <= BQ2562x::MaxIINDPMCurrent)
         {
-            uint16_t value = Util::toRaw(current, 20.0f);
+            uint16_t value = toRawNearest(current, 20.0f);
             return _writeReg(Input_Current_Limit_IINDPM, value);
         }
         return false;
     }
 
-    bool BQ2562x::setITERM(uint16_t current)
+    bool BQ2562x::setITERM(float current)
     {
         if (current >= BQ2562x::MinITERMCurrent && current <= BQ2562x::MaxITERMCurrent)
         {
-            uint16_t value = Util::toRaw(current, 5.0f);
+            uint16_t value = toRawNearest(current, 5.0f);
             return _writeReg(Termination_Control_0_ITERM, value);
         }
         return false;

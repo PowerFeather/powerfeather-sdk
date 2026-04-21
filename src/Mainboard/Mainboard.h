@@ -145,7 +145,7 @@ namespace PowerFeather
          *  - \a VSQT: enabled
          *  - Charging: disabled
          *  - Maximum battery charging current: 50 mA
-         *  - Maintain supply voltage: 4600 mV
+         *  - Maintain supply voltage: 4.6 V
          *  - Fuel gauge: enabled (use \c init() to disable)
          *  - Battery temperature sense: disabled
          *  - Battery alarms (low charge, high/low voltage): disabled
@@ -176,8 +176,8 @@ namespace PowerFeather
          * On V2, inferred capacities below 50 mAh are supported for monitoring only: battery charging remains
          * disabled and charge-current configuration is rejected.
          *
-         * The profile must provide a valid charger constant-voltage target in \c chargeVoltageMv.
-         * Accepted range is 3500-4800 mV.
+         * The profile must provide a valid charger constant-voltage target in \c chargeVoltage.
+         * Accepted range is 3.5-4.8 V.
          *
          * @param[in] profile MAX17260 model profile.
          *
@@ -252,19 +252,19 @@ namespace PowerFeather
          * @brief Measure the supply voltage.
          *
          * Measures the \a VUSB or \a VDC voltage. \a VUSB is the power input from the USB-C connector,
-         * while \a VDC is the power input from the header pin. Resolution is 4 mV
+         * while \a VDC is the power input from the header pin. Resolution is approximately 0.004 V.
          *
          * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * This function can block for 100 ms.
          *
-         * @param[out] voltage The measured voltage in millivolts (mV).
+         * @param[out] voltage The measured voltage in volts (V).
          *
          * @return Result Returns \c Result::Ok if the supply voltage was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
-        Result getSupplyVoltage(uint16_t &voltage);
+        Result getSupplyVoltage(float &voltage);
 
         /**
          * @brief Measure the supply current.
@@ -282,7 +282,7 @@ namespace PowerFeather
          * @return Result Returns \c Result::Ok if the supply current was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
-        Result getSupplyCurrent(int16_t &current);
+        Result getSupplyCurrent(float &current);
 
         /**
          * @brief Check if the supply is good.
@@ -307,12 +307,12 @@ namespace PowerFeather
          * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
-         * @param[in] voltage The supply voltage to maintain in millivolts (mV), from 4600 mV to 16800 mV.
+         * @param[in] voltage The supply voltage to maintain in volts (V), from 4.6 V to 16.8 V.
          *
          * @return Result Returns \c Result::Ok if the supply voltage to maintain was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
-        Result setSupplyMaintainVoltage(uint16_t voltage);
+        Result setSupplyMaintainVoltage(float voltage);
 
         /**
          * @brief Enter ship mode.
@@ -413,7 +413,7 @@ namespace PowerFeather
          * @return Result Returns \c Result::Ok if the maximum battery charging current was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
-        Result setBatteryChargingMaxCurrent(uint16_t current);
+        Result setBatteryChargingMaxCurrent(float current);
 
         /**
          * @brief Enable or disable battery temperature measurement.
@@ -460,7 +460,7 @@ namespace PowerFeather
         /**
          * @brief Measure battery voltage.
          *
-         * Resolution is 2 mV. If the fuel gauge is enabled and available, it is used;
+         * Resolution is approximately 0.002 V. If the fuel gauge is enabled and available, it is used;
          * otherwise, the charger VBAT ADC path is used as a fallback.
          *
          * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
@@ -471,12 +471,12 @@ namespace PowerFeather
          *
          * This function can block for 100 ms.
          *
-         * @param[out] voltage Measured battery voltage in millivolts (mV).
+         * @param[out] voltage Measured battery voltage in volts (V).
          *
          * @return Result Returns \c Result::Ok if the battery voltage was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
-        Result getBatteryVoltage(uint16_t &voltage);
+        Result getBatteryVoltage(float &voltage);
 
         /**
          * @brief Measure battery current.
@@ -484,7 +484,7 @@ namespace PowerFeather
          * Measures the current to or from the battery during charging and discharging, respectively, using the
          * charger `IBAT_ADC` measurement path.
          *
-         * This overload uses the charger `IBAT_ADC` register on both V1 and V2, with a 4 mA LSb.
+         * This function uses the charger `IBAT_ADC` register on both V1 and V2, with a 4 mA LSb.
          *
          * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          * On V2, power-management I2C remains usable with \a VSQT disabled.
@@ -500,7 +500,7 @@ namespace PowerFeather
          * @return Result Returns \c Result::Ok if the battery current was measured successfully;
          * returns a value other than \c Result::Ok if not.
          */
-        Result getBatteryCurrent(int16_t &current);
+        Result getBatteryCurrent(float &current);
 
         /**
          * @brief Estimate battery charge.
@@ -628,20 +628,20 @@ namespace PowerFeather
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The voltage at which the low voltage alarm will trigger in millivolts (mV).
-         * Valid non-zero range depends on board revision (2500-5000 mV for V1, 20-5100 mV for V2). If zero,
+         * @param[in] voltage The voltage at which the low voltage alarm will trigger in volts (V).
+         * Valid non-zero range depends on board revision (2.5-5.0 V for V1, 0.02-5.1 V for V2). If zero,
          * triggering of the alarm is disabled and any existing low voltage
          * alarm is cleared.
          *
          * Alarm handling differs by board revision:
          *  - V1 (LC709204F): low-voltage status naturally clears once voltage returns above threshold.
          *  - V2 (MAX17260): low-voltage status is latched until explicitly cleared.
-         *    Use \c setBatteryLowVoltageAlarm(0) to clear, then set a non-zero threshold to re-arm.
+         *    Use \c setBatteryLowVoltageAlarm(0.0f) to clear, then set a non-zero threshold to re-arm.
          *
          * @return Result Returns \c Result::Ok if the battery low voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
-        Result setBatteryLowVoltageAlarm(uint16_t voltage);
+        Result setBatteryLowVoltageAlarm(float voltage);
 
         /**
          * @brief Set an alarm for battery high voltage.
@@ -656,20 +656,20 @@ namespace PowerFeather
          *
          * The battery fuel gauge must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
-         * @param[in] voltage The voltage at which the high voltage alarm will trigger in millovolts (mV).
-         * Valid non-zero range depends on board revision (2500-5000 mV for V1, 20-5100 mV for V2). If zero,
+         * @param[in] voltage The voltage at which the high voltage alarm will trigger in volts (V).
+         * Valid non-zero range depends on board revision (2.5-5.0 V for V1, 0.02-5.1 V for V2). If zero,
          * triggering of the alarm is disabled and any existing high voltage
          * alarm is cleared.
          *
          * Alarm handling differs by board revision:
          *  - V1 (LC709204F): high-voltage status naturally clears once voltage returns below threshold.
          *  - V2 (MAX17260): high-voltage status is latched until explicitly cleared.
-         *    Use \c setBatteryHighVoltageAlarm(0) to clear, then set a non-zero threshold to re-arm.
+         *    Use \c setBatteryHighVoltageAlarm(0.0f) to clear, then set a non-zero threshold to re-arm.
          *
          * @return Result Returns \c Result::Ok if the battery high voltage alarm was set successfully;
          * returns a value other than \c Result::Ok if not.
          */
-        Result setBatteryHighVoltageAlarm(uint16_t voltage);
+        Result setBatteryHighVoltageAlarm(float voltage);
 
         /**
          * @brief Set an alarm for battery low charge.
@@ -768,9 +768,9 @@ namespace PowerFeather
         static constexpr uint32_t _i2cFreq = 100000;
         static constexpr uint32_t _i2cTimeout = 1000;
 
-        static constexpr uint16_t _defaultMaxChargingCurrent = 50; // minimum charge current at 1C
-        static constexpr uint16_t _minChargeableBatteryCapacity = _defaultMaxChargingCurrent;
-        static constexpr uint16_t _minSupplyMaintainVoltage = BQ2562x::ResetVINDPMVoltage;
+        static constexpr float _defaultMaxChargingCurrent = 50.0f; // minimum charge current at 1C
+        static constexpr uint16_t _minChargeableBatteryCapacity = 50;
+        static constexpr float _minSupplyMaintainVoltage = BQ2562x::ResetVINDPMVoltage;
 
         static_assert(_minSupplyMaintainVoltage >= BQ2562x::MinVINDPMVoltage);
         static_assert(_defaultMaxChargingCurrent >= BQ2562x::MinChargingCurrent);
@@ -783,7 +783,7 @@ namespace PowerFeather
             FuelGauge::InitSource source{FuelGauge::InitSource::Generic_3V7};
             uint16_t capacityMah{0};
             uint16_t terminationCurrentMa{0};
-            uint16_t chargeVoltageMv{0};
+            float chargeVoltage{0.0f};
             uint32_t profileHash{0};
         };
 
@@ -803,9 +803,9 @@ namespace PowerFeather
         uint32_t _chargerADCTime{0};
         uint16_t _batteryCapacity{0};
         uint16_t _terminationCurrent{0};
-        uint16_t _chargeVoltageMv{4200};
-        uint16_t _chargingCurrentLimit{_defaultMaxChargingCurrent};
-        uint16_t _vindpm{_minSupplyMaintainVoltage};
+        float _chargeVoltage{4.2f};
+        float _chargingCurrentLimit{_defaultMaxChargingCurrent};
+        float _vindpm{_minSupplyMaintainVoltage};
         uint32_t _profileHash{0};
         bool _tsEnabled{false};
         bool _chargingEnabled{false};

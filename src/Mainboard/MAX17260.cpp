@@ -45,6 +45,11 @@ namespace PowerFeather
 {
     static const char *TAG = "PowerFeather::Mainboard::MAX17260";
 
+    namespace
+    {
+        static constexpr float MillivoltsPerVolt = 1000.0f;
+    }
+
     bool MAX17260::readRegister(uint8_t address, uint16_t &value)
     {
         if (_i2c.read(_i2cAddress, address, reinterpret_cast<uint8_t *>(&value), registerSizeBytes()))
@@ -237,7 +242,7 @@ namespace PowerFeather
 
         uint16_t modelCfg = ModelCfgBit_Refresh;
         modelCfg |= static_cast<uint16_t>((modelId & 0x7u) << 5);
-        if (config.data.capacity.chargeVoltageMv > ModelCfgHighVoltageThresholdMv)
+        if (config.data.capacity.chargeVoltage > ModelCfgHighVoltageThreshold)
         {
             modelCfg |= ModelCfgBit_VChg;
         }
@@ -587,13 +592,12 @@ namespace PowerFeather
         return false;
     }
 
-    bool MAX17260::getCellVoltage(uint16_t &voltage)
+    bool MAX17260::getCellVoltage(float &voltage)
     {
         uint16_t raw = 0;
         if (readRegister(Register::VCell, raw))
         {
-            uint32_t mv = static_cast<uint32_t>(raw) * 5u;
-            voltage = static_cast<uint16_t>((mv + 32u) >> 6); // divide by 64 with rounding
+            voltage = (static_cast<float>(raw) * 5.0f) / (64.0f * MillivoltsPerVolt);
             return true;
         }
         return false;
@@ -810,7 +814,7 @@ namespace PowerFeather
         return writeRegister(Register::Config, newConfig);
     }
 
-    bool MAX17260::setLowVoltageAlarm(uint16_t voltage)
+    bool MAX17260::setLowVoltageAlarm(float voltage)
     {
         if (voltage != 0 && (voltage < MinVoltageAlarm || voltage > MaxVoltageAlarm))
         {
@@ -827,7 +831,7 @@ namespace PowerFeather
         uint8_t raw = 0;
         if (voltage != 0)
         {
-            uint32_t value = (static_cast<uint32_t>(voltage) + 10u) / 20u;
+            uint32_t value = static_cast<uint32_t>(std::lround((voltage * MillivoltsPerVolt) / 20.0f));
             raw = static_cast<uint8_t>(std::min<uint32_t>(value, 0xFFu));
         }
 
@@ -845,7 +849,7 @@ namespace PowerFeather
         return true;
     }
 
-    bool MAX17260::setHighVoltageAlarm(uint16_t voltage)
+    bool MAX17260::setHighVoltageAlarm(float voltage)
     {
         if (voltage != 0 && (voltage < MinVoltageAlarm || voltage > MaxVoltageAlarm))
         {
@@ -862,7 +866,7 @@ namespace PowerFeather
         uint8_t raw = 0xFF; // Writing 0xFF (5100 mV) effectively disables the alarm.
         if (voltage != 0)
         {
-            uint32_t value = (static_cast<uint32_t>(voltage) + 10u) / 20u;
+            uint32_t value = static_cast<uint32_t>(std::lround((voltage * MillivoltsPerVolt) / 20.0f));
             raw = static_cast<uint8_t>(std::min<uint32_t>(value, 0xFFu));
         }
 

@@ -32,7 +32,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <math.h>
+#include <cmath>
 
 #include <esp_log.h>
 
@@ -42,6 +42,11 @@
 namespace PowerFeather
 {
     static const char *TAG = "PowerFeather::Mainboard::LC709204F";
+
+    namespace
+    {
+        static constexpr float MillivoltsPerVolt = 1000.0f;
+    }
 
     bool LC709204F::readRegister(uint8_t address, uint16_t &data)
     {
@@ -128,11 +133,12 @@ namespace PowerFeather
         return crc;
     }
 
-    bool LC709204F::_setVoltageAlarm(Register reg, uint16_t voltage)
+    bool LC709204F::_setVoltageAlarm(Register reg, float voltage)
     {
         if (voltage == 0 || (voltage >= LC709204F::MinVoltageAlarm && voltage <= LC709204F::MaxVoltageAlarm))
         {
-            return writeRegister(static_cast<uint8_t>(reg), voltage);
+            uint16_t rawMv = static_cast<uint16_t>(std::lround(voltage * MillivoltsPerVolt));
+            return writeRegister(static_cast<uint8_t>(reg), rawMv);
         }
         return false;
     }
@@ -153,9 +159,15 @@ namespace PowerFeather
         return res;
     }
 
-    bool LC709204F::getCellVoltage(uint16_t &voltage)
+    bool LC709204F::getCellVoltage(float &voltage)
     {
-        return readRegister(static_cast<uint8_t>(Register::Cell_Voltage), voltage);
+        uint16_t rawMv = 0;
+        if (readRegister(static_cast<uint8_t>(Register::Cell_Voltage), rawMv))
+        {
+            voltage = static_cast<float>(rawMv) / MillivoltsPerVolt;
+            return true;
+        }
+        return false;
     }
 
     bool LC709204F::getRSOC(uint8_t &percent)
@@ -294,12 +306,12 @@ namespace PowerFeather
         return writeRegister(static_cast<uint8_t>(Register::Status_Bit), status);
     }
 
-    bool LC709204F::setLowVoltageAlarm(uint16_t voltage)
+    bool LC709204F::setLowVoltageAlarm(float voltage)
     {
         return _setVoltageAlarm(Register::Alarm_Low_Cell_Voltage, voltage);
     }
 
-    bool LC709204F::setHighVoltageAlarm(uint16_t voltage)
+    bool LC709204F::setHighVoltageAlarm(float voltage)
     {
         return _setVoltageAlarm(Register::Alarm_High_Cell_Voltage, voltage);
     }

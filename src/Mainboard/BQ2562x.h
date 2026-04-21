@@ -45,9 +45,9 @@ namespace PowerFeather
         static constexpr uint16_t MinChargingCurrent = 40;
         static constexpr uint16_t MaxChargingCurrent = 2000;
 
-        static constexpr uint16_t MinVINDPMVoltage = 4600;
-        static constexpr uint16_t MaxVINDPMVoltage = 16800;
-        static constexpr uint16_t ResetVINDPMVoltage = 4600;
+        static constexpr float MinVINDPMVoltage = 4.6f;
+        static constexpr float MaxVINDPMVoltage = 16.8f;
+        static constexpr float ResetVINDPMVoltage = 4.6f;
 
         static constexpr uint16_t MinIINDPMCurrent = 100;
         static constexpr uint16_t MaxIINDPMCurrent = 3200;
@@ -189,11 +189,12 @@ namespace PowerFeather
 
         BQ2562x(MasterI2C &i2c) : _i2c(i2c) {}
 
+        // Voltage APIs use volts (V). Current APIs use milliamps (mA).
         bool getWD(bool &enabled);
-        bool getVBUS(uint16_t &voltage);
-        bool getIBUS(int16_t &current);
-        bool getVBAT(uint16_t &voltage);
-        bool getIBAT(int16_t &current);
+        bool getVBUS(float &voltage);
+        bool getIBUS(float &current);
+        bool getVBAT(float &voltage);
+        bool getIBAT(float &current);
         bool getADCDone(bool &done);
         bool getTSEnabled(bool &enabled);
         bool getTSBias(float &voltage);
@@ -201,9 +202,9 @@ namespace PowerFeather
         bool getChargeStat(ChargeStat &stat);
         bool getChargingEnabled(bool& enabled);
         bool getSTATEnabled(bool& enabled);
-        bool getVINDPM(uint16_t& voltage);
-        bool getChargeCurrentLimit(uint16_t& current);
-        bool getChargeVoltageLimit(uint16_t& voltage);
+        bool getVINDPM(float& voltage);
+        bool getChargeCurrentLimit(float& current);
+        bool getChargeVoltageLimit(float& voltage);
         bool getPartInformation(uint8_t &info);
 
         bool setWD(WatchdogTimer timer);
@@ -215,13 +216,13 @@ namespace PowerFeather
         bool enableWVBUS(bool enable);
         bool enableADC(Adc adc, bool enable);
         bool enableSTAT(bool enable);
-        bool setChargeCurrentLimit(uint16_t current);
-        bool setChargeVoltageLimit(uint16_t voltage);
+        bool setChargeCurrentLimit(float current);
+        bool setChargeVoltageLimit(float voltage);
         bool setBATFETControl(BATFETControl control);
         bool setBATFETDelay(BATFETDelay delay);
-        bool setVINDPM(uint16_t voltage);
-        bool setIINDPM(uint16_t current);
-        bool setITERM(uint16_t current);
+        bool setVINDPM(float voltage);
+        bool setIINDPM(float current);
+        bool setITERM(float current);
         bool setTopOff(TopOffTimer timer);
         bool setIbatPk(IbatPkLimit limit);
         bool setTH456(TH456Setting setting);
