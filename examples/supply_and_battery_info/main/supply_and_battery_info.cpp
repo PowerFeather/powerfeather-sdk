@@ -30,7 +30,7 @@ extern "C" void app_main()
     if (initResult == Result::Ok) // check if initialization succeeded
     {
         printf("Board initialized successfully\n\n");
-        Board.setBatteryChargingMaxCurrent(100); // set max charging current to 100 mA
+        Board.setBatteryChargingMaxCurrent(100.0f); // set max charging current to 100 mA
         inited = true;
     }
 
@@ -46,8 +46,8 @@ extern "C" void app_main()
             Board.enableBatteryCharging(gpio_get_level(Mainboard::Pin::BTN) == 0); // BTN is LOW when pressed
 
             // Get information about supply and battery
-            uint16_t supplyVoltage = 0, batteryVoltage = 0;
-            int16_t supplyCurrent = 0, batteryCurrent = 0;
+            float supplyVoltage = 0.0f, batteryVoltage = 0.0f;
+            float supplyCurrent = 0.0f, batteryCurrent = 0.0f;
             uint8_t batteryCharge = 0;
 
             Board.getSupplyVoltage(supplyVoltage);
@@ -56,8 +56,8 @@ extern "C" void app_main()
             Board.getBatteryVoltage(batteryVoltage);
             Board.getBatteryCurrent(batteryCurrent);
 
-            printf("[Supply]  Voltage: %d mV    Current: %d mA\n", supplyVoltage, supplyCurrent);
-            printf("[Battery] Voltage: %d mV    Current: %d mA    ", batteryVoltage, batteryCurrent);
+            printf("[Supply]  Voltage: %.3f V    Current: %.1f mA\n", supplyVoltage, supplyCurrent);
+            printf("[Battery] Voltage: %.3f V    Current: %.1f mA    ", batteryVoltage, batteryCurrent);
 
             // Check the result for getting battery charge.
             Result res = Board.getBatteryCharge(batteryCharge);
