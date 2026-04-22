@@ -199,6 +199,7 @@ namespace PowerFeather
         if (!writeRegister(Register::Command, HibernateExit_Command2)) return false;
 
         if (!writeRegister(Register::DesignCap, _capacityMahToDesignCapRaw(config.data.capacity.capacityMah))) return false;
+        // This will be overwritten by _finalizeInit() with potentially better accuracy
         if (!writeRegister(Register::IChgTerm, _currentMaToRaw(config.data.capacity.terminationCurrentMa))) return false;
         if (!writeRegister(Register::VEmpty, VEmpty_Default)) return false;
 
