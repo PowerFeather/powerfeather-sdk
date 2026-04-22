@@ -299,32 +299,83 @@ namespace PowerFeather
         if (!writeRegister(Register::HibCfg, HibernateExit_Command2)) return false;
         if (!writeRegister(Register::Command, HibernateExit_Command2)) return false;
 
-        if (!writeRegister(Register::UnlockModel1, UnlockKey1)) return false;
-        if (!writeRegister(Register::UnlockModel2, UnlockKey2)) return false;
-
         const uint8_t modelTableBase = static_cast<uint8_t>(Register::ModelTableStart);
-        for (size_t i = 0; i < 16; ++i)
+        bool modelVerified = false;
+        for (int attempt = 0; attempt < 3; ++attempt)
         {
-            if (!writeRegister(static_cast<uint8_t>(modelTableBase + i), model.modelTable[i]))
+            if (!writeRegister(Register::UnlockModel1, UnlockKey1)) return false;
+            if (!writeRegister(Register::UnlockModel2, UnlockKey2)) return false;
+
+            for (size_t i = 0; i < 32; ++i)
             {
-                return false;
+                if (!writeRegister(static_cast<uint8_t>(modelTableBase + i), model.modelTable[i]))
+                {
+                    return false;
+                }
+            }
+
+            if (!writeRegister(Register::RCompSeg, model.rCompSeg)) return false;
+
+            modelVerified = true;
+            for (size_t i = 0; i < 32; ++i)
+            {
+                uint16_t val = 0;
+                if (!readRegister(static_cast<uint8_t>(modelTableBase + i), val) || val != model.modelTable[i])
+                {
+                    modelVerified = false;
+                    break;
+                }
+            }
+
+            if (modelVerified)
+            {
+                uint16_t rCompSegVal = 0;
+                if (!readRegister(Register::RCompSeg, rCompSegVal) || rCompSegVal != model.rCompSeg)
+                {
+                    modelVerified = false;
+                }
+            }
+
+            if (modelVerified)
+            {
+                break;
             }
         }
 
-        for (size_t i = 0; i < 16; ++i)
+        if (!modelVerified)
         {
-            if (!writeRegister(static_cast<uint8_t>(modelTableBase + 16 + i), model.modelTable[16 + i]))
+            return false;
+        }
+
+        bool lockVerified = false;
+        for (int attempt = 0; attempt < 3; ++attempt)
+        {
+            if (!writeRegister(Register::UnlockModel1, 0x0000)) return false;
+            if (!writeRegister(Register::UnlockModel2, 0x0000)) return false;
+
+            lockVerified = true;
+            for (size_t i = 0; i < 32; ++i)
             {
-                return false;
+                uint16_t val = 0;
+                if (!readRegister(static_cast<uint8_t>(modelTableBase + i), val) || val != 0x0000)
+                {
+                    lockVerified = false;
+                    break;
+                }
+            }
+
+            if (lockVerified)
+            {
+                break;
             }
         }
 
-        if (!writeRegister(Register::RCompSeg, model.rCompSeg)) return false;
+        if (!lockVerified)
+        {
+            return false;
+        }
 
-        if (!writeRegister(Register::UnlockModel1, 0x0000)) return false;
-        if (!writeRegister(Register::UnlockModel2, 0x0000)) return false;
-
-        if (!writeRegister(Register::RepCap, 0x0000)) return false;
+        if (!_writeAndVerify(Register::RepCap, 0x0000)) return false;
         vTaskDelay(pdMS_TO_TICKS(100));
         if (!writeRegister(Register::DesignCap, model.designCap)) return false;
 
@@ -397,7 +448,7 @@ namespace PowerFeather
             }
         }
 
-        if (!writeRegister(Register::LearnCfg, model.learnCfg)) return false;
+        if (!_writeAndVerify(Register::LearnCfg, model.learnCfg)) return false;
         if (!writeRegister(Register::RelaxCfg, model.relaxCfg)) return false;
         if (!writeRegister(Register::Config, model.config)) return false;
         if (!writeRegister(Register::MiscCfg, model.miscCfg)) return false;
@@ -456,13 +507,31 @@ namespace PowerFeather
 
         if (!writeRegister(Register::Config2, config2)) return false;
 
-        if (!writeRegister(Register::QRTable20, model.qrTable[2])) return false;
-        if (!writeRegister(Register::QRTable30, model.qrTable[3])) return false;
-        if (!writeRegister(Register::Cycles, 0x0000)) return false;
+        if (!_writeAndVerify(Register::QRTable20, model.qrTable[2])) return false;
+        if (!_writeAndVerify(Register::QRTable30, model.qrTable[3])) return false;
+        if (!_writeAndVerify(Register::Cycles, 0x0000)) return false;
 
         if (!writeRegister(Register::HibCfg, hibCfg)) return false;
 
         return _waitForDNRClear();
+    }
+
+    bool MAX17260::_writeAndVerify(Register address, uint16_t value)
+    {
+        for (int attempt = 0; attempt < 3; ++attempt)
+        {
+            if (!writeRegister(address, value))
+            {
+                return false;
+            }
+
+            uint16_t check = 0;
+            if (readRegister(address, check) && check == value)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     bool MAX17260::getEnabled(bool &enabled)
