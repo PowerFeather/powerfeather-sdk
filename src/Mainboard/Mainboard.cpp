@@ -209,7 +209,13 @@ namespace PowerFeather
         {
             bool done = false;
             RET_IF_FALSE(getCharger().setupADC(true, BQ2562x::ADCRate::Oneshot, BQ2562x::ADCSampling::Bits_10), Result::Failure);
+
+            // Release lock during long ADC wait to preserve parallel-task responsiveness,
+            // then block indefinitely on relock to guarantee the caller's RAII contract is honored.
+            _mutex.unlock();
             vTaskDelay(pdMS_TO_TICKS(_chargerADCWaitTime));
+            _mutex.lockBlocking();
+
             RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
             _chargerADCTime = now;
             ESP_LOGD(TAG, "Updated charger ADC.");

@@ -60,6 +60,17 @@ namespace PowerFeather
         return false;
     }
 
+    bool Mutex::lockBlocking()
+    {
+        if (xSemaphoreTakeRecursive(_sem, portMAX_DELAY) == pdTRUE)
+        {
+            ESP_LOGD(TAG, "Mutex %p blocking take succeeded.", this);
+            return true;
+        }
+        ESP_LOGD(TAG, "Failed to take mutex %p (blocking).", this);
+        return false;
+    }
+
     void Mutex::unlock()
     {
         xSemaphoreGiveRecursive(_sem);

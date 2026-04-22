@@ -59,6 +59,7 @@ namespace PowerFeather
 
         void init();
         bool lock();
+        bool lockBlocking();
         void unlock();
 
     private:
