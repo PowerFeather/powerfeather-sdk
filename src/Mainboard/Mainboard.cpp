@@ -91,6 +91,18 @@ namespace PowerFeather
     static RTC_NOINIT_ATTR uint32_t first;
     static const uint32_t firstMagic = 0xdeadbeef;
 
+    // Charger state the user has committed via public setters. Placed in RTC
+    // slow memory so it survives deep sleep and can be re-applied to the chip
+    // in _reapplyChargerConfig. Valid iff first == firstMagic (warm boot).
+    struct PersistedChargerState
+    {
+        uint16_t chargingCurrentLimit;
+        uint16_t vindpm;
+        bool chargingEnabled;
+        bool tsEnabled;
+    };
+    static RTC_NOINIT_ATTR PersistedChargerState persistedChargerState;
+
     FuelGauge &Mainboard::getFuelGauge()
     {
         return _fuelGauge;
@@ -203,6 +215,8 @@ namespace PowerFeather
 
     Result Mainboard::_udpateChargerADC()
     {
+        RET_IF_ERR(_reapplyChargerConfig());
+
         uint32_t now = esp_timer_get_time() / 1000;
         // Since updating ADC values take a long time, only update it again after _chargerADCWaitTime has elapsed.
         if (_chargerADCTime == 0 || (now - _chargerADCTime) >= _chargerADCWaitTime)
@@ -220,6 +234,48 @@ namespace PowerFeather
             _chargerADCTime = now;
             ESP_LOGD(TAG, "Updated charger ADC.");
         }
+        return Result::Ok;
+    }
+
+    Result Mainboard::_reapplyChargerConfig()
+    {
+        bool wdOn = true;
+        RET_IF_FALSE(getCharger().getWD(wdOn), Result::Failure);
+
+        if (wdOn)
+        {
+            ESP_LOGW(TAG, "Charger watchdog enabled, re-applying configuration.");
+            RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
+            RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxChargingCurrent), Result::Failure);
+            RET_IF_FALSE(getCharger().enableTS(_tsEnabled), Result::Failure);
+            RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
+            RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
+            RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
+            RET_IF_FALSE(getCharger().setTopOff(BQ2562x::TopOffTimer::Timer17Min), Result::Failure);
+            RET_IF_FALSE(getCharger().setIbatPk(BQ2562x::IbatPkLimit::Limit3A), Result::Failure);
+            RET_IF_FALSE(getCharger().setTH456(BQ2562x::TH456Setting::TH4_35_TH5_40_TH6_50), Result::Failure);
+            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Precool, BQ2562x::TempIset::Ichg40), Result::Failure);
+            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Prewarm, BQ2562x::TempIset::Ichg40), Result::Failure);
+            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Cool, BQ2562x::TempIset::Ichg20), Result::Failure);
+            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Warm, BQ2562x::TempIset::Ichg20), Result::Failure);
+            // Mask all interrupts first so POR-default unmasks don't leak through,
+            // then selectively re-enable only the ones the SDK actually uses.
+            RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
+            if (_tsEnabled)
+            {
+                RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, true), Result::Failure);
+            }
+            if (_batteryCapacity)
+            {
+                RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxIINDPMCurrent), Result::Failure);
+                RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
+            }
+            RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltageMv), Result::Failure);
+            RET_IF_FALSE(getCharger().setVINDPM(_vindpm), Result::Failure);
+            RET_IF_FALSE(getCharger().setWD(BQ2562x::WatchdogTimer::Disabled), Result::Failure);
+            RET_IF_FALSE(getCharger().enableCharging(_chargingEnabled), Result::Failure);
+        }
+
         return Result::Ok;
     }
 
@@ -304,6 +360,31 @@ namespace PowerFeather
         _batteryCapacity = capacity;
         _batteryType = type;
         _usesProfile = useProfile;
+        _chargingEnabled = false;
+        _chargingCurrentLimit = _defaultMaxChargingCurrent;
+        _tsEnabled = false;
+        _vindpm = _minSupplyMaintainVoltage;
+        if (!_isFirst())
+        {
+            // Warm boot: the chip may have retained the previous session's config
+            // (wdOn == false) or may have POR'd (wdOn == true). Either way,
+            // _reapplyChargerConfig should restore what the user last set, not
+            // reset to defaults — so rehydrate from RTC-persisted state.
+            _chargingEnabled = persistedChargerState.chargingEnabled;
+            _chargingCurrentLimit = persistedChargerState.chargingCurrentLimit;
+            _tsEnabled = persistedChargerState.tsEnabled;
+            _vindpm = persistedChargerState.vindpm;
+        }
+        else
+        {
+            // Cold boot: RTC_NOINIT_ATTR leaves persistedChargerState undefined.
+            // Seed it with the defaults above so that a warm boot prior to any
+            // setter call rehydrates known-good values instead of RTC garbage.
+            persistedChargerState.chargingEnabled = _chargingEnabled;
+            persistedChargerState.chargingCurrentLimit = _chargingCurrentLimit;
+            persistedChargerState.tsEnabled = _tsEnabled;
+            persistedChargerState.vindpm = _vindpm;
+        }
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
         _fuelGaugeUsingExternalTemp = false;
 #endif
@@ -352,40 +433,17 @@ namespace PowerFeather
                 return Result::Failure;
             }
 
-            bool wdOn = true;
-            RET_IF_FALSE(getCharger().getWD(wdOn), Result::Failure);
+            // _reapplyChargerConfig is gated on the charger watchdog (POR indicator).
+            // On wdOn == true (first init, or chip POR since last init), it applies the
+            // full configuration using the software state set above — which on a warm
+            // boot is the user's previous-session values rehydrated from RTC, not the
+            // hardcoded defaults. On wdOn == false (chip retained state), it's a no-op
+            // and the redundant setChargeVoltageLimit below is the belt-and-braces write.
+            RET_IF_ERR(_reapplyChargerConfig());
 
-            if (wdOn) // watchdog enabled means that the initiatialization was not done previously
-            {
-                RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
-                RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxChargingCurrent), Result::Failure);
-                RET_IF_FALSE(getCharger().enableTS(false), Result::Failure);
-                RET_IF_FALSE(getCharger().setChargeCurrentLimit(_defaultMaxChargingCurrent), Result::Failure);
-                RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
-                RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
-                RET_IF_FALSE(getCharger().setTopOff(BQ2562x::TopOffTimer::Timer17Min), Result::Failure);
-                RET_IF_FALSE(getCharger().setIbatPk(BQ2562x::IbatPkLimit::Limit3A), Result::Failure);
-                RET_IF_FALSE(getCharger().setTH456(BQ2562x::TH456Setting::TH4_35_TH5_40_TH6_50), Result::Failure);
-                RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Precool, BQ2562x::TempIset::Ichg40), Result::Failure);
-                RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Prewarm, BQ2562x::TempIset::Ichg40), Result::Failure);
-                RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Cool, BQ2562x::TempIset::Ichg20), Result::Failure);
-                RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Warm, BQ2562x::TempIset::Ichg20), Result::Failure);
-                RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
-                if (_batteryCapacity)
-                {
-                RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
-                }
-                // Disable the charger watchdog to keep the charger in host mode and to
-                // keep some registers from resetting to their POR values.
-                RET_IF_FALSE(getCharger().setWD(BQ2562x::WatchdogTimer::Disabled), Result::Failure);
-                ESP_LOGD(TAG, "Charger IC initialized.");
-            }
-            else
-            {
-                ESP_LOGD(TAG, "Charger IC already initialized.");
-            }
-
-            // Enforce charge voltage target on every init path, including wake/re-init.
+            // Enforce charge voltage target on every init path, including the wdOn==false
+            // path (chip retained state across sleep but we still want to rewrite VREG
+            // in case the BatteryType chemistry selection changed since last session).
             RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltageMv), Result::Failure);
 
             // If battery capacity is not 0, initialize the fuel gauge. This can fail if during
@@ -446,7 +504,21 @@ namespace PowerFeather
         // On V2, power-management I2C remains usable even with VSQT disabled.
         ESP_LOGD(TAG, "VSQT set to: %d.", enable);
 #else
-        RET_IF_FALSE(enable ? (_sqtEnabled || _i2c.start()) : !_sqtEnabled || _i2c.end(), Result::Failure);
+        if (enable && !_sqtEnabled)
+        {
+            RET_IF_FALSE(_i2c.start(), Result::Failure);
+            RET_IF_ERR(_reapplyChargerConfig());
+            RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltageMv), Result::Failure);
+            _chargerADCTime = 0;
+            if (_batteryCapacity)
+            {
+                _initFuelGauge();
+            }
+        }
+        else if (!enable && _sqtEnabled)
+        {
+            RET_IF_FALSE(_i2c.end(), Result::Failure);
+        }
         _sqtEnabled = enable;
         ESP_LOGD(TAG, "VSQT set to: %d.", _sqtEnabled);
 #endif
@@ -500,7 +572,10 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(voltage >= _minSupplyMaintainVoltage && voltage <= BQ2562x::MaxVINDPMVoltage, Result::InvalidArg);
+        RET_IF_ERR(_reapplyChargerConfig());
         RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
+        _vindpm = voltage;
+        persistedChargerState.vindpm = voltage;
         ESP_LOGD(TAG, "Maintain supply voltage set to: %d mV.", voltage);
         return Result::Ok;
     }
@@ -550,7 +625,10 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_ERR(_reapplyChargerConfig());
         RET_IF_FALSE(getCharger().enableCharging(enable), Result::Failure);
+        _chargingEnabled = enable;
+        persistedChargerState.chargingEnabled = enable;
         ESP_LOGD(TAG, "Charging set to: %d.", enable);
         return Result::Ok;
     }
@@ -561,8 +639,11 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_ERR(_reapplyChargerConfig());
         RET_IF_FALSE(current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setChargeCurrentLimit(current), Result::Failure);
+        _chargingCurrentLimit = current;
+        persistedChargerState.chargingCurrentLimit = current;
         ESP_LOGD(TAG, "Max charging current set to: %d mA.", current);
         return Result::Ok;
     }
@@ -573,8 +654,11 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_ERR(_reapplyChargerConfig());
         RET_IF_FALSE(getCharger().enableTS(enable), Result::Failure);
         RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, enable), Result::Failure);
+        _tsEnabled = enable;
+        persistedChargerState.tsEnabled = enable;
         ESP_LOGD(TAG, "Temperature sense set to: %d.", enable);
         return Result::Ok;
     }

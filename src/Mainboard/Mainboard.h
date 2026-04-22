@@ -757,6 +757,10 @@ namespace PowerFeather
         uint16_t _batteryCapacity{0};
         uint16_t _terminationCurrent{0};
         uint16_t _chargeVoltageMv{4200};
+        uint16_t _chargingCurrentLimit{_defaultMaxChargingCurrent};
+        uint16_t _vindpm{_minSupplyMaintainVoltage};
+        bool _tsEnabled{false};
+        bool _chargingEnabled{false};
         BatteryType _batteryType{BatteryType::Generic_3V7};
         bool _usesProfile{false};
         Mutex _mutex{100};
@@ -773,6 +777,7 @@ namespace PowerFeather
         uint16_t _capacityFromProfile(const MAX17260::Model &profile) const;
         Result _initInternal(uint16_t capacity, BatteryType type, const MAX17260::Model *profile);
         Result _udpateChargerADC();
+        Result _reapplyChargerConfig();
 
         bool _isFuelGaugeEnabled();
         Result _initFuelGauge();
