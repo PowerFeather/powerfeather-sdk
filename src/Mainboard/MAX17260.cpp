@@ -704,7 +704,7 @@ namespace PowerFeather
         }
 
         uint8_t low = static_cast<uint8_t>(current & 0xFF);
-        uint8_t raw = 0xFF;
+        uint8_t raw = 0xFF; // Writing 0xFF (5100 mV) effectively disables the alarm.
         if (voltage != 0)
         {
             uint32_t value = (static_cast<uint32_t>(voltage) + 10u) / 20u;

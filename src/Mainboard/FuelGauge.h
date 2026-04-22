@@ -80,6 +80,7 @@ namespace PowerFeather
 
             InitSource source{InitSource::Generic_3V7};
             Payload data{};
+            bool tsenseEnabled{false};
         };
 
         FuelGauge(MasterI2C &i2c) : _i2c(i2c) {}
@@ -253,7 +254,7 @@ namespace PowerFeather
             }
         }
 
-        if (!enableTSENSE(false, false))
+        if (!enableTSENSE(config.tsenseEnabled, false))
         {
             return false;
         }

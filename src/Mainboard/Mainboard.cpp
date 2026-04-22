@@ -135,14 +135,11 @@ namespace PowerFeather
             }
         }
 
-        RET_IF_FALSE(gauge.init(config), Result::Failure);
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-        // Default to IC-managed temperature until the host starts providing external temperature updates.
-        if (!_fuelGaugeUsingExternalTemp)
-        {
-            RET_IF_FALSE(gauge.enableTSENSE(true, false), Result::Failure);
-        }
+        config.tsenseEnabled = !_fuelGaugeUsingExternalTemp;
 #endif
+
+        RET_IF_FALSE(gauge.init(config), Result::Failure);
         ESP_LOGD(TAG, "Fuel gauge init complete (%s).", gauge.getName());
 
         return Result::Ok;
