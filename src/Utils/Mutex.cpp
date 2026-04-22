@@ -42,8 +42,11 @@ namespace PowerFeather
 
     void Mutex::init()
     {
-        _sem = xSemaphoreCreateRecursiveMutex();
-        ESP_LOGD(TAG, "Mutex %p created.", this);
+        if (_sem == nullptr)
+        {
+            _sem = xSemaphoreCreateRecursiveMutex();
+            ESP_LOGD(TAG, "Mutex %p created.", this);
+        }
     }
 
     bool Mutex::lock()
