@@ -202,20 +202,12 @@ namespace PowerFeather
         if (!writeRegister(Register::IChgTerm, _currentMaToRaw(config.data.capacity.terminationCurrentMa))) return false;
         if (!writeRegister(Register::VEmpty, VEmpty_Default)) return false;
 
-        uint16_t modelCfg = 0;
-        if (!readRegister(Register::ModelCfg, modelCfg))
-        {
-            return false;
-        }
-
-        modelCfg &= static_cast<uint16_t>(~ModelCfgMask_ModelID);
-        modelCfg &= static_cast<uint16_t>(~ModelCfgBit_VChg);
+        uint16_t modelCfg = ModelCfgBit_Refresh;
         modelCfg |= static_cast<uint16_t>((modelId & 0x7u) << 5);
         if (config.data.capacity.chargeVoltageMv > ModelCfgHighVoltageThresholdMv)
         {
             modelCfg |= ModelCfgBit_VChg;
         }
-        modelCfg |= ModelCfgBit_Refresh;
 
         if (!writeRegister(Register::ModelCfg, modelCfg))
         {
