@@ -705,6 +705,15 @@ namespace PowerFeather
         float bias = 0;
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getTSBias(bias), Result::Failure);
+
+        // Check if bias is within plausible range for 103AT thermistor.
+        // Values outside [0.1, 0.8] likely indicate open/short circuit or missing thermistor.
+        if (bias < 0.10f || bias > 0.80f)
+        {
+            ESP_LOGD(TAG, "Battery thermistor bias %f is out of plausible range.", bias);
+            return Result::Failure;
+        }
+
         // Map bias to temperature given 103AT thermistor with fitted curve.
         celsius = (-1866.96172 * powf(bias, 4)) + (3169.31754 * powf(bias, 3)) - (1849.96775 * powf(bias, 2)) + (276.6656 * bias) + 81.98758;
         ESP_LOGD(TAG, "Measured battery temperature: %f °C.", celsius);
