@@ -40,6 +40,7 @@
 
 #include <soc/reset_reasons.h>
 #include <esp_log.h>
+#include <esp_timer.h>
 
 #include "Mainboard.h"
 
@@ -205,7 +206,7 @@ namespace PowerFeather
 
     Result Mainboard::_udpateChargerADC()
     {
-        uint32_t now = 0;
+        uint32_t now = esp_timer_get_time() / 1000;
         // Since updating ADC values take a long time, only update it again after _chargerADCWaitTime has elapsed.
         if (_chargerADCTime == 0 || (now - _chargerADCTime) >= _chargerADCWaitTime)
         {
