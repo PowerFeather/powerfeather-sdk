@@ -438,7 +438,8 @@ namespace PowerFeather
         /**
          * @brief Measure battery voltage.
          *
-         * Resolution is 2 mV.
+         * Resolution is 2 mV. If the fuel gauge is enabled and available, it is used;
+         * otherwise, the charger VBAT ADC path is used as a fallback.
          *
          * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          *
