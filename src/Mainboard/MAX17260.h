@@ -249,6 +249,8 @@ namespace PowerFeather
         bool _waitForDNRClear();
         bool _waitForModelRefreshClear();
 
+        bool _writeAndVerify(Register address, uint16_t value);
+
         static uint16_t _capacityMahToDesignCapRaw(uint16_t capacityMah);
         static uint16_t _currentMaToRaw(uint16_t currentMa);
 

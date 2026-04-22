@@ -345,10 +345,11 @@ namespace PowerFeather
 
             uint8_t pi = 0;
             RET_IF_FALSE(getCharger().getPartInformation(pi), Result::Failure);
-            if (((pi >> 3) & 0x07) != BQ2562x::Charger_PN_BQ25622)
+            uint8_t pn = (pi >> 3) & 0x07;
+            if (pn != BQ2562x::Charger_PN_BQ25622 && pn != BQ2562x::Charger_PN_BQ25628)
             {
-                ESP_LOGE(TAG, "Unsupported charger part ID: 0x%02x (expected PN: 0x%02x)", pi, BQ2562x::Charger_PN_BQ25622);
-                return Result::NotSupported;
+                ESP_LOGE(TAG, "Unsupported charger part ID: 0x%02x (expected PN: 0x%02x or 0x%02x)", pi, BQ2562x::Charger_PN_BQ25622, BQ2562x::Charger_PN_BQ25628);
+                return Result::Failure;
             }
 
             bool wdOn = true;
