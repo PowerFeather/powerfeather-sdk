@@ -293,6 +293,8 @@ namespace PowerFeather
         const Register Part_Information_PN =                  { 0x38, 1, 3, 5 };
         const Register Part_Information_DEV_REV =             { 0x38, 1, 0, 2 };
 
+        static constexpr uint8_t Charger_PN_BQ25622 = 0x03;
+
         static constexpr uint8_t _i2cAddress = 0x6a;
 
         MasterI2C &_i2c;

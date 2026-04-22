@@ -343,6 +343,14 @@ namespace PowerFeather
         {
             RET_IF_FALSE(_i2c.start(), Result::Failure);
 
+            uint8_t pi = 0;
+            RET_IF_FALSE(getCharger().getPartInformation(pi), Result::Failure);
+            if (((pi >> 3) & 0x07) != BQ2562x::Charger_PN_BQ25622)
+            {
+                ESP_LOGE(TAG, "Unsupported charger part ID: 0x%02x (expected PN: 0x%02x)", pi, BQ2562x::Charger_PN_BQ25622);
+                return Result::NotSupported;
+            }
+
             bool wdOn = true;
             RET_IF_FALSE(getCharger().getWD(wdOn), Result::Failure);
 
