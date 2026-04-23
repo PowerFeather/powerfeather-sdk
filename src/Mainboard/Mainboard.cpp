@@ -84,6 +84,40 @@ namespace PowerFeather
             }
         };
 
+        template <typename Gauge>
+        struct FuelGaugeTempModeHelper
+        {
+            static bool syncUsingExternalTemp(Gauge &, bool &)
+            {
+                return true;
+            }
+        };
+
+        template <>
+        struct FuelGaugeTempModeHelper<MAX17260>
+        {
+            static bool syncUsingExternalTemp(MAX17260 &gauge, bool &usingExternalTemp)
+            {
+                if (!gauge.probe())
+                {
+                    return false;
+                }
+
+                bool initialized = false;
+                if (!gauge.getInitialized(initialized))
+                {
+                    return false;
+                }
+
+                if (!initialized)
+                {
+                    return true;
+                }
+
+                return gauge.getUsingExternalTemperature(usingExternalTemp);
+            }
+        };
+
         static uint16_t designCapToMah(uint16_t designCapRaw, uint16_t maxMah)
         {
             // MAX17260 profile DesignCap is a normalized 16-bit value.
@@ -143,6 +177,12 @@ namespace PowerFeather
         FuelGauge &gauge = getFuelGauge();
         FuelGauge::InitConfig config;
         FuelGaugeInitSignature signature;
+
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        RET_IF_FALSE(FuelGaugeTempModeHelper<FuelGaugeImpl>::syncUsingExternalTemp(
+                         static_cast<FuelGaugeImpl &>(gauge), _fuelGaugeUsingExternalTemp),
+                     Result::Failure);
+#endif
 
         if (_usesProfile)
         {

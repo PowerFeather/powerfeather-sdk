@@ -656,6 +656,17 @@ namespace PowerFeather
         return false;
     }
 
+    bool MAX17260::getUsingExternalTemperature(bool &external)
+    {
+        uint16_t config = 0;
+        if (readRegister(Register::Config, config))
+        {
+            external = (config & ConfigBit_TEx) != 0;
+            return true;
+        }
+        return false;
+    }
+
     bool MAX17260::setEnabled(bool enable)
     {
         if (enable)

@@ -111,6 +111,7 @@ namespace PowerFeather
         bool getCycles(uint16_t &cycles) override;
         bool getSOH(uint8_t &percent) override;
         bool getInitialized(bool& state) override;
+        bool getUsingExternalTemperature(bool &external);
         bool setEnabled(bool enable) override;
         bool setCellTemperature(float temperature) override;
         bool enableTSENSE(bool enableTsense1, bool enableTsense2) override;
