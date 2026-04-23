@@ -296,7 +296,8 @@ namespace PowerFeather
             RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
             RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
             RET_IF_FALSE(getCharger().setTopOff(BQ2562x::TopOffTimer::Timer17Min), Result::Failure);
-            RET_IF_FALSE(getCharger().setIbatPk(BQ2562x::IbatPkLimit::Limit3A), Result::Failure);
+            // BQ25622E/BQ25628E currently document only 6 A and 12 A IBAT_PK values.
+            RET_IF_FALSE(getCharger().setIbatPk(BQ2562x::IbatPkLimit::Limit6A), Result::Failure);
             RET_IF_FALSE(getCharger().setTH456(BQ2562x::TH456Setting::TH4_35_TH5_40_TH6_50), Result::Failure);
             RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Precool, BQ2562x::TempIset::Ichg40), Result::Failure);
             RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Prewarm, BQ2562x::TempIset::Ichg40), Result::Failure);

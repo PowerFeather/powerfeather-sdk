@@ -425,6 +425,10 @@ namespace PowerFeather
 
     bool BQ2562x::setIbatPk(IbatPkLimit limit)
     {
+        if (limit == IbatPkLimit::Reserved00 || limit == IbatPkLimit::Reserved01)
+        {
+            return false;
+        }
         uint8_t value = static_cast<uint8_t>(limit);
         return _writeReg(Charger_Control_3_IBAT_PK, value);
     }

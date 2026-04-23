@@ -153,10 +153,14 @@ namespace PowerFeather
 
         enum class IbatPkLimit : uint8_t
         {
-            Limit1_5A = 0x00,
-            Limit3A = 0x01,
+            Reserved00 = 0x00,
+            Reserved01 = 0x01,
             Limit6A = 0x02,
-            Limit12A = 0x03
+            Limit12A = 0x03,
+            // Backward-compatible aliases for legacy code. Current TI datasheets
+            // for both BQ25622E and BQ25628E mark these encodings as reserved.
+            Limit1_5A = Reserved00,
+            Limit3A = Reserved01
         };
 
         enum class TH456Setting : uint8_t
