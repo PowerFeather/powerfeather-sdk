@@ -189,7 +189,9 @@ namespace PowerFeather
     #define TRY_LOCK(m)                 Mutex::Lock m##Lock(m); RET_IF_FALSE(m##Lock.isLocked(), Result::LockFailed);
 
     static RTC_NOINIT_ATTR uint32_t first;
+    static RTC_NOINIT_ATTR uint32_t rtcStateVersion;
     static const uint32_t firstMagic = 0xdeadbeef;
+    static const uint32_t rtcStateVersionMagic = 0x20260423;
 
     // Charger state the user has committed via public setters. Placed in RTC
     // slow memory so it survives deep sleep and can be re-applied to the chip
@@ -244,12 +246,6 @@ namespace PowerFeather
         FuelGauge::InitConfig config;
         FuelGaugeInitSignature signature;
 
-#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-        RET_IF_FALSE(FuelGaugeTempModeHelper<FuelGaugeImpl>::syncUsingExternalTemp(
-                         static_cast<FuelGaugeImpl &>(gauge), _fuelGaugeUsingExternalTemp),
-                     Result::Failure);
-#endif
-
         if (_usesProfile)
         {
             config.source = FuelGauge::InitSource::Profile_Max17260;
@@ -283,16 +279,29 @@ namespace PowerFeather
             signature.source = config.source;
         }
 
-#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-        config.tsenseEnabled = !_fuelGaugeUsingExternalTemp;
-#endif
-
         bool forceReinit = _hasFuelGaugeInitSignature &&
                            (signature.source != _lastFuelGaugeInitSignature.source ||
                             signature.capacityMah != _lastFuelGaugeInitSignature.capacityMah ||
                             signature.terminationCurrentMa != _lastFuelGaugeInitSignature.terminationCurrentMa ||
                             signature.chargeVoltageMv != _lastFuelGaugeInitSignature.chargeVoltageMv ||
                             signature.profileHash != _lastFuelGaugeInitSignature.profileHash);
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        if (_hasFuelGaugeInitSignature && !forceReinit)
+        {
+            RET_IF_FALSE(FuelGaugeTempModeHelper<FuelGaugeImpl>::syncUsingExternalTemp(
+                             static_cast<FuelGaugeImpl &>(gauge), _fuelGaugeUsingExternalTemp),
+                         Result::Failure);
+        }
+        else
+        {
+            // An explicit gauge reinit, or any init without a trusted prior
+            // signature, should return to the documented default internal-
+            // temperature mode. Preserve external-temperature mode only on the
+            // retained fast path where the battery/profile inputs still match.
+            _fuelGaugeUsingExternalTemp = false;
+        }
+        config.tsenseEnabled = !_fuelGaugeUsingExternalTemp;
+#endif
         RET_IF_FALSE(gauge.init(config, forceReinit), Result::Failure);
         _lastFuelGaugeInitSignature = signature;
         _hasFuelGaugeInitSignature = true;
@@ -309,8 +318,9 @@ namespace PowerFeather
 
     bool Mainboard::_isFirst()
     {
-        // If the RTC is domain is shutdown, consider next boot as first boot.
-        bool isFirst = (first != firstMagic);
+        // If the RTC domain is shut down, or retained RTC state was produced by
+        // an older firmware layout, consider the next boot as first boot.
+        bool isFirst = (first != firstMagic) || (rtcStateVersion != rtcStateVersionMagic);
         ESP_LOGD(TAG, "Check if first boot: %d.", isFirst);
         return isFirst;
     }
@@ -679,6 +689,7 @@ namespace PowerFeather
         persistedChargerInitSignature.hasSignature = true;
 
         first = firstMagic;
+        rtcStateVersion = rtcStateVersionMagic;
         _initDone = true;
 
         ESP_LOGD(TAG, "Initialization done.");
