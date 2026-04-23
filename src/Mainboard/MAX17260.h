@@ -244,6 +244,7 @@ namespace PowerFeather
             return writeRegister(static_cast<uint8_t>(address), value);
         }
         bool initImpl(const InitConfig &config) override;
+        bool _verifyDeviceIdentity();
         bool _initEZConfig(const InitConfig &config, uint8_t modelId);
         bool _initHardware();
         bool _waitForDNRClear();

@@ -139,12 +139,34 @@ namespace PowerFeather
     bool MAX17260::probe()
     {
         uint16_t value = 0;
-        return readField(Fields::Status::POR, value);
+        return _verifyDeviceIdentity() && readField(Fields::Status::POR, value);
+    }
+
+    bool MAX17260::_verifyDeviceIdentity()
+    {
+        uint16_t devName = 0;
+        if (!readRegister(Register::DevName, devName))
+        {
+            return false;
+        }
+
+        if (devName != DevName_MAX17260)
+        {
+            ESP_LOGE(TAG, "Unexpected fuel-gauge DevName: 0x%04x (expected 0x%04x).", devName, DevName_MAX17260);
+            return false;
+        }
+
+        return true;
     }
 
     bool MAX17260::initImpl(const InitConfig &config)
     {
         if (!_initHardware())
+        {
+            return false;
+        }
+
+        if (!_verifyDeviceIdentity())
         {
             return false;
         }

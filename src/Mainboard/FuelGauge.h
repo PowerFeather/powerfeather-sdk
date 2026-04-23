@@ -203,6 +203,11 @@ namespace PowerFeather
 {
     inline bool FuelGauge::init(const InitConfig &config, bool forceReinit)
     {
+        if (!probe())
+        {
+            return false;
+        }
+
         bool inited = false;
         if (!getInitialized(inited))
         {
