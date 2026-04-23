@@ -66,6 +66,60 @@ namespace PowerFeather
             return hash;
         }
 
+        struct ChargerInitSignature
+        {
+            uint8_t source;
+            uint16_t capacityMah;
+            uint16_t terminationCurrentMa;
+            uint16_t chargeVoltageMv;
+            uint32_t profileHash;
+            bool batteryExpected;
+        };
+
+        static ChargerInitSignature makeChargerInitSignature(Mainboard::BatteryType type,
+                                                             bool useProfile,
+                                                             uint16_t capacityMah,
+                                                             uint16_t terminationCurrentMa,
+                                                             uint16_t chargeVoltageMv,
+                                                             uint32_t profileHash)
+        {
+            ChargerInitSignature signature = {};
+            signature.batteryExpected = (capacityMah != 0);
+            signature.capacityMah = capacityMah;
+
+            if (useProfile)
+            {
+                signature.source = static_cast<uint8_t>(FuelGauge::InitSource::Profile_Max17260);
+                signature.profileHash = profileHash;
+            }
+            else
+            {
+                switch (type)
+                {
+                    case Mainboard::BatteryType::Generic_3V7:
+                        signature.source = static_cast<uint8_t>(FuelGauge::InitSource::Generic_3V7);
+                        break;
+                    case Mainboard::BatteryType::ICR18650_26H:
+                        signature.source = static_cast<uint8_t>(FuelGauge::InitSource::ICR18650_26H);
+                        break;
+                    case Mainboard::BatteryType::UR18650ZY:
+                        signature.source = static_cast<uint8_t>(FuelGauge::InitSource::UR18650ZY);
+                        break;
+                    case Mainboard::BatteryType::Generic_LFP:
+                        signature.source = static_cast<uint8_t>(FuelGauge::InitSource::Generic_LFP);
+                        break;
+                }
+            }
+
+            if (signature.batteryExpected)
+            {
+                signature.terminationCurrentMa = terminationCurrentMa;
+                signature.chargeVoltageMv = chargeVoltageMv;
+            }
+
+            return signature;
+        }
+
         template <typename Gauge>
         struct FuelGaugeProfileHelper
         {
@@ -148,6 +202,18 @@ namespace PowerFeather
         bool tsEnabled;
     };
     static RTC_NOINIT_ATTR PersistedChargerState persistedChargerState;
+
+    struct PersistedChargerInitSignature
+    {
+        uint8_t source;
+        uint16_t capacityMah;
+        uint16_t terminationCurrentMa;
+        uint16_t chargeVoltageMv;
+        uint32_t profileHash;
+        bool batteryExpected;
+        bool hasSignature;
+    };
+    static RTC_NOINIT_ATTR PersistedChargerInitSignature persistedChargerInitSignature;
 
     struct PersistedFuelGaugeInitSignature
     {
@@ -446,53 +512,7 @@ namespace PowerFeather
         _batteryType = type;
         _usesProfile = useProfile;
         _profileHash = useProfile ? fnv1aHash(profile, sizeof(*profile)) : 0;
-        _chargingEnabled = false;
-        _chargingCurrentLimit = _defaultMaxChargingCurrent;
-        _tsEnabled = false;
-        _vindpm = _minSupplyMaintainVoltage;
-        if (!_isFirst())
-        {
-            // Warm boot: the chip may have retained the previous session's config
-            // (wdOn == false) or may have POR'd (wdOn == true). Either way,
-            // _reapplyChargerConfig should restore what the user last set, not
-            // reset to defaults — so rehydrate from RTC-persisted state.
-            _chargingEnabled = persistedChargerState.chargingEnabled;
-            _chargingCurrentLimit = persistedChargerState.chargingCurrentLimit;
-            _tsEnabled = persistedChargerState.tsEnabled;
-            _vindpm = persistedChargerState.vindpm;
-            _lastFuelGaugeInitSignature.source = static_cast<FuelGauge::InitSource>(persistedFuelGaugeInitSignature.source);
-            _lastFuelGaugeInitSignature.capacityMah = persistedFuelGaugeInitSignature.capacityMah;
-            _lastFuelGaugeInitSignature.terminationCurrentMa = persistedFuelGaugeInitSignature.terminationCurrentMa;
-            _lastFuelGaugeInitSignature.chargeVoltageMv = persistedFuelGaugeInitSignature.chargeVoltageMv;
-            _lastFuelGaugeInitSignature.profileHash = persistedFuelGaugeInitSignature.profileHash;
-            _hasFuelGaugeInitSignature = persistedFuelGaugeInitSignature.hasSignature;
-        }
-        else
-        {
-            // Cold boot: RTC_NOINIT_ATTR leaves persistedChargerState undefined.
-            // Seed it with the defaults above so that a warm boot prior to any
-            // setter call rehydrates known-good values instead of RTC garbage.
-            persistedChargerState.chargingEnabled = _chargingEnabled;
-            persistedChargerState.chargingCurrentLimit = _chargingCurrentLimit;
-            persistedChargerState.tsEnabled = _tsEnabled;
-            persistedChargerState.vindpm = _vindpm;
-            persistedFuelGaugeInitSignature.source = static_cast<uint8_t>(FuelGauge::InitSource::Generic_3V7);
-            persistedFuelGaugeInitSignature.capacityMah = 0;
-            persistedFuelGaugeInitSignature.terminationCurrentMa = 0;
-            persistedFuelGaugeInitSignature.chargeVoltageMv = 0;
-            persistedFuelGaugeInitSignature.profileHash = 0;
-            persistedFuelGaugeInitSignature.hasSignature = false;
-            _lastFuelGaugeInitSignature = {};
-            _hasFuelGaugeInitSignature = false;
-        }
-#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
-        _fuelGaugeUsingExternalTemp = false;
-#endif
-        ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
-        if (useProfile)
-        {
-            FuelGaugeProfileHelper<FuelGaugeImpl>::setProfile(_fuelGauge, profile);
-        }
+
         // Set termination current to C / 10, or within limits of the IC.
         uint16_t minCurrent = BQ2562x::MinITERMCurrent;
         uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
@@ -511,6 +531,70 @@ namespace PowerFeather
         }
         _chargeVoltageMv = chargeVoltageMv;
 
+        ChargerInitSignature currentChargerInitSignature = makeChargerInitSignature(_batteryType,
+                                                                                   _usesProfile,
+                                                                                   _batteryCapacity,
+                                                                                   _terminationCurrent,
+                                                                                   _chargeVoltageMv,
+                                                                                   _profileHash);
+
+        _chargingEnabled = false;
+        _chargingCurrentLimit = _defaultMaxChargingCurrent;
+        _tsEnabled = false;
+        _vindpm = _minSupplyMaintainVoltage;
+        bool chargerSignatureMatch = false;
+        if (!_isFirst())
+        {
+            chargerSignatureMatch = persistedChargerInitSignature.hasSignature &&
+                                    persistedChargerInitSignature.source == currentChargerInitSignature.source &&
+                                    persistedChargerInitSignature.capacityMah == currentChargerInitSignature.capacityMah &&
+                                    persistedChargerInitSignature.terminationCurrentMa == currentChargerInitSignature.terminationCurrentMa &&
+                                    persistedChargerInitSignature.chargeVoltageMv == currentChargerInitSignature.chargeVoltageMv &&
+                                    persistedChargerInitSignature.profileHash == currentChargerInitSignature.profileHash &&
+                                    persistedChargerInitSignature.batteryExpected == currentChargerInitSignature.batteryExpected;
+            if (chargerSignatureMatch)
+            {
+                // Warm boot with unchanged battery/profile inputs: retain the
+                // user-committed charger state across RTC-retaining resets.
+                _chargingEnabled = persistedChargerState.chargingEnabled;
+                _chargingCurrentLimit = persistedChargerState.chargingCurrentLimit;
+                _tsEnabled = persistedChargerState.tsEnabled;
+                _vindpm = persistedChargerState.vindpm;
+            }
+            _lastFuelGaugeInitSignature.source = static_cast<FuelGauge::InitSource>(persistedFuelGaugeInitSignature.source);
+            _lastFuelGaugeInitSignature.capacityMah = persistedFuelGaugeInitSignature.capacityMah;
+            _lastFuelGaugeInitSignature.terminationCurrentMa = persistedFuelGaugeInitSignature.terminationCurrentMa;
+            _lastFuelGaugeInitSignature.chargeVoltageMv = persistedFuelGaugeInitSignature.chargeVoltageMv;
+            _lastFuelGaugeInitSignature.profileHash = persistedFuelGaugeInitSignature.profileHash;
+            _hasFuelGaugeInitSignature = persistedFuelGaugeInitSignature.hasSignature;
+        }
+        else
+        {
+            // Cold boot: RTC_NOINIT_ATTR leaves persistedChargerState undefined.
+            // Seed it with the defaults above so that a warm boot prior to any
+            // setter call rehydrates known-good values instead of RTC garbage.
+            persistedChargerState.chargingEnabled = _chargingEnabled;
+            persistedChargerState.chargingCurrentLimit = _chargingCurrentLimit;
+            persistedChargerState.tsEnabled = _tsEnabled;
+            persistedChargerState.vindpm = _vindpm;
+            persistedChargerInitSignature.hasSignature = false;
+            persistedFuelGaugeInitSignature.source = static_cast<uint8_t>(FuelGauge::InitSource::Generic_3V7);
+            persistedFuelGaugeInitSignature.capacityMah = 0;
+            persistedFuelGaugeInitSignature.terminationCurrentMa = 0;
+            persistedFuelGaugeInitSignature.chargeVoltageMv = 0;
+            persistedFuelGaugeInitSignature.profileHash = 0;
+            persistedFuelGaugeInitSignature.hasSignature = false;
+            _lastFuelGaugeInitSignature = {};
+            _hasFuelGaugeInitSignature = false;
+        }
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        _fuelGaugeUsingExternalTemp = false;
+#endif
+        ESP_LOGD(TAG, "Battery capacity and type set to %d mAh, %d.", static_cast<int>(_batteryCapacity), static_cast<int>(_batteryType));
+        if (useProfile)
+        {
+            FuelGaugeProfileHelper<FuelGaugeImpl>::setProfile(_fuelGauge, profile);
+        }
         // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
         bool sqtEnabled = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT);
@@ -546,6 +630,19 @@ namespace PowerFeather
             // in case the BatteryType chemistry selection changed since last session).
             RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltageMv), Result::Failure);
 
+            if (!_isFirst() && !chargerSignatureMatch)
+            {
+                // On a warm boot with changed battery/profile inputs, the
+                // charger may have retained the previous session's live state
+                // even though software intentionally reset to safe defaults.
+                // Push those defaults into the retained hardware as well.
+                RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
+                RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
+                RET_IF_FALSE(getCharger().enableTS(_tsEnabled), Result::Failure);
+                RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, false), Result::Failure);
+                RET_IF_FALSE(getCharger().setVINDPM(_vindpm), Result::Failure);
+            }
+
             // If battery capacity is not 0, initialize the fuel gauge. This can fail if during
             // startup no battery is connected, therefore failures are not checked here. Fuel guage
             // initialization attempts will be made later, during calls to member functions that
@@ -568,6 +665,18 @@ namespace PowerFeather
         ESP_LOGD(TAG, "3V3 detected as %d during initialization.", _3V3Enabled);
 
         RET_IF_FALSE(_initInternalDigitalPin(Pin::PG, GPIO_MODE_INPUT), Result::Failure);
+
+        persistedChargerState.chargingEnabled = _chargingEnabled;
+        persistedChargerState.chargingCurrentLimit = _chargingCurrentLimit;
+        persistedChargerState.tsEnabled = _tsEnabled;
+        persistedChargerState.vindpm = _vindpm;
+        persistedChargerInitSignature.source = currentChargerInitSignature.source;
+        persistedChargerInitSignature.capacityMah = currentChargerInitSignature.capacityMah;
+        persistedChargerInitSignature.terminationCurrentMa = currentChargerInitSignature.terminationCurrentMa;
+        persistedChargerInitSignature.chargeVoltageMv = currentChargerInitSignature.chargeVoltageMv;
+        persistedChargerInitSignature.profileHash = currentChargerInitSignature.profileHash;
+        persistedChargerInitSignature.batteryExpected = currentChargerInitSignature.batteryExpected;
+        persistedChargerInitSignature.hasSignature = true;
 
         first = firstMagic;
         _initDone = true;
