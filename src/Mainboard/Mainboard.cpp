@@ -54,6 +54,18 @@ namespace PowerFeather
 
     namespace
     {
+        static uint32_t fnv1aHash(const void *data, size_t size)
+        {
+            const uint8_t *bytes = static_cast<const uint8_t *>(data);
+            uint32_t hash = 2166136261u;
+            for (size_t i = 0; i < size; ++i)
+            {
+                hash ^= bytes[i];
+                hash *= 16777619u;
+            }
+            return hash;
+        }
+
         template <typename Gauge>
         struct FuelGaugeProfileHelper
         {
@@ -103,6 +115,17 @@ namespace PowerFeather
     };
     static RTC_NOINIT_ATTR PersistedChargerState persistedChargerState;
 
+    struct PersistedFuelGaugeInitSignature
+    {
+        uint8_t source;
+        uint16_t capacityMah;
+        uint16_t terminationCurrentMa;
+        uint16_t chargeVoltageMv;
+        uint32_t profileHash;
+        bool hasSignature;
+    };
+    static RTC_NOINIT_ATTR PersistedFuelGaugeInitSignature persistedFuelGaugeInitSignature;
+
     FuelGauge &Mainboard::getFuelGauge()
     {
         return _fuelGauge;
@@ -119,17 +142,23 @@ namespace PowerFeather
     {
         FuelGauge &gauge = getFuelGauge();
         FuelGauge::InitConfig config;
+        FuelGaugeInitSignature signature;
 
         if (_usesProfile)
         {
             config.source = FuelGauge::InitSource::Profile_Max17260;
             config.data.profile.model = nullptr;
+            signature.source = config.source;
+            signature.profileHash = _profileHash;
         }
         else
         {
             config.data.capacity.capacityMah = _batteryCapacity;
             config.data.capacity.terminationCurrentMa = _terminationCurrent;
             config.data.capacity.chargeVoltageMv = _chargeVoltageMv;
+            signature.capacityMah = _batteryCapacity;
+            signature.terminationCurrentMa = _terminationCurrent;
+            signature.chargeVoltageMv = _chargeVoltageMv;
             switch (_batteryType)
             {
                 case BatteryType::Generic_3V7:
@@ -145,13 +174,28 @@ namespace PowerFeather
                     config.source = FuelGauge::InitSource::Generic_LFP;
                     break;
             }
+            signature.source = config.source;
         }
 
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
         config.tsenseEnabled = !_fuelGaugeUsingExternalTemp;
 #endif
 
-        RET_IF_FALSE(gauge.init(config), Result::Failure);
+        bool forceReinit = _hasFuelGaugeInitSignature &&
+                           (signature.source != _lastFuelGaugeInitSignature.source ||
+                            signature.capacityMah != _lastFuelGaugeInitSignature.capacityMah ||
+                            signature.terminationCurrentMa != _lastFuelGaugeInitSignature.terminationCurrentMa ||
+                            signature.chargeVoltageMv != _lastFuelGaugeInitSignature.chargeVoltageMv ||
+                            signature.profileHash != _lastFuelGaugeInitSignature.profileHash);
+        RET_IF_FALSE(gauge.init(config, forceReinit), Result::Failure);
+        _lastFuelGaugeInitSignature = signature;
+        _hasFuelGaugeInitSignature = true;
+        persistedFuelGaugeInitSignature.source = static_cast<uint8_t>(signature.source);
+        persistedFuelGaugeInitSignature.capacityMah = signature.capacityMah;
+        persistedFuelGaugeInitSignature.terminationCurrentMa = signature.terminationCurrentMa;
+        persistedFuelGaugeInitSignature.chargeVoltageMv = signature.chargeVoltageMv;
+        persistedFuelGaugeInitSignature.profileHash = signature.profileHash;
+        persistedFuelGaugeInitSignature.hasSignature = true;
         ESP_LOGD(TAG, "Fuel gauge init complete (%s).", gauge.getName());
 
         return Result::Ok;
@@ -360,6 +404,7 @@ namespace PowerFeather
         _batteryCapacity = capacity;
         _batteryType = type;
         _usesProfile = useProfile;
+        _profileHash = useProfile ? fnv1aHash(profile, sizeof(*profile)) : 0;
         _chargingEnabled = false;
         _chargingCurrentLimit = _defaultMaxChargingCurrent;
         _tsEnabled = false;
@@ -374,6 +419,12 @@ namespace PowerFeather
             _chargingCurrentLimit = persistedChargerState.chargingCurrentLimit;
             _tsEnabled = persistedChargerState.tsEnabled;
             _vindpm = persistedChargerState.vindpm;
+            _lastFuelGaugeInitSignature.source = static_cast<FuelGauge::InitSource>(persistedFuelGaugeInitSignature.source);
+            _lastFuelGaugeInitSignature.capacityMah = persistedFuelGaugeInitSignature.capacityMah;
+            _lastFuelGaugeInitSignature.terminationCurrentMa = persistedFuelGaugeInitSignature.terminationCurrentMa;
+            _lastFuelGaugeInitSignature.chargeVoltageMv = persistedFuelGaugeInitSignature.chargeVoltageMv;
+            _lastFuelGaugeInitSignature.profileHash = persistedFuelGaugeInitSignature.profileHash;
+            _hasFuelGaugeInitSignature = persistedFuelGaugeInitSignature.hasSignature;
         }
         else
         {
@@ -384,6 +435,14 @@ namespace PowerFeather
             persistedChargerState.chargingCurrentLimit = _chargingCurrentLimit;
             persistedChargerState.tsEnabled = _tsEnabled;
             persistedChargerState.vindpm = _vindpm;
+            persistedFuelGaugeInitSignature.source = static_cast<uint8_t>(FuelGauge::InitSource::Generic_3V7);
+            persistedFuelGaugeInitSignature.capacityMah = 0;
+            persistedFuelGaugeInitSignature.terminationCurrentMa = 0;
+            persistedFuelGaugeInitSignature.chargeVoltageMv = 0;
+            persistedFuelGaugeInitSignature.profileHash = 0;
+            persistedFuelGaugeInitSignature.hasSignature = false;
+            _lastFuelGaugeInitSignature = {};
+            _hasFuelGaugeInitSignature = false;
         }
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
         _fuelGaugeUsingExternalTemp = false;

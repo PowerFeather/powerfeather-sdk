@@ -740,6 +740,15 @@ namespace PowerFeather
         static constexpr uint16_t _chargerADCWaitTime = 100; // 80 ms actual
         static constexpr uint16_t _batfetCtrlWaitTime = 30; // 30 ms actual
 
+        struct FuelGaugeInitSignature
+        {
+            FuelGauge::InitSource source{FuelGauge::InitSource::Generic_3V7};
+            uint16_t capacityMah{0};
+            uint16_t terminationCurrentMa{0};
+            uint16_t chargeVoltageMv{0};
+            uint32_t profileHash{0};
+        };
+
 #ifdef ARDUINO
         ArduinoMasterI2C _i2c{_i2cPort, Pin::SDA1, Pin::SCL1, _i2cFreq};
 #else
@@ -759,10 +768,13 @@ namespace PowerFeather
         uint16_t _chargeVoltageMv{4200};
         uint16_t _chargingCurrentLimit{_defaultMaxChargingCurrent};
         uint16_t _vindpm{_minSupplyMaintainVoltage};
+        uint32_t _profileHash{0};
         bool _tsEnabled{false};
         bool _chargingEnabled{false};
         BatteryType _batteryType{BatteryType::Generic_3V7};
         bool _usesProfile{false};
+        FuelGaugeInitSignature _lastFuelGaugeInitSignature{};
+        bool _hasFuelGaugeInitSignature{false};
         Mutex _mutex{100};
 
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)

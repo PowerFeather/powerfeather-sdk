@@ -85,7 +85,7 @@ namespace PowerFeather
 
         FuelGauge(MasterI2C &i2c) : _i2c(i2c) {}
 
-        bool init(const InitConfig &config);
+        bool init(const InitConfig &config, bool forceReinit = false);
 
         virtual bool getEnabled(bool &enabled) = 0;
         virtual bool getCellVoltage(uint16_t &voltage) = 0;
@@ -201,7 +201,7 @@ namespace PowerFeather
 
 namespace PowerFeather
 {
-    inline bool FuelGauge::init(const InitConfig &config)
+    inline bool FuelGauge::init(const InitConfig &config, bool forceReinit)
     {
         bool inited = false;
         if (!getInitialized(inited))
@@ -209,7 +209,7 @@ namespace PowerFeather
             return false;
         }
 
-        if (inited)
+        if (!forceReinit && inited)
         {
             return true;
         }
