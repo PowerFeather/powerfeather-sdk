@@ -42,6 +42,10 @@
 #include <esp_log.h>
 #include <esp_timer.h>
 
+#if defined(ARDUINO)
+#include <Arduino.h>
+#endif
+
 #include "Mainboard.h"
 
 namespace PowerFeather
@@ -50,10 +54,32 @@ namespace PowerFeather
 
     static const char *TAG = "PowerFeather::Mainboard";
 
+#ifndef POWERFEATHER_ENABLE_PF_STATE_STREAM
+#define POWERFEATHER_ENABLE_PF_STATE_STREAM 0
+#endif
+
     /*extern*/ Mainboard &Board = Mainboard::get();
 
     namespace
     {
+        static constexpr const char *kPfStateFormat =
+            "snapshot retained_valid=%d rtc_cold=%d first=%d charger_sig_match=%d fg_had_sig=%d fg_force_reinit=%d fg_external_temp=%d learned_state_present=%d "
+            "current_chg_src=%u current_chg_cap=%u current_chg_term=%u current_chg_cv=%u current_chg_hash=%lu current_chg_battery_expected=%d current_chg_has_sig=%d "
+            "persisted_chg_src=%u persisted_chg_cap=%u persisted_chg_term=%u persisted_chg_cv=%u persisted_chg_hash=%lu persisted_chg_battery_expected=%d persisted_chg_has_sig=%d "
+            "last_fg_src=%u last_fg_cap=%u last_fg_term=%u last_fg_cv=%u last_fg_hash=%lu last_fg_has_sig=%d "
+            "persisted_fg_src=%u persisted_fg_cap=%u persisted_fg_term=%u persisted_fg_cv=%u persisted_fg_hash=%lu persisted_fg_has_sig=%d";
+
+        template <typename... Args>
+        static void emitPfStateSnapshot(Args... args)
+        {
+            char line[1024];
+            snprintf(line, sizeof(line), kPfStateFormat, args...);
+            ESP_LOGI("PF_STATE", "%s", line);
+#if POWERFEATHER_ENABLE_PF_STATE_STREAM && defined(ARDUINO)
+            Serial.printf("PF_STATE %s\n", line);
+#endif
+        }
+
         static uint32_t fnv1aHash(const void *data, size_t size)
         {
             const uint8_t *bytes = static_cast<const uint8_t *>(data);
@@ -299,6 +325,14 @@ namespace PowerFeather
             uint32_t scaled = (static_cast<uint32_t>(designCapRaw) * maxMah + 0x7FFFu) / 0xFFFFu;
             return static_cast<uint16_t>(std::min<uint32_t>(scaled, maxMah));
         }
+
+        struct InitDecisionState
+        {
+            bool lastInitFuelGaugeHadSignature = false;
+            bool lastInitFuelGaugeForceReinit = false;
+        };
+
+        static InitDecisionState initDecisionState;
     }
 
     #define LOG_FAIL(r)                 ESP_LOGD(TAG, "Unexpected result %d on %s:%d.", (r), __FUNCTION__, __LINE__)
@@ -406,11 +440,32 @@ namespace PowerFeather
                             signature.terminationCurrentMa != _lastFuelGaugeInitSignature.terminationCurrentMa ||
                             signature.chargeVoltageMv != _lastFuelGaugeInitSignature.chargeVoltageMv ||
                             signature.profileHash != _lastFuelGaugeInitSignature.profileHash);
+        initDecisionState.lastInitFuelGaugeHadSignature = hadFuelGaugeInitSignature;
+        initDecisionState.lastInitFuelGaugeForceReinit = forceReinit;
+        ESP_LOGI(TAG,
+                 "Fuel gauge init decision: had_sig=%d curr[src=%u cap=%u term=%u cv=%u hash=%08lx] prev[src=%u cap=%u term=%u cv=%u hash=%08lx] force_reinit=%d",
+                 hadFuelGaugeInitSignature,
+                 static_cast<unsigned>(signature.source),
+                 static_cast<unsigned>(signature.capacityMah),
+                 static_cast<unsigned>(signature.terminationCurrentMa),
+                 static_cast<unsigned>(signature.chargeVoltageMv),
+                 static_cast<unsigned long>(signature.profileHash),
+                 static_cast<unsigned>(_lastFuelGaugeInitSignature.source),
+                 static_cast<unsigned>(_lastFuelGaugeInitSignature.capacityMah),
+                 static_cast<unsigned>(_lastFuelGaugeInitSignature.terminationCurrentMa),
+                 static_cast<unsigned>(_lastFuelGaugeInitSignature.chargeVoltageMv),
+                 static_cast<unsigned long>(_lastFuelGaugeInitSignature.profileHash),
+                 forceReinit);
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
         FuelGaugeImpl &typedGauge = static_cast<FuelGaugeImpl &>(gauge);
         FuelGaugeRestoreGuard<FuelGaugeImpl> restoreGuard(typedGauge);
         if (_hasFuelGaugeInitSignature && !forceReinit)
         {
+            ESP_LOGI(TAG,
+                     "Fuel gauge retained fast path: using_external_temp=%d learned_state_present=%d profile_source=%d",
+                     _fuelGaugeUsingExternalTemp,
+                     persistedFuelGaugeLearnedState.hasState,
+                     config.source == FuelGauge::InitSource::Profile_Max17260);
             RET_IF_FALSE(FuelGaugeTempModeHelper<FuelGaugeImpl>::syncUsingExternalTemp(
                              typedGauge, _fuelGaugeUsingExternalTemp),
                          Result::Failure);
@@ -426,6 +481,11 @@ namespace PowerFeather
             // signature, should return to the documented default internal-
             // temperature mode. Preserve external-temperature mode only on the
             // retained fast path where the battery/profile inputs still match.
+            ESP_LOGI(TAG,
+                     "Fuel gauge reset path: had_sig=%d force_reinit=%d clearing_external_temp_mode learned_state_present=%d",
+                     _hasFuelGaugeInitSignature,
+                     forceReinit,
+                     persistedFuelGaugeLearnedState.hasState);
             _fuelGaugeUsingExternalTemp = false;
             RET_IF_FALSE(FuelGaugeLearnedStateHelper<FuelGaugeImpl>::syncBeforeInit(
                              typedGauge, false, persistedFuelGaugeLearnedState),
@@ -695,7 +755,21 @@ namespace PowerFeather
         _tsEnabled = false;
         _vindpm = _minSupplyMaintainVoltage;
         bool chargerSignatureMatch = false;
-        if (!_isFirst())
+        const bool firstBoot = _isFirst();
+        initDecisionState.lastInitFuelGaugeHadSignature = false;
+        initDecisionState.lastInitFuelGaugeForceReinit = false;
+        ESP_LOGI(TAG,
+                 "Init context: first=%d rtc_version=0x%08lx battery_type=%d cap=%u term=%u cv=%u use_profile=%d profile_hash=%08lx charging_supported=%d",
+                 firstBoot,
+                 static_cast<unsigned long>(rtcStateVersion),
+                 static_cast<int>(_batteryType),
+                 static_cast<unsigned>(_batteryCapacity),
+                 static_cast<unsigned>(_terminationCurrent),
+                 static_cast<unsigned>(_chargeVoltageMv),
+                 useProfile,
+                 static_cast<unsigned long>(_profileHash),
+                 chargingSupported);
+        if (!firstBoot)
         {
             chargerSignatureMatch = persistedChargerInitSignature.hasSignature &&
                                     persistedChargerInitSignature.source == currentChargerInitSignature.source &&
@@ -704,6 +778,26 @@ namespace PowerFeather
                                     persistedChargerInitSignature.chargeVoltageMv == currentChargerInitSignature.chargeVoltageMv &&
                                     persistedChargerInitSignature.profileHash == currentChargerInitSignature.profileHash &&
                                     persistedChargerInitSignature.batteryExpected == currentChargerInitSignature.batteryExpected;
+            ESP_LOGI(TAG,
+                     "Charger signature: match=%d persisted[src=%u cap=%u term=%u cv=%u hash=%08lx battery_expected=%d has_sig=%d] current[src=%u cap=%u term=%u cv=%u hash=%08lx battery_expected=%d] persisted_state[chg_en=%d ichg=%u ts=%d vindpm=%u]",
+                     chargerSignatureMatch,
+                     static_cast<unsigned>(persistedChargerInitSignature.source),
+                     static_cast<unsigned>(persistedChargerInitSignature.capacityMah),
+                     static_cast<unsigned>(persistedChargerInitSignature.terminationCurrentMa),
+                     static_cast<unsigned>(persistedChargerInitSignature.chargeVoltageMv),
+                     static_cast<unsigned long>(persistedChargerInitSignature.profileHash),
+                     persistedChargerInitSignature.batteryExpected,
+                     persistedChargerInitSignature.hasSignature,
+                     static_cast<unsigned>(currentChargerInitSignature.source),
+                     static_cast<unsigned>(currentChargerInitSignature.capacityMah),
+                     static_cast<unsigned>(currentChargerInitSignature.terminationCurrentMa),
+                     static_cast<unsigned>(currentChargerInitSignature.chargeVoltageMv),
+                     static_cast<unsigned long>(currentChargerInitSignature.profileHash),
+                     currentChargerInitSignature.batteryExpected,
+                     persistedChargerState.chargingEnabled,
+                     static_cast<unsigned>(persistedChargerState.chargingCurrentLimit),
+                     persistedChargerState.tsEnabled,
+                     static_cast<unsigned>(persistedChargerState.vindpm));
             if (chargerSignatureMatch)
             {
                 // Warm boot with unchanged battery/profile inputs: retain the
@@ -712,6 +806,21 @@ namespace PowerFeather
                 _chargingCurrentLimit = persistedChargerState.chargingCurrentLimit;
                 _tsEnabled = persistedChargerState.tsEnabled;
                 _vindpm = persistedChargerState.vindpm;
+                ESP_LOGI(TAG,
+                         "Rehydrated charger state from RTC: chg_en=%d ichg=%u ts=%d vindpm=%u",
+                         _chargingEnabled,
+                         static_cast<unsigned>(_chargingCurrentLimit),
+                         _tsEnabled,
+                         static_cast<unsigned>(_vindpm));
+            }
+            else
+            {
+                ESP_LOGI(TAG,
+                         "Warm boot with signature mismatch: keeping safe defaults chg_en=%d ichg=%u ts=%d vindpm=%u",
+                         _chargingEnabled,
+                         static_cast<unsigned>(_chargingCurrentLimit),
+                         _tsEnabled,
+                         static_cast<unsigned>(_vindpm));
             }
             _lastFuelGaugeInitSignature.source = static_cast<FuelGauge::InitSource>(persistedFuelGaugeInitSignature.source);
             _lastFuelGaugeInitSignature.capacityMah = persistedFuelGaugeInitSignature.capacityMah;
@@ -722,6 +831,7 @@ namespace PowerFeather
         }
         else
         {
+            ESP_LOGI(TAG, "Cold boot: clearing retained charger/fuel-gauge signatures and learned state");
             // Cold boot: RTC_NOINIT_ATTR leaves persistedChargerState undefined.
             // Seed it with the defaults above so that a warm boot prior to any
             // setter call rehydrates known-good values instead of RTC garbage.
@@ -740,7 +850,6 @@ namespace PowerFeather
             _lastFuelGaugeInitSignature = {};
             _hasFuelGaugeInitSignature = false;
         }
-
         if (_batteryCapacity && !chargingSupported)
         {
             // Tiny V2 packs are supported for monitoring only. Reset any
@@ -779,6 +888,15 @@ namespace PowerFeather
                 return Result::Failure;
             }
 
+            ESP_LOGI(TAG,
+                     "Applying charger init state: first=%d sig_match=%d chosen_state[chg_en=%d ichg=%u ts=%d vindpm=%u cv=%u]",
+                     firstBoot,
+                     chargerSignatureMatch,
+                     _chargingEnabled,
+                     static_cast<unsigned>(_chargingCurrentLimit),
+                     _tsEnabled,
+                     static_cast<unsigned>(_vindpm),
+                     static_cast<unsigned>(_chargeVoltageMv));
             // _reapplyChargerConfig is gated on the charger watchdog (POR indicator).
             // On wdOn == true (first init, or chip POR since last init), it applies the
             // full configuration using the software state set above — which on a warm
@@ -798,12 +916,20 @@ namespace PowerFeather
                 RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
             }
 
-            if (!_isFirst() && !chargerSignatureMatch)
+            if (firstBoot || !chargerSignatureMatch)
             {
-                // On a warm boot with changed battery/profile inputs, the
-                // charger may have retained the previous session's live state
-                // even though software intentionally reset to safe defaults.
-                // Push those defaults into the retained hardware as well.
+                ESP_LOGI(TAG,
+                         "%s: pushing software charger state into retained charger hardware chg_en=%d ichg=%u ts=%d vindpm=%u",
+                         firstBoot ? "Cold boot" : "Warm boot signature mismatch",
+                         _chargingEnabled,
+                         static_cast<unsigned>(_chargingCurrentLimit),
+                         _tsEnabled,
+                         static_cast<unsigned>(_vindpm));
+                // On a cold boot or a warm boot with changed battery/profile
+                // inputs, the charger may have retained the previous session's
+                // live state even though software intentionally selected safe
+                // defaults. Push those software-selected values into the
+                // retained hardware as well.
                 RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
                 RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
                 RET_IF_FALSE(getCharger().enableTS(_tsEnabled), Result::Failure);
@@ -849,6 +975,45 @@ namespace PowerFeather
         first = firstMagic;
         rtcStateVersion = rtcStateVersionMagic;
         _initDone = true;
+
+        emitPfStateSnapshot((first == firstMagic) && (rtcStateVersion == rtcStateVersionMagic),
+                 !((first == firstMagic) && (rtcStateVersion == rtcStateVersionMagic)),
+                 firstBoot,
+                 chargerSignatureMatch,
+                 initDecisionState.lastInitFuelGaugeHadSignature,
+                 initDecisionState.lastInitFuelGaugeForceReinit,
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+                 _fuelGaugeUsingExternalTemp,
+#else
+                 false,
+#endif
+                 persistedFuelGaugeLearnedState.hasState,
+                 static_cast<unsigned>(currentChargerInitSignature.source),
+                 static_cast<unsigned>(currentChargerInitSignature.capacityMah),
+                 static_cast<unsigned>(currentChargerInitSignature.terminationCurrentMa),
+                 static_cast<unsigned>(currentChargerInitSignature.chargeVoltageMv),
+                 static_cast<unsigned long>(currentChargerInitSignature.profileHash),
+                 currentChargerInitSignature.batteryExpected,
+                 _initDone,
+                 static_cast<unsigned>(persistedChargerInitSignature.source),
+                 static_cast<unsigned>(persistedChargerInitSignature.capacityMah),
+                 static_cast<unsigned>(persistedChargerInitSignature.terminationCurrentMa),
+                 static_cast<unsigned>(persistedChargerInitSignature.chargeVoltageMv),
+                 static_cast<unsigned long>(persistedChargerInitSignature.profileHash),
+                 persistedChargerInitSignature.batteryExpected,
+                 persistedChargerInitSignature.hasSignature,
+                 static_cast<unsigned>(_lastFuelGaugeInitSignature.source),
+                 static_cast<unsigned>(_lastFuelGaugeInitSignature.capacityMah),
+                 static_cast<unsigned>(_lastFuelGaugeInitSignature.terminationCurrentMa),
+                 static_cast<unsigned>(_lastFuelGaugeInitSignature.chargeVoltageMv),
+                 static_cast<unsigned long>(_lastFuelGaugeInitSignature.profileHash),
+                 _hasFuelGaugeInitSignature,
+                 static_cast<unsigned>(persistedFuelGaugeInitSignature.source),
+                 static_cast<unsigned>(persistedFuelGaugeInitSignature.capacityMah),
+                 static_cast<unsigned>(persistedFuelGaugeInitSignature.terminationCurrentMa),
+                 static_cast<unsigned>(persistedFuelGaugeInitSignature.chargeVoltageMv),
+                 static_cast<unsigned long>(persistedFuelGaugeInitSignature.profileHash),
+                 persistedFuelGaugeInitSignature.hasSignature);
 
         ESP_LOGD(TAG, "Initialization done.");
 
