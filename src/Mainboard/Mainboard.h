@@ -154,6 +154,8 @@ namespace PowerFeather
          *
          * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh).
          * Valid range depends on board revision: V1 supports 50-6000 mAh, V2 supports 1-16383 mAh.
+         * On V2, capacities below 50 mAh are supported for monitoring only: battery charging remains disabled
+         * and charge-current configuration is rejected.
          * Must be non-zero; use \c init() when no battery is expected. If using multiple batteries connected
          * in parallel, specify only the capacity for one cell. Ignored when \p type is
          * \c BatteryType::ICR18650_26H or \c BatteryType::UR18650ZY.
@@ -168,6 +170,8 @@ namespace PowerFeather
          * @brief Initialize the board using a MAX17260 model profile.
          *
          * The battery capacity is inferred from the profile.
+         * On V2, inferred capacities below 50 mAh are supported for monitoring only: battery charging remains
+         * disabled and charge-current configuration is rejected.
          *
          * The profile must provide a valid charger constant-voltage target in \c chargeVoltageMv.
          * Accepted range is 3500-4800 mV.
@@ -367,6 +371,7 @@ namespace PowerFeather
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
+         * On V2, charging is not available for configured battery capacities below 50 mAh.
          *
          * @param[in] enable If \c true, battery charging is enabled; if \c false, battery charging is disabled.
          *
@@ -387,6 +392,7 @@ namespace PowerFeather
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
+         * On V2, this function is not available for configured battery capacities below 50 mAh.
          *
          * @param[in] current The maximum charging current in milliamps (mA), up to 2000 mA.
          *
@@ -732,6 +738,7 @@ namespace PowerFeather
         static constexpr uint32_t _i2cTimeout = 1000;
 
         static constexpr uint16_t _defaultMaxChargingCurrent = 50; // minimum charge current at 1C
+        static constexpr uint16_t _minChargeableBatteryCapacity = _defaultMaxChargingCurrent;
         static constexpr uint16_t _minSupplyMaintainVoltage = BQ2562x::ResetVINDPMVoltage;
 
         static_assert(_minSupplyMaintainVoltage >= BQ2562x::MinVINDPMVoltage);

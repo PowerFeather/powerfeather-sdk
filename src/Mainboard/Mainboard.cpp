@@ -547,6 +547,7 @@ namespace PowerFeather
                                                                                    _terminationCurrent,
                                                                                    _chargeVoltageMv,
                                                                                    _profileHash);
+        const bool chargingSupported = (_batteryCapacity == 0) || (_batteryCapacity >= _minChargeableBatteryCapacity);
 
         _chargingEnabled = false;
         _chargingCurrentLimit = _defaultMaxChargingCurrent;
@@ -597,6 +598,15 @@ namespace PowerFeather
             _lastFuelGaugeInitSignature = {};
             _hasFuelGaugeInitSignature = false;
         }
+
+        if (_batteryCapacity && !chargingSupported)
+        {
+            // Tiny V2 packs are supported for monitoring only. Reset any
+            // retained charging state so init() cannot inherit an unsafe
+            // charge-enable/current policy from a previous session.
+            _chargingEnabled = false;
+            _chargingCurrentLimit = _defaultMaxChargingCurrent;
+        }
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
         _fuelGaugeUsingExternalTemp = false;
 #endif
@@ -639,6 +649,12 @@ namespace PowerFeather
             // path (chip retained state across sleep but we still want to rewrite VREG
             // in case the BatteryType chemistry selection changed since last session).
             RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltageMv), Result::Failure);
+
+            if (_batteryCapacity && !chargingSupported)
+            {
+                RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
+                RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
+            }
 
             if (!_isFirst() && !chargerSignatureMatch)
             {
@@ -845,6 +861,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(!enable || _batteryCapacity >= _minChargeableBatteryCapacity, Result::InvalidState);
         RET_IF_ERR(_reapplyChargerConfig());
         RET_IF_FALSE(getCharger().enableCharging(enable), Result::Failure);
         _chargingEnabled = enable;
@@ -859,6 +876,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity >= _minChargeableBatteryCapacity, Result::InvalidState);
         RET_IF_ERR(_reapplyChargerConfig());
         RET_IF_FALSE(current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
         RET_IF_FALSE(getCharger().setChargeCurrentLimit(current), Result::Failure);
