@@ -172,6 +172,125 @@ namespace PowerFeather
             }
         };
 
+        struct PersistedFuelGaugeLearnedState
+        {
+            uint16_t fullCapRep;
+            uint16_t fullCapNom;
+            uint16_t rComp0;
+            uint16_t tempCo;
+            uint16_t cycles;
+            bool hasState;
+        };
+
+        template <typename Gauge>
+        struct FuelGaugeLearnedStateHelper
+        {
+            static bool syncBeforeInit(Gauge &, bool, PersistedFuelGaugeLearnedState &)
+            {
+                return true;
+            }
+
+            static bool captureAfterInit(Gauge &, PersistedFuelGaugeLearnedState &)
+            {
+                return true;
+            }
+
+            static void clearPendingRestore(Gauge &) {}
+        };
+
+        template <>
+        struct FuelGaugeLearnedStateHelper<MAX17260>
+        {
+            static bool syncBeforeInit(MAX17260 &gauge,
+                                       bool allowRestore,
+                                       PersistedFuelGaugeLearnedState &persistedState)
+            {
+                if (!allowRestore)
+                {
+                    gauge.clearRestoreLearnedParameters();
+                    return true;
+                }
+
+                bool initialized = false;
+                if (!gauge.getInitialized(initialized))
+                {
+                    return false;
+                }
+
+                if (!initialized)
+                {
+                    if (persistedState.hasState)
+                    {
+                        MAX17260::LearnedParameters parameters = {};
+                        parameters.fullCapRep = persistedState.fullCapRep;
+                        parameters.fullCapNom = persistedState.fullCapNom;
+                        parameters.rComp0 = persistedState.rComp0;
+                        parameters.tempCo = persistedState.tempCo;
+                        parameters.cycles = persistedState.cycles;
+                        gauge.setRestoreLearnedParameters(parameters);
+                    }
+                    else
+                    {
+                        gauge.clearRestoreLearnedParameters();
+                    }
+                    return true;
+                }
+
+                MAX17260::LearnedParameters parameters = {};
+                if (gauge.getLearnedParameters(parameters))
+                {
+                    persistedState.fullCapRep = parameters.fullCapRep;
+                    persistedState.fullCapNom = parameters.fullCapNom;
+                    persistedState.rComp0 = parameters.rComp0;
+                    persistedState.tempCo = parameters.tempCo;
+                    persistedState.cycles = parameters.cycles;
+                    persistedState.hasState = true;
+                }
+                else
+                {
+                    persistedState.hasState = false;
+                }
+
+                gauge.clearRestoreLearnedParameters();
+                return true;
+            }
+
+            static bool captureAfterInit(MAX17260 &gauge, PersistedFuelGaugeLearnedState &persistedState)
+            {
+                MAX17260::LearnedParameters parameters = {};
+                if (!gauge.getLearnedParameters(parameters))
+                {
+                    persistedState.hasState = false;
+                    return true;
+                }
+
+                persistedState.fullCapRep = parameters.fullCapRep;
+                persistedState.fullCapNom = parameters.fullCapNom;
+                persistedState.rComp0 = parameters.rComp0;
+                persistedState.tempCo = parameters.tempCo;
+                persistedState.cycles = parameters.cycles;
+                persistedState.hasState = true;
+                return true;
+            }
+
+            static void clearPendingRestore(MAX17260 &gauge)
+            {
+                gauge.clearRestoreLearnedParameters();
+            }
+        };
+
+        template <typename Gauge>
+        struct FuelGaugeRestoreGuard
+        {
+            explicit FuelGaugeRestoreGuard(Gauge &gauge) : gauge(gauge) {}
+            ~FuelGaugeRestoreGuard()
+            {
+                FuelGaugeLearnedStateHelper<Gauge>::clearPendingRestore(gauge);
+            }
+
+            Gauge &gauge;
+        };
+
         static uint16_t designCapToMah(uint16_t designCapRaw, uint16_t maxMah)
         {
             // MAX17260 profile DesignCap is a normalized 16-bit value.
@@ -191,7 +310,7 @@ namespace PowerFeather
     static RTC_NOINIT_ATTR uint32_t first;
     static RTC_NOINIT_ATTR uint32_t rtcStateVersion;
     static const uint32_t firstMagic = 0xdeadbeef;
-    static const uint32_t rtcStateVersionMagic = 0x20260423;
+    static const uint32_t rtcStateVersionMagic = 0x20260424;
 
     // Charger state the user has committed via public setters. Placed in RTC
     // slow memory so it survives deep sleep and can be re-applied to the chip
@@ -227,6 +346,7 @@ namespace PowerFeather
         bool hasSignature;
     };
     static RTC_NOINIT_ATTR PersistedFuelGaugeInitSignature persistedFuelGaugeInitSignature;
+    static RTC_NOINIT_ATTR PersistedFuelGaugeLearnedState persistedFuelGaugeLearnedState;
 
     FuelGauge &Mainboard::getFuelGauge()
     {
@@ -245,6 +365,7 @@ namespace PowerFeather
         FuelGauge &gauge = getFuelGauge();
         FuelGauge::InitConfig config;
         FuelGaugeInitSignature signature;
+        const bool hadFuelGaugeInitSignature = _hasFuelGaugeInitSignature;
 
         if (_usesProfile)
         {
@@ -286,10 +407,17 @@ namespace PowerFeather
                             signature.chargeVoltageMv != _lastFuelGaugeInitSignature.chargeVoltageMv ||
                             signature.profileHash != _lastFuelGaugeInitSignature.profileHash);
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        FuelGaugeImpl &typedGauge = static_cast<FuelGaugeImpl &>(gauge);
+        FuelGaugeRestoreGuard<FuelGaugeImpl> restoreGuard(typedGauge);
         if (_hasFuelGaugeInitSignature && !forceReinit)
         {
             RET_IF_FALSE(FuelGaugeTempModeHelper<FuelGaugeImpl>::syncUsingExternalTemp(
-                             static_cast<FuelGaugeImpl &>(gauge), _fuelGaugeUsingExternalTemp),
+                             typedGauge, _fuelGaugeUsingExternalTemp),
+                         Result::Failure);
+            RET_IF_FALSE(FuelGaugeLearnedStateHelper<FuelGaugeImpl>::syncBeforeInit(
+                             typedGauge,
+                             config.source == FuelGauge::InitSource::Profile_Max17260,
+                             persistedFuelGaugeLearnedState),
                          Result::Failure);
         }
         else
@@ -299,10 +427,23 @@ namespace PowerFeather
             // temperature mode. Preserve external-temperature mode only on the
             // retained fast path where the battery/profile inputs still match.
             _fuelGaugeUsingExternalTemp = false;
+            RET_IF_FALSE(FuelGaugeLearnedStateHelper<FuelGaugeImpl>::syncBeforeInit(
+                             typedGauge, false, persistedFuelGaugeLearnedState),
+                         Result::Failure);
         }
         config.tsenseEnabled = !_fuelGaugeUsingExternalTemp;
 #endif
         RET_IF_FALSE(gauge.init(config, forceReinit), Result::Failure);
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        RET_IF_FALSE(FuelGaugeLearnedStateHelper<FuelGaugeImpl>::captureAfterInit(
+                         typedGauge, persistedFuelGaugeLearnedState),
+                     Result::Failure);
+#endif
+        if (!hadFuelGaugeInitSignature || forceReinit)
+        {
+            persistedFuelGaugeLearnedState.hasState = config.source == FuelGauge::InitSource::Profile_Max17260 &&
+                                                      persistedFuelGaugeLearnedState.hasState;
+        }
         _lastFuelGaugeInitSignature = signature;
         _hasFuelGaugeInitSignature = true;
         persistedFuelGaugeInitSignature.source = static_cast<uint8_t>(signature.source);
@@ -595,6 +736,7 @@ namespace PowerFeather
             persistedFuelGaugeInitSignature.chargeVoltageMv = 0;
             persistedFuelGaugeInitSignature.profileHash = 0;
             persistedFuelGaugeInitSignature.hasSignature = false;
+            persistedFuelGaugeLearnedState.hasState = false;
             _lastFuelGaugeInitSignature = {};
             _hasFuelGaugeInitSignature = false;
         }

@@ -182,7 +182,17 @@ namespace PowerFeather
                 }
                 model = &_profile;
             }
-            return loadModel(*model);
+
+            LearnedParameters restoreParameters = {};
+            const LearnedParameters *restoreParametersPtr = nullptr;
+            if (_hasRestoreLearnedParameters)
+            {
+                restoreParameters = _restoreLearnedParameters;
+                restoreParametersPtr = &restoreParameters;
+                _hasRestoreLearnedParameters = false;
+            }
+
+            return _loadModel(*model, restoreParametersPtr);
         }
 
         uint8_t modelId = ModelID_LiCoO2;
@@ -299,6 +309,11 @@ namespace PowerFeather
 
     bool MAX17260::loadModel(const Model &model)
     {
+        return _loadModel(model, nullptr);
+    }
+
+    bool MAX17260::_loadModel(const Model &model, const LearnedParameters *savedParameters)
+    {
         if (!_waitForDNRClear())
         {
             return false;
@@ -394,8 +409,20 @@ namespace PowerFeather
         vTaskDelay(pdMS_TO_TICKS(100));
         if (!writeRegister(Register::DesignCap, model.designCap)) return false;
 
-        const uint16_t fullCapNom = model.designCap;
-        const uint16_t fullCapRep = model.designCap;
+        uint16_t fullCapNom = model.designCap;
+        uint16_t fullCapRep = model.designCap;
+        uint16_t rComp0 = model.rComp0;
+        uint16_t tempCo = model.tempCo;
+        uint16_t cycles = 0x0000;
+
+        if (savedParameters)
+        {
+            fullCapRep = savedParameters->fullCapRep;
+            fullCapNom = savedParameters->fullCapNom;
+            rComp0 = savedParameters->rComp0;
+            tempCo = savedParameters->tempCo;
+            cycles = savedParameters->cycles;
+        }
 
         if (!writeRegister(Register::FullCapRep, fullCapRep)) return false;
 
@@ -446,8 +473,8 @@ namespace PowerFeather
 
         if (!writeRegister(Register::IChgTerm, model.ichgTerm)) return false;
         if (!writeRegister(Register::VEmpty, model.vEmpty)) return false;
-        if (!writeRegister(Register::RComp0, model.rComp0)) return false;
-        if (!writeRegister(Register::TempCo, model.tempCo)) return false;
+        if (!writeRegister(Register::RComp0, rComp0)) return false;
+        if (!writeRegister(Register::TempCo, tempCo)) return false;
 
         const uint8_t qrAddresses[4] = {
             static_cast<uint8_t>(Register::QRTable00),
@@ -524,7 +551,7 @@ namespace PowerFeather
 
         if (!_writeAndVerify(Register::QRTable20, model.qrTable[2])) return false;
         if (!_writeAndVerify(Register::QRTable30, model.qrTable[3])) return false;
-        if (!_writeAndVerify(Register::Cycles, 0x0000)) return false;
+        if (!_writeAndVerify(Register::Cycles, cycles)) return false;
 
         if (!writeRegister(Register::HibCfg, hibCfg)) return false;
 
@@ -656,6 +683,15 @@ namespace PowerFeather
         return false;
     }
 
+    bool MAX17260::getLearnedParameters(LearnedParameters &parameters)
+    {
+        return readRegister(Register::FullCapRep, parameters.fullCapRep) &&
+               readRegister(Register::FullCapNom, parameters.fullCapNom) &&
+               readRegister(Register::RComp0, parameters.rComp0) &&
+               readRegister(Register::TempCo, parameters.tempCo) &&
+               readRegister(Register::Cycles, parameters.cycles);
+    }
+
     bool MAX17260::getUsingExternalTemperature(bool &external)
     {
         uint16_t config = 0;
@@ -665,6 +701,17 @@ namespace PowerFeather
             return true;
         }
         return false;
+    }
+
+    void MAX17260::setRestoreLearnedParameters(const LearnedParameters &parameters)
+    {
+        _restoreLearnedParameters = parameters;
+        _hasRestoreLearnedParameters = true;
+    }
+
+    void MAX17260::clearRestoreLearnedParameters()
+    {
+        _hasRestoreLearnedParameters = false;
     }
 
     bool MAX17260::setEnabled(bool enable)

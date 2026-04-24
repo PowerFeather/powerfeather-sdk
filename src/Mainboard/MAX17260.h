@@ -43,6 +43,15 @@ namespace PowerFeather
     class MAX17260 : public RegisterFuelGauge
     {
     public:
+        struct LearnedParameters
+        {
+            uint16_t fullCapRep{0};
+            uint16_t fullCapNom{0};
+            uint16_t rComp0{0};
+            uint16_t tempCo{0};
+            uint16_t cycles{0};
+        };
+
         struct Model
         {
             std::array<uint16_t, 32> modelTable{};
@@ -111,7 +120,10 @@ namespace PowerFeather
         bool getCycles(uint16_t &cycles) override;
         bool getSOH(uint8_t &percent) override;
         bool getInitialized(bool& state) override;
+        bool getLearnedParameters(LearnedParameters &parameters);
         bool getUsingExternalTemperature(bool &external);
+        void setRestoreLearnedParameters(const LearnedParameters &parameters);
+        void clearRestoreLearnedParameters();
         bool setEnabled(bool enable) override;
         bool setCellTemperature(float temperature) override;
         bool enableTSENSE(bool enableTsense1, bool enableTsense2) override;
@@ -250,6 +262,7 @@ namespace PowerFeather
         bool _initHardware();
         bool _waitForDNRClear();
         bool _waitForModelRefreshClear();
+        bool _loadModel(const Model &model, const LearnedParameters *savedParameters);
 
         bool _writeAndVerify(Register address, uint16_t value);
 
@@ -258,5 +271,7 @@ namespace PowerFeather
 
         Model _profile{};
         bool _hasProfile{false};
+        LearnedParameters _restoreLearnedParameters{};
+        bool _hasRestoreLearnedParameters{false};
     };
 }
