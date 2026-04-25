@@ -703,6 +703,19 @@ namespace PowerFeather
         return false;
     }
 
+    bool MAX17260::getDesignCapacity(uint16_t &mah)
+    {
+        uint16_t raw = 0;
+        if (!readRegister(Register::DesignCap, raw))
+        {
+            return false;
+        }
+        // Inverse of _capacityMahToDesignCapRaw: mAh = raw * 5 / RSENSE_mΩ.
+        uint32_t scaled = static_cast<uint32_t>(raw) * 5u + (SenseResistorMilliohms / 2u);
+        mah = static_cast<uint16_t>(std::min<uint32_t>(scaled / SenseResistorMilliohms, 0xFFFFu));
+        return true;
+    }
+
     void MAX17260::setRestoreLearnedParameters(const LearnedParameters &parameters)
     {
         _restoreLearnedParameters = parameters;

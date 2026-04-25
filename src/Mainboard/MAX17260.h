@@ -122,6 +122,7 @@ namespace PowerFeather
         bool getInitialized(bool& state) override;
         bool getLearnedParameters(LearnedParameters &parameters);
         bool getUsingExternalTemperature(bool &external);
+        bool getDesignCapacity(uint16_t &mah);
         void setRestoreLearnedParameters(const LearnedParameters &parameters);
         void clearRestoreLearnedParameters();
         bool setEnabled(bool enable) override;
