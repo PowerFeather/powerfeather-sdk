@@ -592,7 +592,11 @@ namespace PowerFeather
             _mutex.lockBlocking();
 
             RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
-            _chargerADCTime = now;
+            // Record completion time (not entry time) so the throttle window measures
+            // idle time after the ADC settled, not entry-to-entry — otherwise back-to-back
+            // callers always satisfy (now - _chargerADCTime) >= _chargerADCWaitTime because
+            // the vTaskDelay above guarantees at least _chargerADCWaitTime has elapsed.
+            _chargerADCTime = esp_timer_get_time() / 1000;
             ESP_LOGD(TAG, "Updated charger ADC.");
         }
         return Result::Ok;
