@@ -150,6 +150,9 @@ namespace PowerFeather
          *  - Battery temperature sense: disabled
          *  - Battery alarms (low charge, high/low voltage): disabled
          *
+         * On RTC-retaining warm boots, charger settings changed through public setters are retained only when the
+         * battery or profile configuration still matches. If the configuration changes, initialization re-applies safe defaults.
+         *
          * This function should be called once, before calling all other \c Mainboard functions.
          *
          * @param[in] capacity The capacity of the connected Li-ion/LiPo battery in milliamp-hours (mAh).
@@ -213,9 +216,9 @@ namespace PowerFeather
          * Enables or disables \a VSQT, the 3.3 V STEMMA QT power output. When disabled, power to the
          * connected STEMMA QT modules is cut, reducing power consumption.
          *
-         * A side effect of disabling \a VSQT is that communications to the battery charger and fuel gauge is also disabled.
+         * On V1, disabling \a VSQT also disables communications to the battery charger and fuel gauge.
          * This means that some of the other \c Mainboard functions will return \c Result::InvalidState when
-         * \a VSQT is disabled. Make sure to enable \a VSQT prior to calling these functions.
+         * \a VSQT is disabled. On V2, power-management I2C remains usable even with \a VSQT disabled.
          *
          * @param[in] enable If \c true, \a VSQT is enabled; if \c false, \a VSQT is disabled.
          *
@@ -235,6 +238,9 @@ namespace PowerFeather
          * where the current extracted from the solar panel should be used to charge the battery as
          * much as possible.
          *
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
+         *
          * @param[in] enable If \c true, \a STAT LED is enabled; if \c false, \a STAT LED is disabled.
          *
          * @return Result Returns \c Result::Ok if \a STAT  LED was enabled or disabled successfully;
@@ -248,7 +254,8 @@ namespace PowerFeather
          * Measures the \a VUSB or \a VDC voltage. \a VUSB is the power input from the USB-C connector,
          * while \a VDC is the power input from the header pin. Resolution is 4 mV
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * This function can block for 100 ms.
          *
@@ -265,11 +272,12 @@ namespace PowerFeather
          * Measures the current drawn from \a VUSB or \a VDC. \a VUSB is the power input from the USB-C connector,
          * while \a VDC is the power input from the header pin. Resolution is 2 mA.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * This function can block for 100 ms.
          *
-         * @param[out] voltage The measured current draw in milliamperes (mA).
+         * @param[out] current The measured current draw in milliamperes (mA).
          *
          * @return Result Returns \c Result::Ok if the supply current was measured successfully;
          * returns a value other than \c Result::Ok if not.
@@ -296,9 +304,10 @@ namespace PowerFeather
          * the set voltage to maintain. This is useful for specifying the maximum power point (MPP) voltage if using a
          * solar panel; allowing the battery charger to extract power from the panel at near-MPPT effectiveness.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
-         * @param[in] voltage The supply voltage to maintain in millivolts (mV), up to 16800 mV.
+         * @param[in] voltage The supply voltage to maintain in millivolts (mV), from 4600 mV to 16800 mV.
          *
          * @return Result Returns \c Result::Ok if the supply voltage to maintain was set successfully;
          * returns a value other than \c Result::Ok if not.
@@ -317,7 +326,8 @@ namespace PowerFeather
          * Ship mode can be exited by either (1) pulling \a QON header pin low for around 800 ms or
          * (2) connecting a power supply which the battery charger determines to be good.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * This function can block for 30 ms if it fails to enter ship mode.
          *
@@ -338,7 +348,8 @@ namespace PowerFeather
          *
          * Shutdown mode can only be exited by connecting a power supply which the battery charger determines to be good.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * This function can block for 30 ms if it fails to enter shutdown mode.
          *
@@ -355,7 +366,8 @@ namespace PowerFeather
          * and loads connected to \a VS (supply output header pin, whichever of \a VUSB and \a VDC),
          * the power cycle provides complete reset by removing power and re-applying it after a short delay.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * @return Result Does not return if a power cycle was performed successfully;
          * returns a value other than \c Result::Ok if not.
@@ -367,7 +379,8 @@ namespace PowerFeather
          *
          * This is useful when opting to not fully charge a battery in order to prolong its lifespan.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -388,13 +401,14 @@ namespace PowerFeather
          * more than 1C. For example, when charging a 550 mAh battery, a current of no more than 550 mA is
          * recommended. That current limit of 550 mA can be specified using this function.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          * On V2, this function is not available for configured battery capacities below 50 mAh.
          *
-         * @param[in] current The maximum charging current in milliamps (mA), up to 2000 mA.
+         * @param[in] current The maximum charging current in milliamps (mA), from 40 mA to 2000 mA.
          *
          * @return Result Returns \c Result::Ok if the maximum battery charging current was set successfully;
          * returns a value other than \c Result::Ok if not.
@@ -408,7 +422,8 @@ namespace PowerFeather
          * If enabled, aside from measurement, the battery charger performs temperature-based battery charging current
          * reduction or cutoff.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -429,7 +444,8 @@ namespace PowerFeather
          * Nonetheless, this is useful when trying to reduce power as much as possible, such as when going
          * into ship mode or shutdown mode for a long time.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -447,7 +463,8 @@ namespace PowerFeather
          * Resolution is 2 mV. If the fuel gauge is enabled and available, it is used;
          * otherwise, the charger VBAT ADC path is used as a fallback.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -469,7 +486,8 @@ namespace PowerFeather
          *
          * This overload uses the charger `IBAT_ADC` register on both V1 and V2, with a 4 mA LSb.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -490,7 +508,8 @@ namespace PowerFeather
          * Gives an estimate of battery state-of-charge from 0% to 100%. This is useful to get a sense
          * if the battery still has much charge or is nearly empty.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -510,7 +529,8 @@ namespace PowerFeather
          * Gives an estimate of battery state-of-health from 0% to 100%. This is useful to get a
          * sense of how much the battery has degraded over time.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -530,7 +550,8 @@ namespace PowerFeather
          * Gives an estimate of the battery cycle count. This is useful to compare against the number of
          * cycle counts the battery is rated for.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -551,7 +572,8 @@ namespace PowerFeather
          * previously dropped and/or risen by a certain percentage to be able to estimate time-to-empty or time-to-full, respectively.
          * If the gauge has not accumulated enough history yet, this function returns \c Result::NotReady.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -572,7 +594,11 @@ namespace PowerFeather
          * Requires a Semitec 103AT thermistor to be connected to the \a TS pin and attached to the battery
          * for the measurement to be accurate.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * Returns \c Result::Failure if the thermistor reading is outside the plausible range,
+         * such as when the thermistor is missing, open, or shorted.
+         *
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -594,7 +620,8 @@ namespace PowerFeather
          *
          * If battery voltage is less than the set voltage, the \a ALARM pin is pulled low.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -621,7 +648,8 @@ namespace PowerFeather
          *
          * If battery voltage is more than the set voltage, the \a ALARM pin is pulled low.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -648,7 +676,8 @@ namespace PowerFeather
          *
          * If battery charge is less than the set percentage, the \a ALARM pin is pulled low.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -679,7 +708,8 @@ namespace PowerFeather
          *  - V2: after initialization, fuel gauge temperature defaults to on-IC measurement until the first call to
          *        this API (or its no-arg overload), after which host-updated temperature is used.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
@@ -699,7 +729,8 @@ namespace PowerFeather
          * Equivalent to calling \c getBatteryTemperature() then \c updateBatteryFuelGaugeTemp(float).
          * See \c updateBatteryFuelGaugeTemp(float) for V1/V2 temperature mode behavior details.
          *
-         * \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
+         * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
