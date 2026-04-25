@@ -146,6 +146,24 @@ namespace PowerFeather
             return signature;
         }
 
+        static bool verifyChargerPart(BQ2562x &charger)
+        {
+            uint8_t pi = 0;
+            if (!charger.getPartInformation(pi))
+            {
+                return false;
+            }
+
+            uint8_t pn = (pi >> 3) & 0x07;
+            if (pn != BQ2562x::Charger_PN_BQ25622 && pn != BQ2562x::Charger_PN_BQ25628)
+            {
+                ESP_LOGE(TAG, "Unsupported charger part ID: 0x%02x (expected PN: 0x%02x or 0x%02x)", pi, BQ2562x::Charger_PN_BQ25622, BQ2562x::Charger_PN_BQ25628);
+                return false;
+            }
+
+            return true;
+        }
+
         template <typename Gauge>
         struct FuelGaugeProfileHelper
         {
@@ -883,14 +901,7 @@ namespace PowerFeather
         {
             RET_IF_FALSE(_i2c.start(), Result::Failure);
 
-            uint8_t pi = 0;
-            RET_IF_FALSE(getCharger().getPartInformation(pi), Result::Failure);
-            uint8_t pn = (pi >> 3) & 0x07;
-            if (pn != BQ2562x::Charger_PN_BQ25622 && pn != BQ2562x::Charger_PN_BQ25628)
-            {
-                ESP_LOGE(TAG, "Unsupported charger part ID: 0x%02x (expected PN: 0x%02x or 0x%02x)", pi, BQ2562x::Charger_PN_BQ25622, BQ2562x::Charger_PN_BQ25628);
-                return Result::Failure;
-            }
+            RET_IF_FALSE(verifyChargerPart(getCharger()), Result::Failure);
 
             ESP_LOGI(TAG,
                      "Applying charger init state: first=%d sig_match=%d chosen_state[chg_en=%d ichg=%u ts=%d vindpm=%u cv=%u]",
@@ -936,6 +947,10 @@ namespace PowerFeather
                 // retained hardware as well.
                 RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
                 RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
+                if (_batteryCapacity)
+                {
+                    RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
+                }
                 RET_IF_FALSE(getCharger().enableTS(_tsEnabled), Result::Failure);
                 RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, false), Result::Failure);
                 RET_IF_FALSE(getCharger().setVINDPM(_vindpm), Result::Failure);
@@ -1054,6 +1069,7 @@ namespace PowerFeather
         if (enable && !_sqtEnabled)
         {
             RET_IF_FALSE(_i2c.start(), Result::Failure);
+            RET_IF_FALSE(verifyChargerPart(getCharger()), Result::Failure);
             RET_IF_ERR(_reapplyChargerConfig());
             RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltageMv), Result::Failure);
             _chargerADCTime = 0;
