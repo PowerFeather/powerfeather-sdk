@@ -62,6 +62,7 @@ namespace PowerFeather
             {
                 uint16_t capacityMah;
                 uint16_t terminationCurrentMa;
+                uint16_t chargeVoltageMv;
             };
 
             struct ProfileConfig
@@ -74,16 +75,17 @@ namespace PowerFeather
                 CapacityConfig capacity;
                 ProfileConfig profile;
 
-                constexpr Payload() : capacity{0, 0} {}
+                constexpr Payload() : capacity{0, 0, 0} {}
             };
 
             InitSource source{InitSource::Generic_3V7};
             Payload data{};
+            bool tsenseEnabled{false};
         };
 
         FuelGauge(MasterI2C &i2c) : _i2c(i2c) {}
 
-        bool init(const InitConfig &config);
+        bool init(const InitConfig &config, bool forceReinit = false);
 
         virtual bool getEnabled(bool &enabled) = 0;
         virtual bool getCellVoltage(uint16_t &voltage) = 0;
@@ -199,15 +201,20 @@ namespace PowerFeather
 
 namespace PowerFeather
 {
-    inline bool FuelGauge::init(const InitConfig &config)
+    inline bool FuelGauge::init(const InitConfig &config, bool forceReinit)
     {
+        if (!probe())
+        {
+            return false;
+        }
+
         bool inited = false;
         if (!getInitialized(inited))
         {
             return false;
         }
 
-        if (inited)
+        if (!forceReinit && inited)
         {
             return true;
         }
@@ -252,7 +259,7 @@ namespace PowerFeather
             }
         }
 
-        if (!enableTSENSE(false, false))
+        if (!enableTSENSE(config.tsenseEnabled, false))
         {
             return false;
         }

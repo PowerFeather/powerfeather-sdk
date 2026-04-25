@@ -184,6 +184,8 @@ namespace PowerFeather
         uint16_t value = 0;
         if (readRegister(static_cast<uint8_t>(Register::TSENSE1), value))
         {
+            // 0x0DCC is the 80 °C anchor (353.15 K). Ideal raw value is 3531.5.
+            // Using 0x0DCC introduces a fixed +0.05 °C bias.
             temperature = Util::fromRaw(value, 0.1, 0x0DCC) + 80.0f;
             return true;
         }
@@ -275,13 +277,20 @@ namespace PowerFeather
 
     bool LC709204F::setCellTemperature(float temperature)
     {
+        // 0xDCC is the 80 °C anchor. See getCellTemperature() for bias details.
         uint16_t value = Util::toRaw(temperature - 80.0f, 0.1f, 0xDCC);
         return writeRegister(static_cast<uint8_t>(Register::TSENSE1), value);
     }
 
     bool LC709204F::enableTSENSE(bool enableTsense1, bool enableTsense2)
     {
-        uint16_t status = enableTsense1 << 0 | enableTsense2 << 1;
+        uint16_t status = 0;
+        if (!readRegister(static_cast<uint8_t>(Register::Status_Bit), status))
+        {
+            return false;
+        }
+        status &= ~0x0003;
+        status |= (enableTsense1 << 0 | enableTsense2 << 1);
         return writeRegister(static_cast<uint8_t>(Register::Status_Bit), status);
     }
 

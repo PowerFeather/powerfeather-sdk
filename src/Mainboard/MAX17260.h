@@ -43,6 +43,15 @@ namespace PowerFeather
     class MAX17260 : public RegisterFuelGauge
     {
     public:
+        struct LearnedParameters
+        {
+            uint16_t fullCapRep{0};
+            uint16_t fullCapNom{0};
+            uint16_t rComp0{0};
+            uint16_t tempCo{0};
+            uint16_t cycles{0};
+        };
+
         struct Model
         {
             std::array<uint16_t, 32> modelTable{};
@@ -111,6 +120,10 @@ namespace PowerFeather
         bool getCycles(uint16_t &cycles) override;
         bool getSOH(uint8_t &percent) override;
         bool getInitialized(bool& state) override;
+        bool getLearnedParameters(LearnedParameters &parameters);
+        bool getUsingExternalTemperature(bool &external);
+        void setRestoreLearnedParameters(const LearnedParameters &parameters);
+        void clearRestoreLearnedParameters();
         bool setEnabled(bool enable) override;
         bool setCellTemperature(float temperature) override;
         bool enableTSENSE(bool enableTsense1, bool enableTsense2) override;
@@ -204,7 +217,9 @@ namespace PowerFeather
 
         static constexpr uint16_t HibCfgBit_EnHib = 1u << 15;
         static constexpr uint16_t ModelCfgBit_Refresh = 1u << 15;
+        static constexpr uint16_t ModelCfgBit_VChg = 1u << 10;
         static constexpr uint16_t ModelCfgMask_ModelID = 0x7u << 5;
+        static constexpr uint16_t ModelCfgHighVoltageThresholdMv = 4275;
         static constexpr uint16_t ConfigBit_TSel = 1u << 15;
         static constexpr uint16_t ConfigBit_TEn = 1u << 9;
         static constexpr uint16_t ConfigBit_TEx = 1u << 8;
@@ -242,15 +257,21 @@ namespace PowerFeather
             return writeRegister(static_cast<uint8_t>(address), value);
         }
         bool initImpl(const InitConfig &config) override;
+        bool _verifyDeviceIdentity();
         bool _initEZConfig(const InitConfig &config, uint8_t modelId);
         bool _initHardware();
         bool _waitForDNRClear();
         bool _waitForModelRefreshClear();
+        bool _loadModel(const Model &model, const LearnedParameters *savedParameters);
+
+        bool _writeAndVerify(Register address, uint16_t value);
 
         static uint16_t _capacityMahToDesignCapRaw(uint16_t capacityMah);
         static uint16_t _currentMaToRaw(uint16_t currentMa);
 
         Model _profile{};
         bool _hasProfile{false};
+        LearnedParameters _restoreLearnedParameters{};
+        bool _hasRestoreLearnedParameters{false};
     };
 }

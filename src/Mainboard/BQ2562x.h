@@ -153,10 +153,14 @@ namespace PowerFeather
 
         enum class IbatPkLimit : uint8_t
         {
-            Limit1_5A = 0x00,
-            Limit3A = 0x01,
+            Reserved00 = 0x00,
+            Reserved01 = 0x01,
             Limit6A = 0x02,
-            Limit12A = 0x03
+            Limit12A = 0x03,
+            // Backward-compatible aliases for legacy code. Current TI datasheets
+            // for both BQ25622E and BQ25628E mark these encodings as reserved.
+            Limit1_5A = Reserved00,
+            Limit3A = Reserved01
         };
 
         enum class TH456Setting : uint8_t
@@ -293,6 +297,11 @@ namespace PowerFeather
         const Register Part_Information_PN =                  { 0x38, 1, 3, 5 };
         const Register Part_Information_DEV_REV =             { 0x38, 1, 0, 2 };
 
+    public:
+        static constexpr uint8_t Charger_PN_BQ25622 = 0x03;
+        static constexpr uint8_t Charger_PN_BQ25628 = 0x04;
+
+    private:
         static constexpr uint8_t _i2cAddress = 0x6a;
 
         MasterI2C &_i2c;

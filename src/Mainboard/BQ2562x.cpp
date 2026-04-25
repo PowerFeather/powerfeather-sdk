@@ -119,8 +119,9 @@ namespace PowerFeather
 
         if (_readReg(IBUS_ADC, value))
         {
-            uint16_t origin = (value >= 0x7830 && value <= 0x7fff) ? 0x7fff + 1 : 0;
-            current = round(Util::fromRaw(value, 2.0f, origin));
+            // IBUS_ADC is 15-bit signed (bits 1-15).
+            int16_t raw = static_cast<int16_t>(value << 1) >> 1;
+            current = round(raw * 2.0f);
             return true;
         }
         return false;
@@ -139,14 +140,16 @@ namespace PowerFeather
 
     bool BQ2562x::getIBAT(int16_t &current)
     {
+        // 0x2000 is an invalid value carried over from bq25622e.
         static constexpr uint16_t invalid = 0x2000;
         uint16_t value = 0;
         if (_readReg(IBAT_ADC, value))
         {
             if (value != invalid)
             {
-                uint16_t origin = (value >= 0x38ad && value <= 0x3fff) ? 0x3fff + 1 : 0;
-                current = round(Util::fromRaw(value, 4.0f, origin));
+                // IBAT_ADC is 14-bit signed (bits 2-15).
+                int16_t raw = static_cast<int16_t>(value << 2) >> 2;
+                current = round(raw * 4.0f);
                 return true;
             }
         }
@@ -422,6 +425,10 @@ namespace PowerFeather
 
     bool BQ2562x::setIbatPk(IbatPkLimit limit)
     {
+        if (limit == IbatPkLimit::Reserved00 || limit == IbatPkLimit::Reserved01)
+        {
+            return false;
+        }
         uint8_t value = static_cast<uint8_t>(limit);
         return _writeReg(Charger_Control_3_IBAT_PK, value);
     }
