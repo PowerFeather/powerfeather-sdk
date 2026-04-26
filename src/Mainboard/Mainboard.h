@@ -790,6 +790,7 @@ namespace PowerFeather
 
 #if POWERFEATHER_ENABLE_PF_STATE_STREAM
         Result testRestoreFuelGaugeLearnedStateAfterPor();
+        Result testClearFuelGaugeInitSignature();
 #endif
 
         static Mainboard &get();

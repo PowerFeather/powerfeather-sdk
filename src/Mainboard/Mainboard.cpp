@@ -463,6 +463,21 @@ namespace PowerFeather
         return Result::InvalidState;
 #endif
     }
+
+    Result Mainboard::testClearFuelGaugeInitSignature()
+    {
+        TRY_LOCK(_mutex);
+        _lastFuelGaugeInitSignature = {};
+        _hasFuelGaugeInitSignature = false;
+        persistedFuelGaugeInitSignature.source = static_cast<uint8_t>(FuelGauge::InitSource::Generic_3V7);
+        persistedFuelGaugeInitSignature.capacityMah = 0;
+        persistedFuelGaugeInitSignature.terminationCurrentMa = 0;
+        persistedFuelGaugeInitSignature.chargeVoltage = 0.0f;
+        persistedFuelGaugeInitSignature.profileHash = 0;
+        persistedFuelGaugeInitSignature.hasSignature = false;
+        persistedFuelGaugeLearnedState.hasState = false;
+        return Result::Ok;
+    }
 #endif
 
     bool Mainboard::_isFuelGaugeEnabled()
@@ -512,12 +527,12 @@ namespace PowerFeather
             signature.source = config.source;
         }
 
-        bool forceReinit = _hasFuelGaugeInitSignature &&
-                           (signature.source != _lastFuelGaugeInitSignature.source ||
-                            signature.capacityMah != _lastFuelGaugeInitSignature.capacityMah ||
-                            signature.terminationCurrentMa != _lastFuelGaugeInitSignature.terminationCurrentMa ||
-                            signature.chargeVoltage != _lastFuelGaugeInitSignature.chargeVoltage ||
-                            signature.profileHash != _lastFuelGaugeInitSignature.profileHash);
+        bool signatureMismatch = signature.source != _lastFuelGaugeInitSignature.source ||
+                                 signature.capacityMah != _lastFuelGaugeInitSignature.capacityMah ||
+                                 signature.terminationCurrentMa != _lastFuelGaugeInitSignature.terminationCurrentMa ||
+                                 signature.chargeVoltage != _lastFuelGaugeInitSignature.chargeVoltage ||
+                                 signature.profileHash != _lastFuelGaugeInitSignature.profileHash;
+        bool forceReinit = !_hasFuelGaugeInitSignature || signatureMismatch;
         initDecisionState.lastInitFuelGaugeHadSignature = hadFuelGaugeInitSignature;
         initDecisionState.lastInitFuelGaugeForceReinit = forceReinit;
         ESP_LOGI(TAG,
