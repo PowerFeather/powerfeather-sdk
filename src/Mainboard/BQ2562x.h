@@ -121,8 +121,12 @@ namespace PowerFeather
 
         enum class BATFETDelay : uint8_t
         {
-            Delay20ms = 0x00,
+            Delay25ms = 0x00,
             Delay10s = 0x01,
+
+            // Backward-compatible alias for the old SDK spelling. The BQ2562x
+            // datasheets define this BATFET_DLY encoding as 25 ms.
+            Delay20ms = Delay25ms,
         };
 
         enum class Adc : uint8_t
