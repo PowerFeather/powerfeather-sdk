@@ -49,6 +49,10 @@
 #include "LC709204F.h"
 #include "MAX17260.h"
 
+#ifndef POWERFEATHER_ENABLE_PF_STATE_STREAM
+#define POWERFEATHER_ENABLE_PF_STATE_STREAM 0
+#endif
+
 namespace PowerFeather
 {
     class Mainboard
@@ -481,10 +485,10 @@ namespace PowerFeather
         /**
          * @brief Measure battery current.
          *
-         * Measures the current to or from the battery during charging and discharging, respectively, using the
-         * charger `IBAT_ADC` measurement path.
+         * Measures the current to or from the battery during charging and discharging, respectively.
          *
-         * This function uses the charger `IBAT_ADC` register on both V1 and V2, with a 4 mA LSb.
+         * On V1, this function uses the charger `IBAT_ADC` register with a 4 mA LSb.
+         * On V2, this function uses the MAX17260 `Current` register with a 0.078125 mA LSb.
          *
          * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          * On V2, power-management I2C remains usable with \a VSQT disabled.
@@ -492,7 +496,10 @@ namespace PowerFeather
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
-         * This function can block for 100 ms.
+         * The battery fuel gauge must be enabled on V2 prior to calling this function, else
+         * \c Result::InvalidState is returned.
+         *
+         * This function can block for 100 ms on V1.
          *
          * @param[out] current Measured battery current in milliamps (mA). If battery is discharging,
          * this value is negative; positive if battery is charging.
@@ -753,6 +760,10 @@ namespace PowerFeather
          */
         FuelGauge &getFuelGauge();
 
+#if POWERFEATHER_ENABLE_PF_STATE_STREAM
+        Result testRestoreFuelGaugeLearnedStateAfterPor();
+#endif
+
         static Mainboard &get();
 
     private:
@@ -766,7 +777,6 @@ namespace PowerFeather
 
         static constexpr int _i2cPort = 1;
         static constexpr uint32_t _i2cFreq = 100000;
-        static constexpr uint32_t _i2cTimeout = 1000;
 
         static constexpr float _defaultMaxChargingCurrent = 50.0f; // minimum charge current at 1C
         static constexpr uint16_t _minChargeableBatteryCapacity = 50;

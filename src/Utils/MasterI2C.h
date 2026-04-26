@@ -60,6 +60,8 @@ namespace PowerFeather
         virtual bool write(uint8_t address, uint8_t reg, const uint8_t *buf, size_t len);
         virtual bool read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len);
 
+        static constexpr int TransferTimeoutMs = 50;
+
     protected:
 #ifndef ARDUINO
         i2c_port_num_t _port;
@@ -80,7 +82,6 @@ namespace PowerFeather
 
         static constexpr uint8_t _firstInvalid7BitAddress = 0x80;
         static constexpr size_t _maxDevices = 8;
-        static constexpr int _transferTimeoutMs = 1000;
 
         bool _getDevice(uint8_t address, i2c_master_dev_handle_t &device);
 

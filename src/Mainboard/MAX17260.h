@@ -113,6 +113,7 @@ namespace PowerFeather
 
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(float &voltage) override;
+        bool getCurrent(float &current);
         bool getRSOC(uint8_t &percent) override;
         bool getTimeToEmpty(uint16_t &minutes) override;
         bool getTimeToFull(uint16_t &minutes) override;
@@ -259,7 +260,7 @@ namespace PowerFeather
         }
         bool initImpl(const InitConfig &config) override;
         bool _verifyDeviceIdentity();
-        bool _initEZConfig(const InitConfig &config, uint8_t modelId);
+        bool _initEZConfig(const InitConfig &config, uint8_t modelId, const LearnedParameters *savedParameters);
         bool _initHardware();
         bool _waitForDNRClear();
         bool _waitForModelRefreshClear();

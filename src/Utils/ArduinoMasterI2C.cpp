@@ -44,7 +44,12 @@ namespace PowerFeather
     {
         _wire = (_port == 0) ? &Wire : &Wire1;
         ESP_LOGD(TAG, "Start Wire%d with sda: %d, scl: %d and freq: %d.", _port, _sdaPin, _sclPin, _freq);
-        return _wire->begin(_sdaPin, _sclPin, _freq);
+        if (!_wire->begin(_sdaPin, _sclPin, _freq))
+        {
+            return false;
+        }
+        _wire->setTimeOut(TransferTimeoutMs);
+        return true;
     }
 
     bool ArduinoMasterI2C::write(uint8_t address, uint8_t reg, const uint8_t *buf, size_t len)

@@ -405,6 +405,66 @@ namespace PowerFeather
         return _fuelGauge;
     }
 
+#if POWERFEATHER_ENABLE_PF_STATE_STREAM
+    Result Mainboard::testRestoreFuelGaugeLearnedStateAfterPor()
+    {
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
+        RET_IF_FALSE(persistedFuelGaugeLearnedState.hasState, Result::NotReady);
+
+        FuelGauge::InitConfig config;
+        if (_usesProfile)
+        {
+            config.source = FuelGauge::InitSource::Profile_Max17260;
+            config.data.profile.model = nullptr;
+        }
+        else
+        {
+            config.data.capacity.capacityMah = _batteryCapacity;
+            config.data.capacity.terminationCurrentMa = _terminationCurrent;
+            config.data.capacity.chargeVoltage = _chargeVoltage;
+            switch (_batteryType)
+            {
+                case BatteryType::Generic_3V7:
+                    config.source = FuelGauge::InitSource::Generic_3V7;
+                    break;
+                case BatteryType::ICR18650_26H:
+                    config.source = FuelGauge::InitSource::ICR18650_26H;
+                    break;
+                case BatteryType::UR18650ZY:
+                    config.source = FuelGauge::InitSource::UR18650ZY;
+                    break;
+                case BatteryType::Generic_LFP:
+                    config.source = FuelGauge::InitSource::Generic_LFP;
+                    break;
+            }
+        }
+        config.tsenseEnabled = !_fuelGaugeUsingExternalTemp;
+
+        FuelGaugeImpl &typedGauge = static_cast<FuelGaugeImpl &>(getFuelGauge());
+        FuelGaugeRestoreGuard<FuelGaugeImpl> restoreGuard(typedGauge);
+
+        MAX17260::LearnedParameters parameters = {};
+        parameters.fullCapRep = persistedFuelGaugeLearnedState.fullCapRep;
+        parameters.fullCapNom = persistedFuelGaugeLearnedState.fullCapNom;
+        parameters.rComp0 = persistedFuelGaugeLearnedState.rComp0;
+        parameters.tempCo = persistedFuelGaugeLearnedState.tempCo;
+        parameters.cycles = persistedFuelGaugeLearnedState.cycles;
+        typedGauge.setRestoreLearnedParameters(parameters);
+
+        RET_IF_FALSE(typedGauge.init(config, true), Result::Failure);
+        RET_IF_FALSE(FuelGaugeLearnedStateHelper<FuelGaugeImpl>::captureAfterInit(
+                         typedGauge, persistedFuelGaugeLearnedState),
+                     Result::Failure);
+        return Result::Ok;
+#else
+        return Result::InvalidState;
+#endif
+    }
+#endif
+
     bool Mainboard::_isFuelGaugeEnabled()
     {
         bool enabled = false;
@@ -489,7 +549,7 @@ namespace PowerFeather
                          Result::Failure);
             RET_IF_FALSE(FuelGaugeLearnedStateHelper<FuelGaugeImpl>::syncBeforeInit(
                              typedGauge,
-                             config.source == FuelGauge::InitSource::Profile_Max17260,
+                             true,
                              persistedFuelGaugeLearnedState),
                          Result::Failure);
         }
@@ -517,11 +577,6 @@ namespace PowerFeather
                          typedGauge, persistedFuelGaugeLearnedState),
                      Result::Failure);
 #endif
-        if (!hadFuelGaugeInitSignature || forceReinit)
-        {
-            persistedFuelGaugeLearnedState.hasState = config.source == FuelGauge::InitSource::Profile_Max17260 &&
-                                                      persistedFuelGaugeLearnedState.hasState;
-        }
         _lastFuelGaugeInitSignature = signature;
         _hasFuelGaugeInitSignature = true;
         persistedFuelGaugeInitSignature.source = static_cast<uint8_t>(signature.source);
@@ -629,7 +684,7 @@ namespace PowerFeather
         {
             ESP_LOGW(TAG, "Charger watchdog enabled, re-applying configuration.");
             RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
-            RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxChargingCurrent), Result::Failure);
+            RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxIINDPMCurrent), Result::Failure);
             RET_IF_FALSE(getCharger().enableTS(_tsEnabled), Result::Failure);
             RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
             RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
@@ -651,7 +706,6 @@ namespace PowerFeather
             }
             if (_batteryCapacity)
             {
-                RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxIINDPMCurrent), Result::Failure);
                 RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
             }
             RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltage), Result::Failure);
@@ -1273,9 +1327,16 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_ERR(_initFuelGauge());
+        RET_IF_FALSE(static_cast<MAX17260 &>(getFuelGauge()).getCurrent(current), Result::Failure);
+        ESP_LOGD(TAG, "Measured battery current from fuel gauge: %f mA.", current);
+#else
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
         ESP_LOGD(TAG, "Measured battery current from charger: %f mA.", current);
+#endif
         return Result::Ok;
     }
 
