@@ -1334,6 +1334,13 @@ namespace PowerFeather
 #else
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
+        bool chargingEnabled = false;
+        RET_IF_FALSE(getCharger().getChargingEnabled(chargingEnabled), Result::Failure);
+        if (!chargingEnabled && current == 0.0f)
+        {
+            ESP_LOGD(TAG, "V1 charger battery-current ADC is unavailable while charging is disabled.");
+            return Result::NotReady;
+        }
         ESP_LOGD(TAG, "Measured battery current from charger: %f mA.", current);
 #endif
         return Result::Ok;
@@ -1388,9 +1395,21 @@ namespace PowerFeather
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
 
+        bool discharging = true;
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
         float ibat = 0.0f;
         RET_IF_ERR(getBatteryCurrent(ibat));
-        bool discharging = ibat <= 0.0f;
+        discharging = ibat <= 0.0f;
+#else
+        bool chargingEnabled = false;
+        RET_IF_FALSE(getCharger().getChargingEnabled(chargingEnabled), Result::Failure);
+        if (chargingEnabled)
+        {
+            float ibat = 0.0f;
+            RET_IF_ERR(getBatteryCurrent(ibat));
+            discharging = ibat <= 0.0f;
+        }
+#endif
 
         // Get the time-to-empty or time-to-full depending on battery is charging
         // or discharging.

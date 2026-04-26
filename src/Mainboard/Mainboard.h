@@ -489,7 +489,9 @@ namespace PowerFeather
          *
          * Measures the current to or from the battery during charging and discharging, respectively.
          *
-         * On V1, this function uses the charger `IBAT_ADC` register with a 4 mA LSb.
+         * On V1, this function uses the charger `IBAT_ADC` register with a 4 mA LSb. The V1
+         * charger reports an ambiguous 0 mA while charging is disabled; in that case this
+         * function returns \c Result::NotReady instead of reporting a misleading zero current.
          * On V2, this function uses the MAX17260 `Current` register with a 0.078125 mA LSb.
          *
          * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
@@ -504,7 +506,8 @@ namespace PowerFeather
          * This function can block for 100 ms on V1.
          *
          * @param[out] current Measured battery current in milliamps (mA). If battery is discharging,
-         * this value is negative; positive if battery is charging.
+         * this value is negative; positive if battery is charging. On V1, this signed contract
+         * applies only when the charger provides a valid `IBAT_ADC` reading.
          *
          * @return Result Returns \c Result::Ok if the battery current was measured successfully;
          * returns a value other than \c Result::Ok if not.
