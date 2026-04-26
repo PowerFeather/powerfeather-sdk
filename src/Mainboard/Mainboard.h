@@ -263,7 +263,9 @@ namespace PowerFeather
          * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
-         * This function can block for 100 ms.
+         * This function can block for about 100 ms on a normal charger ADC refresh, plus
+         * power-management I2C transfer time. I2C faults can add one or more 50 ms transaction
+         * timeout windows before the function returns failure.
          *
          * @param[out] voltage The measured voltage in volts (V).
          *
@@ -281,7 +283,9 @@ namespace PowerFeather
          * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
-         * This function can block for 100 ms.
+         * This function can block for about 100 ms on a normal charger ADC refresh, plus
+         * power-management I2C transfer time. I2C faults can add one or more 50 ms transaction
+         * timeout windows before the function returns failure.
          *
          * @param[out] current The measured current draw in milliamperes (mA).
          *
@@ -475,7 +479,9 @@ namespace PowerFeather
          * A non-zero \p capacity or \p type of \c BatteryType::ICR18650_26H / \c BatteryType::UR18650ZY
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
-         * This function can block for 100 ms.
+         * This function can block for about 100 ms plus power-management I2C transfer time when
+         * the charger ADC fallback path is used. I2C faults can add one or more 50 ms transaction
+         * timeout windows before the function returns failure.
          *
          * @param[out] voltage Measured battery voltage in volts (V).
          *
@@ -503,7 +509,9 @@ namespace PowerFeather
          * The battery fuel gauge must be enabled on V2 prior to calling this function, else
          * \c Result::InvalidState is returned.
          *
-         * This function can block for 100 ms on V1.
+         * This function can block for about 100 ms on a normal V1 charger ADC refresh, plus
+         * power-management I2C transfer time. I2C faults can add one or more 50 ms transaction
+         * timeout windows before the function returns failure.
          *
          * @param[out] current Measured battery current in milliamps (mA). If battery is discharging,
          * this value is negative; positive if battery is charging. On V1, this signed contract
@@ -618,7 +626,9 @@ namespace PowerFeather
          * Battery temperature measurement must be enabled prior calling this function, else \c Result::InvalidState
          * is returned.
          *
-         * This function can block for 100 ms.
+         * This function can block for about 100 ms on a normal charger ADC refresh, plus
+         * power-management I2C transfer time. I2C faults can add one or more 50 ms transaction
+         * timeout windows before the function returns failure.
          *
          * @param[out] celsius Measured battery temperature in celsius.
          *
