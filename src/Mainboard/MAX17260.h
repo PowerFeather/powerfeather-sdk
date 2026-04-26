@@ -222,7 +222,8 @@ namespace PowerFeather
         static constexpr uint16_t HibCfgBit_EnHib = 1u << 15;
         static constexpr uint16_t ModelCfgBit_Refresh = 1u << 15;
         static constexpr uint16_t ModelCfgBit_VChg = 1u << 10;
-        static constexpr uint16_t ModelCfgMask_ModelID = 0x7u << 5;
+        static constexpr uint8_t ModelCfgShift_ModelID = 4;
+        static constexpr uint16_t ModelCfgMask_ModelID = 0x7u << ModelCfgShift_ModelID;
         static constexpr float ModelCfgHighVoltageThreshold = 4.275f;
         static constexpr uint16_t ConfigBit_TSel = 1u << 15;
         static constexpr uint16_t ConfigBit_TEn = 1u << 9;
