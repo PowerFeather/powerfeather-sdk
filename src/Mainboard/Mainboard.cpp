@@ -37,6 +37,7 @@
 #include <cstdint>
 #include <cstring>
 #include <math.h>
+#include <type_traits>
 
 #include <soc/reset_reasons.h>
 #include <esp_log.h>
@@ -80,16 +81,66 @@ namespace PowerFeather
 #endif
         }
 
-        static uint32_t fnv1aHash(const void *data, size_t size)
+        static uint32_t fnv1aAppendByte(uint32_t hash, uint8_t byte)
         {
-            const uint8_t *bytes = static_cast<const uint8_t *>(data);
-            uint32_t hash = 2166136261u;
-            for (size_t i = 0; i < size; ++i)
-            {
-                hash ^= bytes[i];
-                hash *= 16777619u;
-            }
+            hash ^= byte;
+            hash *= 16777619u;
             return hash;
+        }
+
+        static uint32_t fnv1aAppendU16(uint32_t hash, uint16_t value)
+        {
+            hash = fnv1aAppendByte(hash, static_cast<uint8_t>(value & 0xFFu));
+            return fnv1aAppendByte(hash, static_cast<uint8_t>(value >> 8));
+        }
+
+        static uint32_t fnv1aAppendU32(uint32_t hash, uint32_t value)
+        {
+            hash = fnv1aAppendByte(hash, static_cast<uint8_t>(value & 0xFFu));
+            hash = fnv1aAppendByte(hash, static_cast<uint8_t>((value >> 8) & 0xFFu));
+            hash = fnv1aAppendByte(hash, static_cast<uint8_t>((value >> 16) & 0xFFu));
+            return fnv1aAppendByte(hash, static_cast<uint8_t>(value >> 24));
+        }
+
+        static uint32_t fnv1aAppendFloat(uint32_t hash, float value)
+        {
+            static_assert(sizeof(float) == sizeof(uint32_t), "Unsupported float size.");
+            uint32_t bits = 0;
+            std::memcpy(&bits, &value, sizeof(bits));
+            return fnv1aAppendU32(hash, bits);
+        }
+
+        static uint32_t hashFuelGaugeProfile(const MAX17260::Model &profile)
+        {
+            static_assert(std::is_trivially_copyable<MAX17260::Model>::value,
+                          "MAX17260::Model must remain trivially copyable.");
+
+            uint32_t hash = 2166136261u;
+            for (uint16_t value : profile.modelTable)
+            {
+                hash = fnv1aAppendU16(hash, value);
+            }
+            hash = fnv1aAppendU16(hash, profile.rComp0);
+            hash = fnv1aAppendU16(hash, profile.tempCo);
+            hash = fnv1aAppendU16(hash, profile.rCompSeg);
+            hash = fnv1aAppendU16(hash, profile.designCap);
+            hash = fnv1aAppendU16(hash, profile.ichgTerm);
+            hash = fnv1aAppendU16(hash, profile.vEmpty);
+            hash = fnv1aAppendU16(hash, profile.modelCfg);
+            hash = fnv1aAppendU16(hash, profile.learnCfg);
+            hash = fnv1aAppendU16(hash, profile.relaxCfg);
+            hash = fnv1aAppendU16(hash, profile.config);
+            hash = fnv1aAppendU16(hash, profile.config2);
+            hash = fnv1aAppendU16(hash, profile.miscCfg);
+            hash = fnv1aAppendU16(hash, profile.fullSocThr);
+            hash = fnv1aAppendU16(hash, profile.tGain);
+            hash = fnv1aAppendU16(hash, profile.tOff);
+            hash = fnv1aAppendU16(hash, profile.curve);
+            for (uint16_t value : profile.qrTable)
+            {
+                hash = fnv1aAppendU16(hash, value);
+            }
+            return fnv1aAppendFloat(hash, profile.chargeVoltage);
         }
 
         struct ChargerInitSignature
@@ -829,7 +880,7 @@ namespace PowerFeather
         _batteryCapacity = capacity;
         _batteryType = type;
         _usesProfile = useProfile;
-        _profileHash = useProfile ? fnv1aHash(profile, sizeof(*profile)) : 0;
+        _profileHash = useProfile ? hashFuelGaugeProfile(*profile) : 0;
 
         // Set termination current to C / 10 for built-in profiles, or to the
         // characterized fuel-gauge value for custom MAX17260 profiles.
