@@ -1061,15 +1061,9 @@ namespace PowerFeather
             // On wdOn == true (first init, or chip POR since last init), it applies the
             // full configuration using the software state set above — which on a warm
             // boot is the user's previous-session values rehydrated from RTC, not the
-            // hardcoded defaults. On wdOn == false (chip retained state), it's a no-op
-            // and the redundant setChargeVoltageLimit below is the belt-and-braces write.
+            // hardcoded defaults. On wdOn == false (chip retained state), it's a no-op.
             bool chargerConfigAppliedByWd = false;
             RET_IF_ERR(_reapplyChargerConfig(&chargerConfigAppliedByWd));
-
-            // Enforce charge voltage target on every init path, including the wdOn==false
-            // path (chip retained state across sleep but we still want to rewrite VREG
-            // in case the BatteryType chemistry selection changed since last session).
-            RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltage), Result::Failure);
 
             if (_batteryCapacity && !chargingSupported)
             {
@@ -1095,6 +1089,13 @@ namespace PowerFeather
                 {
                     RET_IF_ERR(_applyChargerConfig());
                 }
+            }
+            else if (!chargerConfigAppliedByWd)
+            {
+                // Same signature and retained charger state: rewrite only VREG so
+                // the charge-voltage target is still enforced without duplicating
+                // the full policy write on cold boot or signature mismatch.
+                RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltage), Result::Failure);
             }
 
             // If battery capacity is not 0, initialize the fuel gauge. This can fail if during
