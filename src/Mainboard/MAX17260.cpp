@@ -238,7 +238,8 @@ namespace PowerFeather
         if (!writeRegister(Register::DesignCap, _capacityMahToDesignCapRaw(config.data.capacity.capacityMah))) return false;
         // This will be overwritten by _finalizeInit() with potentially better accuracy
         if (!writeRegister(Register::IChgTerm, _currentMaToRaw(config.data.capacity.terminationCurrentMa))) return false;
-        if (!writeRegister(Register::VEmpty, VEmpty_Default)) return false;
+        const uint16_t vEmpty = (modelId == ModelID_LFP) ? VEmpty_LFP : VEmpty_Default;
+        if (!writeRegister(Register::VEmpty, vEmpty)) return false;
 
         uint16_t modelCfg = ModelCfgBit_Refresh;
         modelCfg |= static_cast<uint16_t>((modelId & 0x7u) << 5);

@@ -217,6 +217,7 @@ namespace PowerFeather
         static constexpr uint16_t HibernateExit_Command2 = 0x0000;
         static constexpr uint16_t ShdnTimer_ShutdownWithin22s = 0x001E;
         static constexpr uint16_t VEmpty_Default = 0xA561;
+        static constexpr uint16_t VEmpty_LFP = 0x7D4B; // VE = 2.50 V, VR = 3.00 V.
 
         static constexpr uint16_t HibCfgBit_EnHib = 1u << 15;
         static constexpr uint16_t ModelCfgBit_Refresh = 1u << 15;
