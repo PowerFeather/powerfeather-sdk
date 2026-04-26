@@ -52,6 +52,11 @@ namespace PowerFeather
         {
             return static_cast<uint16_t>(std::lround(value / step));
         }
+
+        static uint16_t toRawFloor(float value, float step)
+        {
+            return static_cast<uint16_t>(std::floor(value / step));
+        }
     }
 
     template <typename T>
@@ -366,7 +371,7 @@ namespace PowerFeather
     {
         if (current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent)
         {
-            uint16_t value = toRawNearest(current, 40.0f);
+            uint16_t value = toRawFloor(current, 40.0f);
             return _writeReg(Charge_Current_Limit_ICHG, value);
         }
         return false;
