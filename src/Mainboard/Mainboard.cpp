@@ -114,6 +114,8 @@ namespace PowerFeather
         {
             static_assert(std::is_trivially_copyable<MAX17260::Model>::value,
                           "MAX17260::Model must remain trivially copyable.");
+            static_assert(sizeof(MAX17260::Model) == 108,
+                          "MAX17260::Model changed; update hashFuelGaugeProfile().");
 
             uint32_t hash = 2166136261u;
             for (uint16_t value : profile.modelTable)

@@ -54,6 +54,9 @@ namespace PowerFeather
 
         struct Model
         {
+            // Mainboard.cpp hashes these fields member-by-member to detect
+            // custom profile changes. If this layout changes, update
+            // hashFuelGaugeProfile() at the same time.
             std::array<uint16_t, 32> modelTable{};
             uint16_t rComp0{0};
             uint16_t tempCo{0};
