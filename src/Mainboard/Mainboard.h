@@ -148,7 +148,7 @@ namespace PowerFeather
          *  - \a 3V3: enabled
          *  - \a VSQT: enabled
          *  - Charging: disabled
-         *  - Maximum battery charging current: 50 mA
+         *  - Maximum battery charging current request: 50 mA (programs 40 mA after BQ step quantization)
          *  - Maintain supply voltage: 4.6 V
          *  - Fuel gauge: enabled (use \c init() to disable)
          *  - Battery temperature sense: disabled
@@ -317,6 +317,8 @@ namespace PowerFeather
          * The battery charger dynamically regulates the current drawn from the supply to prevent it from collapsing under
          * the set voltage to maintain. This is useful for specifying the maximum power point (MPP) voltage if using a
          * solar panel; allowing the battery charger to extract power from the panel at near-MPPT effectiveness.
+         * This programs the charger's VINDPM request. The charger's effective regulation point can be higher when
+         * its battery-tracking behavior applies.
          *
          * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          * On V2, power-management I2C remains usable with \a VSQT disabled.
@@ -414,6 +416,8 @@ namespace PowerFeather
          * This is useful for batteries with small capacities, since it is not recommended to charge a battery at
          * more than 1C. For example, when charging a 550 mAh battery, a current of no more than 550 mA is
          * recommended. That current limit of 550 mA can be specified using this function.
+         * The charger encodes this limit in 40 mA steps; values between steps are rounded down so the programmed
+         * charger limit does not exceed the requested maximum.
          *
          * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
          * On V2, power-management I2C remains usable with \a VSQT disabled.
@@ -423,6 +427,7 @@ namespace PowerFeather
          * On V2, this function is not available for configured battery capacities below 50 mAh.
          *
          * @param[in] current The maximum charging current in milliamps (mA), from 40 mA to 2000 mA.
+         * Values between 40 mA register steps are rounded down.
          *
          * @return Result Returns \c Result::Ok if the maximum battery charging current was set successfully;
          * returns a value other than \c Result::Ok if not.
