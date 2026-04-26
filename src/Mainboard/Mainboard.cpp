@@ -710,8 +710,13 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::_reapplyChargerConfig()
+    Result Mainboard::_reapplyChargerConfig(bool *applied)
     {
+        if (applied)
+        {
+            *applied = false;
+        }
+
         bool wdOn = true;
         RET_IF_FALSE(getCharger().getWD(wdOn), Result::Failure);
 
@@ -719,6 +724,10 @@ namespace PowerFeather
         {
             ESP_LOGW(TAG, "Charger watchdog enabled, re-applying configuration.");
             RET_IF_ERR(_applyChargerConfig());
+            if (applied)
+            {
+                *applied = true;
+            }
         }
 
         return Result::Ok;
@@ -979,7 +988,8 @@ namespace PowerFeather
             // boot is the user's previous-session values rehydrated from RTC, not the
             // hardcoded defaults. On wdOn == false (chip retained state), it's a no-op
             // and the redundant setChargeVoltageLimit below is the belt-and-braces write.
-            RET_IF_ERR(_reapplyChargerConfig());
+            bool chargerConfigAppliedByWd = false;
+            RET_IF_ERR(_reapplyChargerConfig(&chargerConfigAppliedByWd));
 
             // Enforce charge voltage target on every init path, including the wdOn==false
             // path (chip retained state across sleep but we still want to rewrite VREG
@@ -1006,7 +1016,10 @@ namespace PowerFeather
                 // live state even though software intentionally selected safe
                 // defaults. Push the full software-selected policy into the
                 // retained hardware as well.
-                RET_IF_ERR(_applyChargerConfig());
+                if (!chargerConfigAppliedByWd)
+                {
+                    RET_IF_ERR(_applyChargerConfig());
+                }
             }
 
             // If battery capacity is not 0, initialize the fuel gauge. This can fail if during
@@ -1334,6 +1347,7 @@ namespace PowerFeather
         RET_IF_FALSE(getCharger().getChargingEnabled(chargingEnabled), Result::Failure);
         if (!chargingEnabled && current == 0.0f)
         {
+            // BQ25628E Table 8-35 specifies that IBAT_ADC resets to zero when EN_CHG=0.
             ESP_LOGD(TAG, "V1 charger battery-current ADC is unavailable while charging is disabled.");
             return Result::NotReady;
         }

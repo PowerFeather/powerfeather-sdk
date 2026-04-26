@@ -264,8 +264,9 @@ namespace PowerFeather
          * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * This function can block for about 100 ms on a normal charger ADC refresh, plus
-         * power-management I2C transfer time. I2C faults can add one or more 50 ms transaction
-         * timeout windows before the function returns failure.
+         * power-management I2C transfer time. I2C faults can add several 50 ms transaction
+         * timeout windows before the function returns failure; tasks contending for the SDK
+         * mutex are bounded by the mutex timeout while this call waits for the ADC conversion.
          *
          * @param[out] voltage The measured voltage in volts (V).
          *
@@ -284,8 +285,9 @@ namespace PowerFeather
          * On V2, power-management I2C remains usable with \a VSQT disabled.
          *
          * This function can block for about 100 ms on a normal charger ADC refresh, plus
-         * power-management I2C transfer time. I2C faults can add one or more 50 ms transaction
-         * timeout windows before the function returns failure.
+         * power-management I2C transfer time. I2C faults can add several 50 ms transaction
+         * timeout windows before the function returns failure; tasks contending for the SDK
+         * mutex are bounded by the mutex timeout while this call waits for the ADC conversion.
          *
          * @param[out] current The measured current draw in milliamperes (mA).
          *
@@ -480,8 +482,9 @@ namespace PowerFeather
          * should have been specified when \c MainBoard::init was called, else \c Result::InvalidState is returned.
          *
          * This function can block for about 100 ms plus power-management I2C transfer time when
-         * the charger ADC fallback path is used. I2C faults can add one or more 50 ms transaction
-         * timeout windows before the function returns failure.
+         * the charger ADC fallback path is used. I2C faults can add several 50 ms transaction
+         * timeout windows before the function returns failure; tasks contending for the SDK
+         * mutex are bounded by the mutex timeout while this call waits for the ADC conversion.
          *
          * @param[out] voltage Measured battery voltage in volts (V).
          *
@@ -495,9 +498,10 @@ namespace PowerFeather
          *
          * Measures the current to or from the battery during charging and discharging, respectively.
          *
-         * On V1, this function uses the charger `IBAT_ADC` register with a 4 mA LSb. The V1
-         * charger reports an ambiguous 0 mA while charging is disabled; in that case this
-         * function returns \c Result::NotReady instead of reporting a misleading zero current.
+         * On V1, this function uses the charger `IBAT_ADC` register with a 4 mA LSb. BQ25628E
+         * Table 8-35 specifies that `IBAT_ADC` resets to zero when charging is disabled; in
+         * that case this function returns \c Result::NotReady instead of reporting a
+         * misleading zero current.
          * On V2, this function uses the MAX17260 `Current` register with a 0.078125 mA LSb.
          *
          * On V1, \a VSQT must be enabled prior to calling this function, else \c Result::InvalidState is returned.
@@ -510,8 +514,9 @@ namespace PowerFeather
          * \c Result::InvalidState is returned.
          *
          * This function can block for about 100 ms on a normal V1 charger ADC refresh, plus
-         * power-management I2C transfer time. I2C faults can add one or more 50 ms transaction
-         * timeout windows before the function returns failure.
+         * power-management I2C transfer time. I2C faults can add several 50 ms transaction
+         * timeout windows before the function returns failure; tasks contending for the SDK
+         * mutex are bounded by the mutex timeout while this call waits for the ADC conversion.
          *
          * @param[out] current Measured battery current in milliamps (mA). If battery is discharging,
          * this value is negative; positive if battery is charging. On V1, this signed contract
@@ -627,8 +632,9 @@ namespace PowerFeather
          * is returned.
          *
          * This function can block for about 100 ms on a normal charger ADC refresh, plus
-         * power-management I2C transfer time. I2C faults can add one or more 50 ms transaction
-         * timeout windows before the function returns failure.
+         * power-management I2C transfer time. I2C faults can add several 50 ms transaction
+         * timeout windows before the function returns failure; tasks contending for the SDK
+         * mutex are bounded by the mutex timeout while this call waits for the ADC conversion.
          *
          * @param[out] celsius Measured battery temperature in celsius.
          *
@@ -853,7 +859,7 @@ namespace PowerFeather
         Result _initInternal(uint16_t capacity, BatteryType type, const MAX17260::Model *profile);
         Result _udpateChargerADC();
         Result _applyChargerConfig();
-        Result _reapplyChargerConfig();
+        Result _reapplyChargerConfig(bool *applied = nullptr);
         Result _getBatteryCurrentLocked(float &current);
 
         bool _isFuelGaugeEnabled();
