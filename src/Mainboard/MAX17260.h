@@ -72,8 +72,9 @@ namespace PowerFeather
             uint16_t tOff{0};
             uint16_t curve{0};
             std::array<uint16_t, 4> qrTable{{0, 0, 0, 0}};
-            // Charger CV target used by Mainboard::init(const Model&), in V.
-            // Required by profile init: valid range is 3.5-4.8 V.
+            // Charger VREG/CV target used by Mainboard::init(const Model&), in V.
+            // Required by profile init: valid range is 3.5-4.8 V. The caller
+            // must choose a value that is safe for the profiled cell chemistry.
             float chargeVoltage{0.0f};
         };
 
