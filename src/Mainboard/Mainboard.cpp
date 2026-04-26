@@ -675,6 +675,41 @@ namespace PowerFeather
         return Result::Ok;
     }
 
+    Result Mainboard::_applyChargerConfig()
+    {
+        RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
+        RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxIINDPMCurrent), Result::Failure);
+        RET_IF_FALSE(getCharger().enableTS(_tsEnabled), Result::Failure);
+        RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
+        RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
+        RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
+        RET_IF_FALSE(getCharger().setTopOff(BQ2562x::TopOffTimer::Timer17Min), Result::Failure);
+        // BQ25622E/BQ25628E currently document only 6 A and 12 A IBAT_PK values.
+        RET_IF_FALSE(getCharger().setIbatPk(BQ2562x::IbatPkLimit::Limit6A), Result::Failure);
+        RET_IF_FALSE(getCharger().setTH456(BQ2562x::TH456Setting::TH4_35_TH5_40_TH6_50), Result::Failure);
+        RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Precool, BQ2562x::TempIset::Ichg40), Result::Failure);
+        RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Prewarm, BQ2562x::TempIset::Ichg40), Result::Failure);
+        RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Cool, BQ2562x::TempIset::Ichg20), Result::Failure);
+        RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Warm, BQ2562x::TempIset::Ichg20), Result::Failure);
+        // Mask all interrupts first so POR-default unmasks don't leak through,
+        // then selectively re-enable only the ones the SDK actually uses.
+        RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
+        if (_tsEnabled)
+        {
+            RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, true), Result::Failure);
+        }
+        if (_batteryCapacity)
+        {
+            RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
+        }
+        RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltage), Result::Failure);
+        RET_IF_FALSE(getCharger().setVINDPM(_vindpm), Result::Failure);
+        RET_IF_FALSE(getCharger().setWD(BQ2562x::WatchdogTimer::Disabled), Result::Failure);
+        RET_IF_FALSE(getCharger().enableCharging(_chargingEnabled), Result::Failure);
+
+        return Result::Ok;
+    }
+
     Result Mainboard::_reapplyChargerConfig()
     {
         bool wdOn = true;
@@ -683,35 +718,7 @@ namespace PowerFeather
         if (wdOn)
         {
             ESP_LOGW(TAG, "Charger watchdog enabled, re-applying configuration.");
-            RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
-            RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxIINDPMCurrent), Result::Failure);
-            RET_IF_FALSE(getCharger().enableTS(_tsEnabled), Result::Failure);
-            RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
-            RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
-            RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
-            RET_IF_FALSE(getCharger().setTopOff(BQ2562x::TopOffTimer::Timer17Min), Result::Failure);
-            // BQ25622E/BQ25628E currently document only 6 A and 12 A IBAT_PK values.
-            RET_IF_FALSE(getCharger().setIbatPk(BQ2562x::IbatPkLimit::Limit6A), Result::Failure);
-            RET_IF_FALSE(getCharger().setTH456(BQ2562x::TH456Setting::TH4_35_TH5_40_TH6_50), Result::Failure);
-            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Precool, BQ2562x::TempIset::Ichg40), Result::Failure);
-            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Prewarm, BQ2562x::TempIset::Ichg40), Result::Failure);
-            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Cool, BQ2562x::TempIset::Ichg20), Result::Failure);
-            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Warm, BQ2562x::TempIset::Ichg20), Result::Failure);
-            // Mask all interrupts first so POR-default unmasks don't leak through,
-            // then selectively re-enable only the ones the SDK actually uses.
-            RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
-            if (_tsEnabled)
-            {
-                RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, true), Result::Failure);
-            }
-            if (_batteryCapacity)
-            {
-                RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
-            }
-            RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltage), Result::Failure);
-            RET_IF_FALSE(getCharger().setVINDPM(_vindpm), Result::Failure);
-            RET_IF_FALSE(getCharger().setWD(BQ2562x::WatchdogTimer::Disabled), Result::Failure);
-            RET_IF_FALSE(getCharger().enableCharging(_chargingEnabled), Result::Failure);
+            RET_IF_ERR(_applyChargerConfig());
         }
 
         return Result::Ok;
@@ -997,17 +1004,9 @@ namespace PowerFeather
                 // On a cold boot or a warm boot with changed battery/profile
                 // inputs, the charger may have retained the previous session's
                 // live state even though software intentionally selected safe
-                // defaults. Push those software-selected values into the
+                // defaults. Push the full software-selected policy into the
                 // retained hardware as well.
-                RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
-                RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
-                if (_batteryCapacity)
-                {
-                    RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
-                }
-                RET_IF_FALSE(getCharger().enableTS(_tsEnabled), Result::Failure);
-                RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, false), Result::Failure);
-                RET_IF_FALSE(getCharger().setVINDPM(_vindpm), Result::Failure);
+                RET_IF_ERR(_applyChargerConfig());
             }
 
             // If battery capacity is not 0, initialize the fuel gauge. This can fail if during

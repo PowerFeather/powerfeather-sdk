@@ -839,6 +839,7 @@ namespace PowerFeather
         uint16_t _capacityFromProfile(const MAX17260::Model &profile) const;
         Result _initInternal(uint16_t capacity, BatteryType type, const MAX17260::Model *profile);
         Result _udpateChargerADC();
+        Result _applyChargerConfig();
         Result _reapplyChargerConfig();
 
         bool _isFuelGaugeEnabled();
