@@ -184,6 +184,8 @@ namespace PowerFeather
          * This value is applied directly to the charger VREG/CV limit. Accepted range is 3.5-4.8 V.
          * The SDK does not infer a safe charge voltage from the custom model data; ensure this value
          * matches the connected cell chemistry because an incorrect value can overcharge the cell.
+         * The profile's \c ichgTerm is also applied to the charger termination-current setting after
+         * conversion from MAX17260 register units; it must correspond to 5-310 mA.
          *
          * @param[in] profile MAX17260 model profile.
          *

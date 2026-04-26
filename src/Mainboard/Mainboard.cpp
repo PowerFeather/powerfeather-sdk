@@ -816,11 +816,20 @@ namespace PowerFeather
         _usesProfile = useProfile;
         _profileHash = useProfile ? fnv1aHash(profile, sizeof(*profile)) : 0;
 
-        // Set termination current to C / 10, or within limits of the IC.
+        // Set termination current to C / 10 for built-in profiles, or to the
+        // characterized fuel-gauge value for custom MAX17260 profiles.
         uint16_t minCurrent = BQ2562x::MinITERMCurrent;
         uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
-        _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
-        _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
+        if (useProfile)
+        {
+            _terminationCurrent = MAX17260::ichgTermRawToMa(profile->ichgTerm);
+            RET_IF_FALSE(_terminationCurrent >= minCurrent && _terminationCurrent <= maxCurrent, Result::InvalidArg);
+        }
+        else
+        {
+            _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
+            _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
+        }
         ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
         float chargeVoltage = 4.2f;

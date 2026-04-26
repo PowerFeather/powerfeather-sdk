@@ -111,6 +111,7 @@ namespace PowerFeather
         bool setModelID(uint8_t modelId);
         bool loadModel(const Model &model);
         void setProfile(const Model &model);
+        static uint16_t ichgTermRawToMa(uint16_t raw);
 
         bool getEnabled(bool &enabled) override;
         bool getCellVoltage(float &voltage) override;

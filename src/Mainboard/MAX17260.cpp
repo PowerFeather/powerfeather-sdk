@@ -141,6 +141,14 @@ namespace PowerFeather
         return static_cast<uint16_t>(std::min<uint32_t>(raw, 0xFFFFu));
     }
 
+    uint16_t MAX17260::ichgTermRawToMa(uint16_t raw)
+    {
+        // Inverse of _currentMaToRaw(): mA = raw * 25 / (RSENSE_mOhm * 16).
+        static constexpr uint32_t denom = static_cast<uint32_t>(SenseResistorMilliohms) * 16u;
+        uint32_t scaled = static_cast<uint32_t>(raw) * 25u + (denom / 2u);
+        return static_cast<uint16_t>(std::min<uint32_t>(scaled / denom, 0xFFFFu));
+    }
+
     bool MAX17260::probe()
     {
         uint16_t value = 0;
