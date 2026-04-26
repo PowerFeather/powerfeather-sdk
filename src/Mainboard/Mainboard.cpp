@@ -1320,12 +1320,8 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::getBatteryCurrent(float &current)
+    Result Mainboard::_getBatteryCurrentLocked(float &current)
     {
-        TRY_LOCK(_mutex);
-        RET_IF_FALSE(_initDone, Result::InvalidState);
-        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
-        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
@@ -1344,6 +1340,15 @@ namespace PowerFeather
         ESP_LOGD(TAG, "Measured battery current from charger: %f mA.", current);
 #endif
         return Result::Ok;
+    }
+
+    Result Mainboard::getBatteryCurrent(float &current)
+    {
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
+        RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
+        return _getBatteryCurrentLocked(current);
     }
 
     Result Mainboard::getBatteryCharge(uint8_t &percent)
@@ -1398,7 +1403,7 @@ namespace PowerFeather
         bool discharging = true;
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
         float ibat = 0.0f;
-        RET_IF_ERR(getBatteryCurrent(ibat));
+        RET_IF_ERR(_getBatteryCurrentLocked(ibat));
         discharging = ibat <= 0.0f;
 #else
         bool chargingEnabled = false;
@@ -1406,7 +1411,7 @@ namespace PowerFeather
         if (chargingEnabled)
         {
             float ibat = 0.0f;
-            RET_IF_ERR(getBatteryCurrent(ibat));
+            RET_IF_ERR(_getBatteryCurrentLocked(ibat));
             discharging = ibat <= 0.0f;
         }
 #endif

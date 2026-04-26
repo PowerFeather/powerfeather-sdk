@@ -854,6 +854,7 @@ namespace PowerFeather
         Result _udpateChargerADC();
         Result _applyChargerConfig();
         Result _reapplyChargerConfig();
+        Result _getBatteryCurrentLocked(float &current);
 
         bool _isFuelGaugeEnabled();
         Result _initFuelGauge();
