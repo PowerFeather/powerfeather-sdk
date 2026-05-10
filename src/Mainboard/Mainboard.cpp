@@ -37,6 +37,7 @@
 #include <cstdint>
 #include <cstring>
 #include <math.h>
+#include <type_traits>
 
 #include <soc/reset_reasons.h>
 #include <esp_log.h>
@@ -64,10 +65,10 @@ namespace PowerFeather
     {
         static constexpr const char *kPfStateFormat =
             "snapshot retained_valid=%d rtc_cold=%d first=%d charger_sig_match=%d fg_had_sig=%d fg_force_reinit=%d fg_external_temp=%d learned_state_present=%d "
-            "current_chg_src=%u current_chg_cap=%u current_chg_term=%u current_chg_cv=%u current_chg_hash=%lu current_chg_battery_expected=%d current_chg_has_sig=%d "
-            "persisted_chg_src=%u persisted_chg_cap=%u persisted_chg_term=%u persisted_chg_cv=%u persisted_chg_hash=%lu persisted_chg_battery_expected=%d persisted_chg_has_sig=%d "
-            "last_fg_src=%u last_fg_cap=%u last_fg_term=%u last_fg_cv=%u last_fg_hash=%lu last_fg_has_sig=%d "
-            "persisted_fg_src=%u persisted_fg_cap=%u persisted_fg_term=%u persisted_fg_cv=%u persisted_fg_hash=%lu persisted_fg_has_sig=%d";
+            "current_chg_src=%u current_chg_cap=%u current_chg_term=%u current_chg_cv=%.3f current_chg_hash=%lu current_chg_battery_expected=%d current_chg_has_sig=%d "
+            "persisted_chg_src=%u persisted_chg_cap=%u persisted_chg_term=%u persisted_chg_cv=%.3f persisted_chg_hash=%lu persisted_chg_battery_expected=%d persisted_chg_has_sig=%d "
+            "last_fg_src=%u last_fg_cap=%u last_fg_term=%u last_fg_cv=%.3f last_fg_hash=%lu last_fg_has_sig=%d "
+            "persisted_fg_src=%u persisted_fg_cap=%u persisted_fg_term=%u persisted_fg_cv=%.3f persisted_fg_hash=%lu persisted_fg_has_sig=%d";
 
         template <typename... Args>
         static void emitPfStateSnapshot(Args... args)
@@ -80,16 +81,68 @@ namespace PowerFeather
 #endif
         }
 
-        static uint32_t fnv1aHash(const void *data, size_t size)
+        static uint32_t fnv1aAppendByte(uint32_t hash, uint8_t byte)
         {
-            const uint8_t *bytes = static_cast<const uint8_t *>(data);
-            uint32_t hash = 2166136261u;
-            for (size_t i = 0; i < size; ++i)
-            {
-                hash ^= bytes[i];
-                hash *= 16777619u;
-            }
+            hash ^= byte;
+            hash *= 16777619u;
             return hash;
+        }
+
+        static uint32_t fnv1aAppendU16(uint32_t hash, uint16_t value)
+        {
+            hash = fnv1aAppendByte(hash, static_cast<uint8_t>(value & 0xFFu));
+            return fnv1aAppendByte(hash, static_cast<uint8_t>(value >> 8));
+        }
+
+        static uint32_t fnv1aAppendU32(uint32_t hash, uint32_t value)
+        {
+            hash = fnv1aAppendByte(hash, static_cast<uint8_t>(value & 0xFFu));
+            hash = fnv1aAppendByte(hash, static_cast<uint8_t>((value >> 8) & 0xFFu));
+            hash = fnv1aAppendByte(hash, static_cast<uint8_t>((value >> 16) & 0xFFu));
+            return fnv1aAppendByte(hash, static_cast<uint8_t>(value >> 24));
+        }
+
+        static uint32_t fnv1aAppendFloat(uint32_t hash, float value)
+        {
+            static_assert(sizeof(float) == sizeof(uint32_t), "Unsupported float size.");
+            uint32_t bits = 0;
+            std::memcpy(&bits, &value, sizeof(bits));
+            return fnv1aAppendU32(hash, bits);
+        }
+
+        static uint32_t hashFuelGaugeProfile(const MAX17260::Model &profile)
+        {
+            static_assert(std::is_trivially_copyable<MAX17260::Model>::value,
+                          "MAX17260::Model must remain trivially copyable.");
+            static_assert(sizeof(MAX17260::Model) == 108,
+                          "MAX17260::Model changed; update hashFuelGaugeProfile().");
+
+            uint32_t hash = 2166136261u;
+            for (uint16_t value : profile.modelTable)
+            {
+                hash = fnv1aAppendU16(hash, value);
+            }
+            hash = fnv1aAppendU16(hash, profile.rComp0);
+            hash = fnv1aAppendU16(hash, profile.tempCo);
+            hash = fnv1aAppendU16(hash, profile.rCompSeg);
+            hash = fnv1aAppendU16(hash, profile.designCap);
+            hash = fnv1aAppendU16(hash, profile.ichgTerm);
+            hash = fnv1aAppendU16(hash, profile.vEmpty);
+            hash = fnv1aAppendU16(hash, profile.modelCfg);
+            hash = fnv1aAppendU16(hash, profile.learnCfg);
+            hash = fnv1aAppendU16(hash, profile.relaxCfg);
+            hash = fnv1aAppendU16(hash, profile.config);
+            hash = fnv1aAppendU16(hash, profile.config2);
+            hash = fnv1aAppendU16(hash, profile.miscCfg);
+            hash = fnv1aAppendU16(hash, profile.fullSocThr);
+            hash = fnv1aAppendU16(hash, profile.tGain);
+            hash = fnv1aAppendU16(hash, profile.tOff);
+            hash = fnv1aAppendU16(hash, profile.curve);
+            for (uint16_t value : profile.qrTable)
+            {
+                hash = fnv1aAppendU16(hash, value);
+            }
+            return fnv1aAppendFloat(hash, profile.chargeVoltage);
         }
 
         struct ChargerInitSignature
@@ -97,7 +150,7 @@ namespace PowerFeather
             uint8_t source;
             uint16_t capacityMah;
             uint16_t terminationCurrentMa;
-            uint16_t chargeVoltageMv;
+            float chargeVoltage;
             uint32_t profileHash;
             bool batteryExpected;
         };
@@ -106,7 +159,7 @@ namespace PowerFeather
                                                              bool useProfile,
                                                              uint16_t capacityMah,
                                                              uint16_t terminationCurrentMa,
-                                                             uint16_t chargeVoltageMv,
+                                                             float chargeVoltage,
                                                              uint32_t profileHash)
         {
             ChargerInitSignature signature = {};
@@ -140,10 +193,28 @@ namespace PowerFeather
             if (signature.batteryExpected)
             {
                 signature.terminationCurrentMa = terminationCurrentMa;
-                signature.chargeVoltageMv = chargeVoltageMv;
+                signature.chargeVoltage = chargeVoltage;
             }
 
             return signature;
+        }
+
+        static bool verifyChargerPart(BQ2562x &charger)
+        {
+            uint8_t pi = 0;
+            if (!charger.getPartInformation(pi))
+            {
+                return false;
+            }
+
+            uint8_t pn = (pi >> 3) & 0x07;
+            if (pn != BQ2562x::Charger_PN_BQ25622 && pn != BQ2562x::Charger_PN_BQ25628)
+            {
+                ESP_LOGE(TAG, "Unsupported charger part ID: 0x%02x (expected PN: 0x%02x or 0x%02x)", pi, BQ2562x::Charger_PN_BQ25622, BQ2562x::Charger_PN_BQ25628);
+                return false;
+            }
+
+            return true;
         }
 
         template <typename Gauge>
@@ -351,8 +422,8 @@ namespace PowerFeather
     // in _reapplyChargerConfig. Valid iff first == firstMagic (warm boot).
     struct PersistedChargerState
     {
-        uint16_t chargingCurrentLimit;
-        uint16_t vindpm;
+        float chargingCurrentLimit;
+        float vindpm;
         bool chargingEnabled;
         bool tsEnabled;
     };
@@ -363,7 +434,7 @@ namespace PowerFeather
         uint8_t source;
         uint16_t capacityMah;
         uint16_t terminationCurrentMa;
-        uint16_t chargeVoltageMv;
+        float chargeVoltage;
         uint32_t profileHash;
         bool batteryExpected;
         bool hasSignature;
@@ -375,7 +446,7 @@ namespace PowerFeather
         uint8_t source;
         uint16_t capacityMah;
         uint16_t terminationCurrentMa;
-        uint16_t chargeVoltageMv;
+        float chargeVoltage;
         uint32_t profileHash;
         bool hasSignature;
     };
@@ -386,6 +457,81 @@ namespace PowerFeather
     {
         return _fuelGauge;
     }
+
+#if POWERFEATHER_ENABLE_PF_STATE_STREAM
+    Result Mainboard::testRestoreFuelGaugeLearnedStateAfterPor()
+    {
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        TRY_LOCK(_mutex);
+        RET_IF_FALSE(_initDone, Result::InvalidState);
+        RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
+        RET_IF_FALSE(persistedFuelGaugeLearnedState.hasState, Result::NotReady);
+
+        FuelGauge::InitConfig config;
+        if (_usesProfile)
+        {
+            config.source = FuelGauge::InitSource::Profile_Max17260;
+            config.data.profile.model = nullptr;
+        }
+        else
+        {
+            config.data.capacity.capacityMah = _batteryCapacity;
+            config.data.capacity.terminationCurrentMa = _terminationCurrent;
+            config.data.capacity.chargeVoltage = _chargeVoltage;
+            switch (_batteryType)
+            {
+                case BatteryType::Generic_3V7:
+                    config.source = FuelGauge::InitSource::Generic_3V7;
+                    break;
+                case BatteryType::ICR18650_26H:
+                    config.source = FuelGauge::InitSource::ICR18650_26H;
+                    break;
+                case BatteryType::UR18650ZY:
+                    config.source = FuelGauge::InitSource::UR18650ZY;
+                    break;
+                case BatteryType::Generic_LFP:
+                    config.source = FuelGauge::InitSource::Generic_LFP;
+                    break;
+            }
+        }
+        config.tsenseEnabled = !_fuelGaugeUsingExternalTemp;
+
+        FuelGaugeImpl &typedGauge = static_cast<FuelGaugeImpl &>(getFuelGauge());
+        FuelGaugeRestoreGuard<FuelGaugeImpl> restoreGuard(typedGauge);
+
+        MAX17260::LearnedParameters parameters = {};
+        parameters.fullCapRep = persistedFuelGaugeLearnedState.fullCapRep;
+        parameters.fullCapNom = persistedFuelGaugeLearnedState.fullCapNom;
+        parameters.rComp0 = persistedFuelGaugeLearnedState.rComp0;
+        parameters.tempCo = persistedFuelGaugeLearnedState.tempCo;
+        parameters.cycles = persistedFuelGaugeLearnedState.cycles;
+        typedGauge.setRestoreLearnedParameters(parameters);
+
+        RET_IF_FALSE(typedGauge.init(config, true), Result::Failure);
+        RET_IF_FALSE(FuelGaugeLearnedStateHelper<FuelGaugeImpl>::captureAfterInit(
+                         typedGauge, persistedFuelGaugeLearnedState),
+                     Result::Failure);
+        return Result::Ok;
+#else
+        return Result::InvalidState;
+#endif
+    }
+
+    Result Mainboard::testClearFuelGaugeInitSignature()
+    {
+        TRY_LOCK(_mutex);
+        _lastFuelGaugeInitSignature = {};
+        _hasFuelGaugeInitSignature = false;
+        persistedFuelGaugeInitSignature.source = static_cast<uint8_t>(FuelGauge::InitSource::Generic_3V7);
+        persistedFuelGaugeInitSignature.capacityMah = 0;
+        persistedFuelGaugeInitSignature.terminationCurrentMa = 0;
+        persistedFuelGaugeInitSignature.chargeVoltage = 0.0f;
+        persistedFuelGaugeInitSignature.profileHash = 0;
+        persistedFuelGaugeInitSignature.hasSignature = false;
+        persistedFuelGaugeLearnedState.hasState = false;
+        return Result::Ok;
+    }
+#endif
 
     bool Mainboard::_isFuelGaugeEnabled()
     {
@@ -412,10 +558,10 @@ namespace PowerFeather
         {
             config.data.capacity.capacityMah = _batteryCapacity;
             config.data.capacity.terminationCurrentMa = _terminationCurrent;
-            config.data.capacity.chargeVoltageMv = _chargeVoltageMv;
+            config.data.capacity.chargeVoltage = _chargeVoltage;
             signature.capacityMah = _batteryCapacity;
             signature.terminationCurrentMa = _terminationCurrent;
-            signature.chargeVoltageMv = _chargeVoltageMv;
+            signature.chargeVoltage = _chargeVoltage;
             switch (_batteryType)
             {
                 case BatteryType::Generic_3V7:
@@ -434,26 +580,26 @@ namespace PowerFeather
             signature.source = config.source;
         }
 
-        bool forceReinit = _hasFuelGaugeInitSignature &&
-                           (signature.source != _lastFuelGaugeInitSignature.source ||
-                            signature.capacityMah != _lastFuelGaugeInitSignature.capacityMah ||
-                            signature.terminationCurrentMa != _lastFuelGaugeInitSignature.terminationCurrentMa ||
-                            signature.chargeVoltageMv != _lastFuelGaugeInitSignature.chargeVoltageMv ||
-                            signature.profileHash != _lastFuelGaugeInitSignature.profileHash);
+        bool signatureMismatch = signature.source != _lastFuelGaugeInitSignature.source ||
+                                 signature.capacityMah != _lastFuelGaugeInitSignature.capacityMah ||
+                                 signature.terminationCurrentMa != _lastFuelGaugeInitSignature.terminationCurrentMa ||
+                                 signature.chargeVoltage != _lastFuelGaugeInitSignature.chargeVoltage ||
+                                 signature.profileHash != _lastFuelGaugeInitSignature.profileHash;
+        bool forceReinit = !_hasFuelGaugeInitSignature || signatureMismatch;
         initDecisionState.lastInitFuelGaugeHadSignature = hadFuelGaugeInitSignature;
         initDecisionState.lastInitFuelGaugeForceReinit = forceReinit;
         ESP_LOGI(TAG,
-                 "Fuel gauge init decision: had_sig=%d curr[src=%u cap=%u term=%u cv=%u hash=%08lx] prev[src=%u cap=%u term=%u cv=%u hash=%08lx] force_reinit=%d",
+                 "Fuel gauge init decision: had_sig=%d curr[src=%u cap=%u term=%u cv=%.3f hash=%08lx] prev[src=%u cap=%u term=%u cv=%.3f hash=%08lx] force_reinit=%d",
                  hadFuelGaugeInitSignature,
                  static_cast<unsigned>(signature.source),
                  static_cast<unsigned>(signature.capacityMah),
                  static_cast<unsigned>(signature.terminationCurrentMa),
-                 static_cast<unsigned>(signature.chargeVoltageMv),
+                 signature.chargeVoltage,
                  static_cast<unsigned long>(signature.profileHash),
                  static_cast<unsigned>(_lastFuelGaugeInitSignature.source),
                  static_cast<unsigned>(_lastFuelGaugeInitSignature.capacityMah),
                  static_cast<unsigned>(_lastFuelGaugeInitSignature.terminationCurrentMa),
-                 static_cast<unsigned>(_lastFuelGaugeInitSignature.chargeVoltageMv),
+                 _lastFuelGaugeInitSignature.chargeVoltage,
                  static_cast<unsigned long>(_lastFuelGaugeInitSignature.profileHash),
                  forceReinit);
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
@@ -471,7 +617,7 @@ namespace PowerFeather
                          Result::Failure);
             RET_IF_FALSE(FuelGaugeLearnedStateHelper<FuelGaugeImpl>::syncBeforeInit(
                              typedGauge,
-                             config.source == FuelGauge::InitSource::Profile_Max17260,
+                             true,
                              persistedFuelGaugeLearnedState),
                          Result::Failure);
         }
@@ -499,17 +645,12 @@ namespace PowerFeather
                          typedGauge, persistedFuelGaugeLearnedState),
                      Result::Failure);
 #endif
-        if (!hadFuelGaugeInitSignature || forceReinit)
-        {
-            persistedFuelGaugeLearnedState.hasState = config.source == FuelGauge::InitSource::Profile_Max17260 &&
-                                                      persistedFuelGaugeLearnedState.hasState;
-        }
         _lastFuelGaugeInitSignature = signature;
         _hasFuelGaugeInitSignature = true;
         persistedFuelGaugeInitSignature.source = static_cast<uint8_t>(signature.source);
         persistedFuelGaugeInitSignature.capacityMah = signature.capacityMah;
         persistedFuelGaugeInitSignature.terminationCurrentMa = signature.terminationCurrentMa;
-        persistedFuelGaugeInitSignature.chargeVoltageMv = signature.chargeVoltageMv;
+        persistedFuelGaugeInitSignature.chargeVoltage = signature.chargeVoltage;
         persistedFuelGaugeInitSignature.profileHash = signature.profileHash;
         persistedFuelGaugeInitSignature.hasSignature = true;
         ESP_LOGD(TAG, "Fuel gauge init complete (%s).", gauge.getName());
@@ -592,50 +733,69 @@ namespace PowerFeather
             _mutex.lockBlocking();
 
             RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
-            _chargerADCTime = now;
+            // Record completion time (not entry time) so the throttle window measures
+            // idle time after the ADC settled, not entry-to-entry — otherwise back-to-back
+            // callers always satisfy (now - _chargerADCTime) >= _chargerADCWaitTime because
+            // the vTaskDelay above guarantees at least _chargerADCWaitTime has elapsed.
+            _chargerADCTime = esp_timer_get_time() / 1000;
             ESP_LOGD(TAG, "Updated charger ADC.");
         }
         return Result::Ok;
     }
 
-    Result Mainboard::_reapplyChargerConfig()
+    Result Mainboard::_applyChargerConfig()
     {
+        RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
+        RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxIINDPMCurrent), Result::Failure);
+        RET_IF_FALSE(getCharger().enableTS(_tsEnabled), Result::Failure);
+        RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
+        RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay25ms), Result::Failure);
+        RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
+        RET_IF_FALSE(getCharger().setTopOff(BQ2562x::TopOffTimer::Timer17Min), Result::Failure);
+        // BQ25622E/BQ25628E currently document only 6 A and 12 A IBAT_PK values.
+        RET_IF_FALSE(getCharger().setIbatPk(BQ2562x::IbatPkLimit::Limit6A), Result::Failure);
+        RET_IF_FALSE(getCharger().setTH456(BQ2562x::TH456Setting::TH4_35_TH5_40_TH6_50), Result::Failure);
+        RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Precool, BQ2562x::TempIset::Ichg40), Result::Failure);
+        RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Prewarm, BQ2562x::TempIset::Ichg40), Result::Failure);
+        RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Cool, BQ2562x::TempIset::Ichg20), Result::Failure);
+        RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Warm, BQ2562x::TempIset::Ichg20), Result::Failure);
+        // Mask all interrupts first so POR-default unmasks don't leak through,
+        // then selectively re-enable only the ones the SDK actually uses.
+        RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
+        if (_tsEnabled)
+        {
+            RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, true), Result::Failure);
+        }
+        if (_batteryCapacity)
+        {
+            RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
+        }
+        RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltage), Result::Failure);
+        RET_IF_FALSE(getCharger().setVINDPM(_vindpm), Result::Failure);
+        RET_IF_FALSE(getCharger().setWD(BQ2562x::WatchdogTimer::Disabled), Result::Failure);
+        RET_IF_FALSE(getCharger().enableCharging(_chargingEnabled), Result::Failure);
+
+        return Result::Ok;
+    }
+
+    Result Mainboard::_reapplyChargerConfig(bool *applied)
+    {
+        if (applied)
+        {
+            *applied = false;
+        }
+
         bool wdOn = true;
         RET_IF_FALSE(getCharger().getWD(wdOn), Result::Failure);
 
         if (wdOn)
         {
             ESP_LOGW(TAG, "Charger watchdog enabled, re-applying configuration.");
-            RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
-            RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxChargingCurrent), Result::Failure);
-            RET_IF_FALSE(getCharger().enableTS(_tsEnabled), Result::Failure);
-            RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
-            RET_IF_FALSE(getCharger().setBATFETDelay(BQ2562x::BATFETDelay::Delay20ms), Result::Failure);
-            RET_IF_FALSE(getCharger().enableWVBUS(true), Result::Failure);
-            RET_IF_FALSE(getCharger().setTopOff(BQ2562x::TopOffTimer::Timer17Min), Result::Failure);
-            // BQ25622E/BQ25628E currently document only 6 A and 12 A IBAT_PK values.
-            RET_IF_FALSE(getCharger().setIbatPk(BQ2562x::IbatPkLimit::Limit6A), Result::Failure);
-            RET_IF_FALSE(getCharger().setTH456(BQ2562x::TH456Setting::TH4_35_TH5_40_TH6_50), Result::Failure);
-            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Precool, BQ2562x::TempIset::Ichg40), Result::Failure);
-            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Prewarm, BQ2562x::TempIset::Ichg40), Result::Failure);
-            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Cool, BQ2562x::TempIset::Ichg20), Result::Failure);
-            RET_IF_FALSE(getCharger().setTempIset(BQ2562x::TempPoint::Warm, BQ2562x::TempIset::Ichg20), Result::Failure);
-            // Mask all interrupts first so POR-default unmasks don't leak through,
-            // then selectively re-enable only the ones the SDK actually uses.
-            RET_IF_FALSE(getCharger().enableInterrupts(false), Result::Failure);
-            if (_tsEnabled)
+            RET_IF_ERR(_applyChargerConfig());
+            if (applied)
             {
-                RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, true), Result::Failure);
+                *applied = true;
             }
-            if (_batteryCapacity)
-            {
-                RET_IF_FALSE(getCharger().setIINDPM(BQ2562x::MaxIINDPMCurrent), Result::Failure);
-                RET_IF_FALSE(getCharger().setITERM(_terminationCurrent), Result::Failure);
-            }
-            RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltageMv), Result::Failure);
-            RET_IF_FALSE(getCharger().setVINDPM(_vindpm), Result::Failure);
-            RET_IF_FALSE(getCharger().setWD(BQ2562x::WatchdogTimer::Disabled), Result::Failure);
-            RET_IF_FALSE(getCharger().enableCharging(_chargingEnabled), Result::Failure);
         }
 
         return Result::Ok;
@@ -657,10 +817,10 @@ namespace PowerFeather
         uint16_t capacity = _capacityFromProfile(profile);
         RET_IF_FALSE(capacity, Result::InvalidArg);
         // Profile init must explicitly provide the charger CV target.
-        static constexpr uint16_t minProfileChargeVoltageMv = 3500;
-        static constexpr uint16_t maxProfileChargeVoltageMv = 4800;
-        RET_IF_FALSE(profile.chargeVoltageMv >= minProfileChargeVoltageMv &&
-                     profile.chargeVoltageMv <= maxProfileChargeVoltageMv, Result::InvalidArg);
+        static constexpr float minProfileChargeVoltage = 3.5f;
+        static constexpr float maxProfileChargeVoltage = 4.8f;
+        RET_IF_FALSE(profile.chargeVoltage >= minProfileChargeVoltage &&
+                     profile.chargeVoltage <= maxProfileChargeVoltage, Result::InvalidArg);
         return _initInternal(capacity, BatteryType::Generic_3V7, &profile);
     }
 
@@ -722,31 +882,40 @@ namespace PowerFeather
         _batteryCapacity = capacity;
         _batteryType = type;
         _usesProfile = useProfile;
-        _profileHash = useProfile ? fnv1aHash(profile, sizeof(*profile)) : 0;
+        _profileHash = useProfile ? hashFuelGaugeProfile(*profile) : 0;
 
-        // Set termination current to C / 10, or within limits of the IC.
+        // Set termination current to C / 10 for built-in profiles, or to the
+        // characterized fuel-gauge value for custom MAX17260 profiles.
         uint16_t minCurrent = BQ2562x::MinITERMCurrent;
         uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
-        _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
-        _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
+        if (useProfile)
+        {
+            _terminationCurrent = MAX17260::ichgTermRawToMa(profile->ichgTerm);
+            RET_IF_FALSE(_terminationCurrent >= minCurrent && _terminationCurrent <= maxCurrent, Result::InvalidArg);
+        }
+        else
+        {
+            _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
+            _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
+        }
         ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
-        uint16_t chargeVoltageMv = 4200;
-        if (useProfile && profile->chargeVoltageMv)
+        float chargeVoltage = 4.2f;
+        if (useProfile && profile->chargeVoltage)
         {
-            chargeVoltageMv = profile->chargeVoltageMv;
+            chargeVoltage = profile->chargeVoltage;
         }
         if (_batteryType == BatteryType::Generic_LFP)
         {
-            chargeVoltageMv = 3600;
+            chargeVoltage = 3.6f;
         }
-        _chargeVoltageMv = chargeVoltageMv;
+        _chargeVoltage = chargeVoltage;
 
         ChargerInitSignature currentChargerInitSignature = makeChargerInitSignature(_batteryType,
                                                                                    _usesProfile,
                                                                                    _batteryCapacity,
                                                                                    _terminationCurrent,
-                                                                                   _chargeVoltageMv,
+                                                                                   _chargeVoltage,
                                                                                    _profileHash);
         const bool chargingSupported = (_batteryCapacity == 0) || (_batteryCapacity >= _minChargeableBatteryCapacity);
 
@@ -759,13 +928,13 @@ namespace PowerFeather
         initDecisionState.lastInitFuelGaugeHadSignature = false;
         initDecisionState.lastInitFuelGaugeForceReinit = false;
         ESP_LOGI(TAG,
-                 "Init context: first=%d rtc_version=0x%08lx battery_type=%d cap=%u term=%u cv=%u use_profile=%d profile_hash=%08lx charging_supported=%d",
+                 "Init context: first=%d rtc_version=0x%08lx battery_type=%d cap=%u term=%u cv=%.3f use_profile=%d profile_hash=%08lx charging_supported=%d",
                  firstBoot,
                  static_cast<unsigned long>(rtcStateVersion),
                  static_cast<int>(_batteryType),
                  static_cast<unsigned>(_batteryCapacity),
                  static_cast<unsigned>(_terminationCurrent),
-                 static_cast<unsigned>(_chargeVoltageMv),
+                 _chargeVoltage,
                  useProfile,
                  static_cast<unsigned long>(_profileHash),
                  chargingSupported);
@@ -775,29 +944,29 @@ namespace PowerFeather
                                     persistedChargerInitSignature.source == currentChargerInitSignature.source &&
                                     persistedChargerInitSignature.capacityMah == currentChargerInitSignature.capacityMah &&
                                     persistedChargerInitSignature.terminationCurrentMa == currentChargerInitSignature.terminationCurrentMa &&
-                                    persistedChargerInitSignature.chargeVoltageMv == currentChargerInitSignature.chargeVoltageMv &&
+                                    persistedChargerInitSignature.chargeVoltage == currentChargerInitSignature.chargeVoltage &&
                                     persistedChargerInitSignature.profileHash == currentChargerInitSignature.profileHash &&
                                     persistedChargerInitSignature.batteryExpected == currentChargerInitSignature.batteryExpected;
             ESP_LOGI(TAG,
-                     "Charger signature: match=%d persisted[src=%u cap=%u term=%u cv=%u hash=%08lx battery_expected=%d has_sig=%d] current[src=%u cap=%u term=%u cv=%u hash=%08lx battery_expected=%d] persisted_state[chg_en=%d ichg=%u ts=%d vindpm=%u]",
+                     "Charger signature: match=%d persisted[src=%u cap=%u term=%u cv=%.3f hash=%08lx battery_expected=%d has_sig=%d] current[src=%u cap=%u term=%u cv=%.3f hash=%08lx battery_expected=%d] persisted_state[chg_en=%d ichg=%.1f ts=%d vindpm=%.3f]",
                      chargerSignatureMatch,
                      static_cast<unsigned>(persistedChargerInitSignature.source),
                      static_cast<unsigned>(persistedChargerInitSignature.capacityMah),
                      static_cast<unsigned>(persistedChargerInitSignature.terminationCurrentMa),
-                     static_cast<unsigned>(persistedChargerInitSignature.chargeVoltageMv),
+                     persistedChargerInitSignature.chargeVoltage,
                      static_cast<unsigned long>(persistedChargerInitSignature.profileHash),
                      persistedChargerInitSignature.batteryExpected,
                      persistedChargerInitSignature.hasSignature,
                      static_cast<unsigned>(currentChargerInitSignature.source),
                      static_cast<unsigned>(currentChargerInitSignature.capacityMah),
                      static_cast<unsigned>(currentChargerInitSignature.terminationCurrentMa),
-                     static_cast<unsigned>(currentChargerInitSignature.chargeVoltageMv),
+                     currentChargerInitSignature.chargeVoltage,
                      static_cast<unsigned long>(currentChargerInitSignature.profileHash),
                      currentChargerInitSignature.batteryExpected,
                      persistedChargerState.chargingEnabled,
-                     static_cast<unsigned>(persistedChargerState.chargingCurrentLimit),
+                     persistedChargerState.chargingCurrentLimit,
                      persistedChargerState.tsEnabled,
-                     static_cast<unsigned>(persistedChargerState.vindpm));
+                     persistedChargerState.vindpm);
             if (chargerSignatureMatch)
             {
                 // Warm boot with unchanged battery/profile inputs: retain the
@@ -807,25 +976,25 @@ namespace PowerFeather
                 _tsEnabled = persistedChargerState.tsEnabled;
                 _vindpm = persistedChargerState.vindpm;
                 ESP_LOGI(TAG,
-                         "Rehydrated charger state from RTC: chg_en=%d ichg=%u ts=%d vindpm=%u",
+                         "Rehydrated charger state from RTC: chg_en=%d ichg=%.1f ts=%d vindpm=%.3f",
                          _chargingEnabled,
-                         static_cast<unsigned>(_chargingCurrentLimit),
+                         _chargingCurrentLimit,
                          _tsEnabled,
-                         static_cast<unsigned>(_vindpm));
+                         _vindpm);
             }
             else
             {
                 ESP_LOGI(TAG,
-                         "Warm boot with signature mismatch: keeping safe defaults chg_en=%d ichg=%u ts=%d vindpm=%u",
+                         "Warm boot with signature mismatch: keeping safe defaults chg_en=%d ichg=%.1f ts=%d vindpm=%.3f",
                          _chargingEnabled,
-                         static_cast<unsigned>(_chargingCurrentLimit),
+                         _chargingCurrentLimit,
                          _tsEnabled,
-                         static_cast<unsigned>(_vindpm));
+                         _vindpm);
             }
             _lastFuelGaugeInitSignature.source = static_cast<FuelGauge::InitSource>(persistedFuelGaugeInitSignature.source);
             _lastFuelGaugeInitSignature.capacityMah = persistedFuelGaugeInitSignature.capacityMah;
             _lastFuelGaugeInitSignature.terminationCurrentMa = persistedFuelGaugeInitSignature.terminationCurrentMa;
-            _lastFuelGaugeInitSignature.chargeVoltageMv = persistedFuelGaugeInitSignature.chargeVoltageMv;
+            _lastFuelGaugeInitSignature.chargeVoltage = persistedFuelGaugeInitSignature.chargeVoltage;
             _lastFuelGaugeInitSignature.profileHash = persistedFuelGaugeInitSignature.profileHash;
             _hasFuelGaugeInitSignature = persistedFuelGaugeInitSignature.hasSignature;
         }
@@ -843,7 +1012,7 @@ namespace PowerFeather
             persistedFuelGaugeInitSignature.source = static_cast<uint8_t>(FuelGauge::InitSource::Generic_3V7);
             persistedFuelGaugeInitSignature.capacityMah = 0;
             persistedFuelGaugeInitSignature.terminationCurrentMa = 0;
-            persistedFuelGaugeInitSignature.chargeVoltageMv = 0;
+            persistedFuelGaugeInitSignature.chargeVoltage = 0.0f;
             persistedFuelGaugeInitSignature.profileHash = 0;
             persistedFuelGaugeInitSignature.hasSignature = false;
             persistedFuelGaugeLearnedState.hasState = false;
@@ -879,36 +1048,24 @@ namespace PowerFeather
         {
             RET_IF_FALSE(_i2c.start(), Result::Failure);
 
-            uint8_t pi = 0;
-            RET_IF_FALSE(getCharger().getPartInformation(pi), Result::Failure);
-            uint8_t pn = (pi >> 3) & 0x07;
-            if (pn != BQ2562x::Charger_PN_BQ25622 && pn != BQ2562x::Charger_PN_BQ25628)
-            {
-                ESP_LOGE(TAG, "Unsupported charger part ID: 0x%02x (expected PN: 0x%02x or 0x%02x)", pi, BQ2562x::Charger_PN_BQ25622, BQ2562x::Charger_PN_BQ25628);
-                return Result::Failure;
-            }
+            RET_IF_FALSE(verifyChargerPart(getCharger()), Result::Failure);
 
             ESP_LOGI(TAG,
-                     "Applying charger init state: first=%d sig_match=%d chosen_state[chg_en=%d ichg=%u ts=%d vindpm=%u cv=%u]",
+                     "Applying charger init state: first=%d sig_match=%d chosen_state[chg_en=%d ichg=%.1f ts=%d vindpm=%.3f cv=%.3f]",
                      firstBoot,
                      chargerSignatureMatch,
                      _chargingEnabled,
-                     static_cast<unsigned>(_chargingCurrentLimit),
+                     _chargingCurrentLimit,
                      _tsEnabled,
-                     static_cast<unsigned>(_vindpm),
-                     static_cast<unsigned>(_chargeVoltageMv));
+                     _vindpm,
+                     _chargeVoltage);
             // _reapplyChargerConfig is gated on the charger watchdog (POR indicator).
             // On wdOn == true (first init, or chip POR since last init), it applies the
             // full configuration using the software state set above — which on a warm
             // boot is the user's previous-session values rehydrated from RTC, not the
-            // hardcoded defaults. On wdOn == false (chip retained state), it's a no-op
-            // and the redundant setChargeVoltageLimit below is the belt-and-braces write.
-            RET_IF_ERR(_reapplyChargerConfig());
-
-            // Enforce charge voltage target on every init path, including the wdOn==false
-            // path (chip retained state across sleep but we still want to rewrite VREG
-            // in case the BatteryType chemistry selection changed since last session).
-            RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltageMv), Result::Failure);
+            // hardcoded defaults. On wdOn == false (chip retained state), it's a no-op.
+            bool chargerConfigAppliedByWd = false;
+            RET_IF_ERR(_reapplyChargerConfig(&chargerConfigAppliedByWd));
 
             if (_batteryCapacity && !chargingSupported)
             {
@@ -919,22 +1076,28 @@ namespace PowerFeather
             if (firstBoot || !chargerSignatureMatch)
             {
                 ESP_LOGI(TAG,
-                         "%s: pushing software charger state into retained charger hardware chg_en=%d ichg=%u ts=%d vindpm=%u",
+                         "%s: pushing software charger state into retained charger hardware chg_en=%d ichg=%.1f ts=%d vindpm=%.3f",
                          firstBoot ? "Cold boot" : "Warm boot signature mismatch",
                          _chargingEnabled,
-                         static_cast<unsigned>(_chargingCurrentLimit),
+                         _chargingCurrentLimit,
                          _tsEnabled,
-                         static_cast<unsigned>(_vindpm));
+                         _vindpm);
                 // On a cold boot or a warm boot with changed battery/profile
                 // inputs, the charger may have retained the previous session's
                 // live state even though software intentionally selected safe
-                // defaults. Push those software-selected values into the
+                // defaults. Push the full software-selected policy into the
                 // retained hardware as well.
-                RET_IF_FALSE(getCharger().enableCharging(false), Result::Failure);
-                RET_IF_FALSE(getCharger().setChargeCurrentLimit(_chargingCurrentLimit), Result::Failure);
-                RET_IF_FALSE(getCharger().enableTS(_tsEnabled), Result::Failure);
-                RET_IF_FALSE(getCharger().enableInterrupt(BQ2562x::Interrupt::TS, false), Result::Failure);
-                RET_IF_FALSE(getCharger().setVINDPM(_vindpm), Result::Failure);
+                if (!chargerConfigAppliedByWd)
+                {
+                    RET_IF_ERR(_applyChargerConfig());
+                }
+            }
+            else if (!chargerConfigAppliedByWd)
+            {
+                // Same signature and retained charger state: rewrite only VREG so
+                // the charge-voltage target is still enforced without duplicating
+                // the full policy write on cold boot or signature mismatch.
+                RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltage), Result::Failure);
             }
 
             // If battery capacity is not 0, initialize the fuel gauge. This can fail if during
@@ -967,7 +1130,7 @@ namespace PowerFeather
         persistedChargerInitSignature.source = currentChargerInitSignature.source;
         persistedChargerInitSignature.capacityMah = currentChargerInitSignature.capacityMah;
         persistedChargerInitSignature.terminationCurrentMa = currentChargerInitSignature.terminationCurrentMa;
-        persistedChargerInitSignature.chargeVoltageMv = currentChargerInitSignature.chargeVoltageMv;
+        persistedChargerInitSignature.chargeVoltage = currentChargerInitSignature.chargeVoltage;
         persistedChargerInitSignature.profileHash = currentChargerInitSignature.profileHash;
         persistedChargerInitSignature.batteryExpected = currentChargerInitSignature.batteryExpected;
         persistedChargerInitSignature.hasSignature = true;
@@ -991,27 +1154,27 @@ namespace PowerFeather
                  static_cast<unsigned>(currentChargerInitSignature.source),
                  static_cast<unsigned>(currentChargerInitSignature.capacityMah),
                  static_cast<unsigned>(currentChargerInitSignature.terminationCurrentMa),
-                 static_cast<unsigned>(currentChargerInitSignature.chargeVoltageMv),
+                 currentChargerInitSignature.chargeVoltage,
                  static_cast<unsigned long>(currentChargerInitSignature.profileHash),
                  currentChargerInitSignature.batteryExpected,
                  _initDone,
                  static_cast<unsigned>(persistedChargerInitSignature.source),
                  static_cast<unsigned>(persistedChargerInitSignature.capacityMah),
                  static_cast<unsigned>(persistedChargerInitSignature.terminationCurrentMa),
-                 static_cast<unsigned>(persistedChargerInitSignature.chargeVoltageMv),
+                 persistedChargerInitSignature.chargeVoltage,
                  static_cast<unsigned long>(persistedChargerInitSignature.profileHash),
                  persistedChargerInitSignature.batteryExpected,
                  persistedChargerInitSignature.hasSignature,
                  static_cast<unsigned>(_lastFuelGaugeInitSignature.source),
                  static_cast<unsigned>(_lastFuelGaugeInitSignature.capacityMah),
                  static_cast<unsigned>(_lastFuelGaugeInitSignature.terminationCurrentMa),
-                 static_cast<unsigned>(_lastFuelGaugeInitSignature.chargeVoltageMv),
+                 _lastFuelGaugeInitSignature.chargeVoltage,
                  static_cast<unsigned long>(_lastFuelGaugeInitSignature.profileHash),
                  _hasFuelGaugeInitSignature,
                  static_cast<unsigned>(persistedFuelGaugeInitSignature.source),
                  static_cast<unsigned>(persistedFuelGaugeInitSignature.capacityMah),
                  static_cast<unsigned>(persistedFuelGaugeInitSignature.terminationCurrentMa),
-                 static_cast<unsigned>(persistedFuelGaugeInitSignature.chargeVoltageMv),
+                 persistedFuelGaugeInitSignature.chargeVoltage,
                  static_cast<unsigned long>(persistedFuelGaugeInitSignature.profileHash),
                  persistedFuelGaugeInitSignature.hasSignature);
 
@@ -1050,8 +1213,9 @@ namespace PowerFeather
         if (enable && !_sqtEnabled)
         {
             RET_IF_FALSE(_i2c.start(), Result::Failure);
+            RET_IF_FALSE(verifyChargerPart(getCharger()), Result::Failure);
             RET_IF_ERR(_reapplyChargerConfig());
-            RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltageMv), Result::Failure);
+            RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltage), Result::Failure);
             _chargerADCTime = 0;
             if (_batteryCapacity)
             {
@@ -1078,25 +1242,25 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::getSupplyVoltage(uint16_t &voltage)
+    Result Mainboard::getSupplyVoltage(float &voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getVBUS(voltage), Result::Failure);
-        ESP_LOGD(TAG, "Measured supply voltage: %d mV.", voltage);
+        ESP_LOGD(TAG, "Measured supply voltage: %f V.", voltage);
         return Result::Ok;
     }
 
-    Result Mainboard::getSupplyCurrent(int16_t &current)
+    Result Mainboard::getSupplyCurrent(float &current)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_ERR(_udpateChargerADC());
         RET_IF_FALSE(getCharger().getIBUS(current), Result::Failure);
-        ESP_LOGD(TAG, "Measured supply current: %d mA.", current);
+        ESP_LOGD(TAG, "Measured supply current: %f mA.", current);
         return Result::Ok;
     }
 
@@ -1109,7 +1273,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::setSupplyMaintainVoltage(uint16_t voltage)
+    Result Mainboard::setSupplyMaintainVoltage(float voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -1119,7 +1283,7 @@ namespace PowerFeather
         RET_IF_FALSE(getCharger().setVINDPM(voltage), Result::Failure);
         _vindpm = voltage;
         persistedChargerState.vindpm = voltage;
-        ESP_LOGD(TAG, "Maintain supply voltage set to: %d mV.", voltage);
+        ESP_LOGD(TAG, "Maintain supply voltage set to: %f V.", voltage);
         return Result::Ok;
     }
 
@@ -1177,7 +1341,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::setBatteryChargingMaxCurrent(uint16_t current)
+    Result Mainboard::setBatteryChargingMaxCurrent(float current)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -1189,7 +1353,7 @@ namespace PowerFeather
         RET_IF_FALSE(getCharger().setChargeCurrentLimit(current), Result::Failure);
         _chargingCurrentLimit = current;
         persistedChargerState.chargingCurrentLimit = current;
-        ESP_LOGD(TAG, "Max charging current set to: %d mA.", current);
+        ESP_LOGD(TAG, "Max charging current set to: %f mA.", current);
         return Result::Ok;
     }
 
@@ -1226,7 +1390,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::getBatteryVoltage(uint16_t &voltage)
+    Result Mainboard::getBatteryVoltage(float &voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -1247,16 +1411,36 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::getBatteryCurrent(int16_t &current)
+    Result Mainboard::_getBatteryCurrentLocked(float &current)
+    {
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
+        RET_IF_ERR(_initFuelGauge());
+        RET_IF_FALSE(static_cast<MAX17260 &>(getFuelGauge()).getCurrent(current), Result::Failure);
+        ESP_LOGD(TAG, "Measured battery current from fuel gauge: %f mA.", current);
+#else
+        RET_IF_ERR(_udpateChargerADC());
+        RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
+        bool chargingEnabled = false;
+        RET_IF_FALSE(getCharger().getChargingEnabled(chargingEnabled), Result::Failure);
+        if (!chargingEnabled && current == 0.0f)
+        {
+            // BQ25628E Table 8-35 specifies that IBAT_ADC resets to zero when EN_CHG=0.
+            ESP_LOGD(TAG, "V1 charger battery-current ADC is unavailable while charging is disabled.");
+            return Result::NotReady;
+        }
+        ESP_LOGD(TAG, "Measured battery current from charger: %f mA.", current);
+#endif
+        return Result::Ok;
+    }
+
+    Result Mainboard::getBatteryCurrent(float &current)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
-        RET_IF_ERR(_udpateChargerADC());
-        RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
-        ESP_LOGD(TAG, "Measured battery current from charger: %d mA.", current);
-        return Result::Ok;
+        return _getBatteryCurrentLocked(current);
     }
 
     Result Mainboard::getBatteryCharge(uint8_t &percent)
@@ -1308,9 +1492,21 @@ namespace PowerFeather
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
 
-        int16_t ibat = 0;
-        RET_IF_ERR(getBatteryCurrent(ibat));
-        bool discharging = ibat <= 0;
+        bool discharging = true;
+#if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
+        float ibat = 0.0f;
+        RET_IF_ERR(_getBatteryCurrentLocked(ibat));
+        discharging = ibat <= 0.0f;
+#else
+        bool chargingEnabled = false;
+        RET_IF_FALSE(getCharger().getChargingEnabled(chargingEnabled), Result::Failure);
+        if (chargingEnabled)
+        {
+            float ibat = 0.0f;
+            RET_IF_ERR(_getBatteryCurrentLocked(ibat));
+            discharging = ibat <= 0.0f;
+        }
+#endif
 
         // Get the time-to-empty or time-to-full depending on battery is charging
         // or discharging.
@@ -1358,7 +1554,7 @@ namespace PowerFeather
         return Result::Ok;
     }
 
-    Result Mainboard::setBatteryLowVoltageAlarm(uint16_t voltage)
+    Result Mainboard::setBatteryLowVoltageAlarm(float voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -1366,8 +1562,8 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        uint16_t minAlarm = 0;
-        uint16_t maxAlarm = 0;
+        float minAlarm = 0.0f;
+        float maxAlarm = 0.0f;
         getFuelGauge().getVoltageAlarmRange(minAlarm, maxAlarm);
         RET_IF_FALSE((voltage == 0) || (voltage >= minAlarm && voltage <= maxAlarm), Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setLowVoltageAlarm(voltage), Result::Failure);
@@ -1375,11 +1571,11 @@ namespace PowerFeather
         {
             RET_IF_FALSE(getFuelGauge().clearLowVoltageAlarm(), Result::Failure);
         }
-        ESP_LOGD(TAG, "Low battery voltage alarm set to: %d mV.", voltage);
+        ESP_LOGD(TAG, "Low battery voltage alarm set to: %f V.", voltage);
         return Result::Ok;
     };
 
-    Result Mainboard::setBatteryHighVoltageAlarm(uint16_t voltage)
+    Result Mainboard::setBatteryHighVoltageAlarm(float voltage)
     {
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
@@ -1387,8 +1583,8 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(_isFuelGaugeEnabled(), Result::InvalidState);
         RET_IF_ERR(_initFuelGauge());
-        uint16_t minAlarm = 0;
-        uint16_t maxAlarm = 0;
+        float minAlarm = 0.0f;
+        float maxAlarm = 0.0f;
         getFuelGauge().getVoltageAlarmRange(minAlarm, maxAlarm);
         RET_IF_FALSE((voltage == 0) || (voltage >= minAlarm && voltage <= maxAlarm), Result::InvalidArg);
         RET_IF_FALSE(getFuelGauge().setHighVoltageAlarm(voltage), Result::Failure);
@@ -1396,7 +1592,7 @@ namespace PowerFeather
         {
             RET_IF_FALSE(getFuelGauge().clearHighVoltageAlarm(), Result::Failure);
         }
-        ESP_LOGD(TAG, "High battery voltage alarm set to: %d mV.", voltage);
+        ESP_LOGD(TAG, "High battery voltage alarm set to: %f V.", voltage);
         return Result::Ok;
     };
 

@@ -54,6 +54,9 @@ namespace PowerFeather
 
         struct Model
         {
+            // Mainboard.cpp hashes these fields member-by-member to detect
+            // custom profile changes. If this layout changes, update
+            // hashFuelGaugeProfile() at the same time.
             std::array<uint16_t, 32> modelTable{};
             uint16_t rComp0{0};
             uint16_t tempCo{0};
@@ -72,9 +75,10 @@ namespace PowerFeather
             uint16_t tOff{0};
             uint16_t curve{0};
             std::array<uint16_t, 4> qrTable{{0, 0, 0, 0}};
-            // Charger CV target used by Mainboard::init(const Model&), in mV.
-            // Required by profile init: valid range is 3500-4800 mV.
-            uint16_t chargeVoltageMv{0};
+            // Charger VREG/CV target used by Mainboard::init(const Model&), in V.
+            // Required by profile init: valid range is 3.5-4.8 V. The caller
+            // must choose a value that is safe for the profiled cell chemistry.
+            float chargeVoltage{0.0f};
         };
 
         static constexpr uint8_t ModelID_LiCoO2 = 0;
@@ -86,10 +90,10 @@ namespace PowerFeather
 
         bool probe() override;
         const char *getName() const override { return "MAX17260"; }
-        void getVoltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const override
+        void getVoltageAlarmRange(float &minV, float &maxV) const override
         {
-            minMv = MinVoltageAlarm;
-            maxMv = MaxVoltageAlarm;
+            minV = MinVoltageAlarm;
+            maxV = MaxVoltageAlarm;
         }
         void getTemperatureRange(float &minC, float &maxC) const override
         {
@@ -110,9 +114,11 @@ namespace PowerFeather
         bool setModelID(uint8_t modelId);
         bool loadModel(const Model &model);
         void setProfile(const Model &model);
+        static uint16_t ichgTermRawToMa(uint16_t raw);
 
         bool getEnabled(bool &enabled) override;
-        bool getCellVoltage(uint16_t &voltage) override;
+        bool getCellVoltage(float &voltage) override;
+        bool getCurrent(float &current);
         bool getRSOC(uint8_t &percent) override;
         bool getTimeToEmpty(uint16_t &minutes) override;
         bool getTimeToFull(uint16_t &minutes) override;
@@ -122,13 +128,14 @@ namespace PowerFeather
         bool getInitialized(bool& state) override;
         bool getLearnedParameters(LearnedParameters &parameters);
         bool getUsingExternalTemperature(bool &external);
+        bool getDesignCapacity(uint16_t &mah);
         void setRestoreLearnedParameters(const LearnedParameters &parameters);
         void clearRestoreLearnedParameters();
         bool setEnabled(bool enable) override;
         bool setCellTemperature(float temperature) override;
         bool enableTSENSE(bool enableTsense1, bool enableTsense2) override;
-        bool setLowVoltageAlarm(uint16_t voltage) override;
-        bool setHighVoltageAlarm(uint16_t voltage) override;
+        bool setLowVoltageAlarm(float voltage) override;
+        bool setHighVoltageAlarm(float voltage) override;
         bool setLowRSOCAlarm(uint8_t percent) override;
         bool setTerminationFactor(float factor) override;
         bool setInitialized() override;
@@ -143,10 +150,10 @@ namespace PowerFeather
         static_assert(MaxBatteryCapacityMah <= UINT16_MAX);
         static constexpr uint16_t MinBatteryCapacity = 1;
         static constexpr uint16_t MaxBatteryCapacity = static_cast<uint16_t>(MaxBatteryCapacityMah);
-        static constexpr uint16_t MinVoltageAlarm = 20;
+        static constexpr float MinVoltageAlarm = 0.02f;
         // VAlrtTh is encoded in 20mV steps with an 8-bit field (0x00..0xFF).
-        // Effective max threshold is 255 * 20mV = 5100mV.
-        static constexpr uint16_t MaxVoltageAlarm = 5100;
+        // Effective max threshold is 255 * 20mV = 5.1V.
+        static constexpr float MaxVoltageAlarm = 5.1f;
         static constexpr float MinTemperature = -128.0f;
         static constexpr float MaxTemperature = 127.996f;
         static constexpr float MinTermination = 0.01f;
@@ -214,12 +221,14 @@ namespace PowerFeather
         static constexpr uint16_t HibernateExit_Command2 = 0x0000;
         static constexpr uint16_t ShdnTimer_ShutdownWithin22s = 0x001E;
         static constexpr uint16_t VEmpty_Default = 0xA561;
+        static constexpr uint16_t VEmpty_LFP = 0x7D4B; // VE = 2.50 V, VR = 3.00 V.
 
         static constexpr uint16_t HibCfgBit_EnHib = 1u << 15;
         static constexpr uint16_t ModelCfgBit_Refresh = 1u << 15;
         static constexpr uint16_t ModelCfgBit_VChg = 1u << 10;
-        static constexpr uint16_t ModelCfgMask_ModelID = 0x7u << 5;
-        static constexpr uint16_t ModelCfgHighVoltageThresholdMv = 4275;
+        static constexpr uint8_t ModelCfgShift_ModelID = 4;
+        static constexpr uint16_t ModelCfgMask_ModelID = 0x7u << ModelCfgShift_ModelID;
+        static constexpr float ModelCfgHighVoltageThreshold = 4.275f;
         static constexpr uint16_t ConfigBit_TSel = 1u << 15;
         static constexpr uint16_t ConfigBit_TEn = 1u << 9;
         static constexpr uint16_t ConfigBit_TEx = 1u << 8;
@@ -258,7 +267,7 @@ namespace PowerFeather
         }
         bool initImpl(const InitConfig &config) override;
         bool _verifyDeviceIdentity();
-        bool _initEZConfig(const InitConfig &config, uint8_t modelId);
+        bool _initEZConfig(const InitConfig &config, uint8_t modelId, const LearnedParameters *savedParameters);
         bool _initHardware();
         bool _waitForDNRClear();
         bool _waitForModelRefreshClear();

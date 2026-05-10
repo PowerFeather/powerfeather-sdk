@@ -10,6 +10,12 @@ The following boards are supported:
 
 Setup for supported platforms is documented on [docs.powerfeather.dev/sdk/setup](https://docs.powerfeather.dev/sdk/setup).
 
+## V2 API Units
+
+The high-level `Mainboard` voltage APIs use `float` volts. Current APIs use `float` milliamps.
+For example, V1 code that passed `4600` mV to `setSupplyMaintainVoltage()` should pass `4.6f`
+with the V2 API, while a charging current limit of `100` mA should be passed as `100.0f`.
+
 ## Examples
 
 ### Arduino

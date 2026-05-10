@@ -45,6 +45,11 @@ namespace PowerFeather
 {
     static const char *TAG = "PowerFeather::Mainboard::MAX17260";
 
+    namespace
+    {
+        static constexpr float MillivoltsPerVolt = 1000.0f;
+    }
+
     bool MAX17260::readRegister(uint8_t address, uint16_t &value)
     {
         if (_i2c.read(_i2cAddress, address, reinterpret_cast<uint8_t *>(&value), registerSizeBytes()))
@@ -136,6 +141,14 @@ namespace PowerFeather
         return static_cast<uint16_t>(std::min<uint32_t>(raw, 0xFFFFu));
     }
 
+    uint16_t MAX17260::ichgTermRawToMa(uint16_t raw)
+    {
+        // Inverse of _currentMaToRaw(): mA = raw * 25 / (RSENSE_mOhm * 16).
+        static constexpr uint32_t denom = static_cast<uint32_t>(SenseResistorMilliohms) * 16u;
+        uint32_t scaled = static_cast<uint32_t>(raw) * 25u + (denom / 2u);
+        return static_cast<uint16_t>(std::min<uint32_t>(scaled / denom, 0xFFFFu));
+    }
+
     bool MAX17260::probe()
     {
         uint16_t value = 0;
@@ -171,6 +184,15 @@ namespace PowerFeather
             return false;
         }
 
+        LearnedParameters restoreParameters = {};
+        const LearnedParameters *restoreParametersPtr = nullptr;
+        if (_hasRestoreLearnedParameters)
+        {
+            restoreParameters = _restoreLearnedParameters;
+            restoreParametersPtr = &restoreParameters;
+            _hasRestoreLearnedParameters = false;
+        }
+
         if (config.source == FuelGauge::InitSource::Profile_Max17260)
         {
             const Model *model = static_cast<const Model *>(config.data.profile.model);
@@ -181,15 +203,6 @@ namespace PowerFeather
                     return false;
                 }
                 model = &_profile;
-            }
-
-            LearnedParameters restoreParameters = {};
-            const LearnedParameters *restoreParametersPtr = nullptr;
-            if (_hasRestoreLearnedParameters)
-            {
-                restoreParameters = _restoreLearnedParameters;
-                restoreParametersPtr = &restoreParameters;
-                _hasRestoreLearnedParameters = false;
             }
 
             return _loadModel(*model, restoreParametersPtr);
@@ -210,10 +223,10 @@ namespace PowerFeather
                 return false;
         }
 
-        return _initEZConfig(config, modelId);
+        return _initEZConfig(config, modelId, restoreParametersPtr);
     }
 
-    bool MAX17260::_initEZConfig(const InitConfig &config, uint8_t modelId)
+    bool MAX17260::_initEZConfig(const InitConfig &config, uint8_t modelId, const LearnedParameters *savedParameters)
     {
         if (!_waitForDNRClear())
         {
@@ -233,11 +246,12 @@ namespace PowerFeather
         if (!writeRegister(Register::DesignCap, _capacityMahToDesignCapRaw(config.data.capacity.capacityMah))) return false;
         // This will be overwritten by _finalizeInit() with potentially better accuracy
         if (!writeRegister(Register::IChgTerm, _currentMaToRaw(config.data.capacity.terminationCurrentMa))) return false;
-        if (!writeRegister(Register::VEmpty, VEmpty_Default)) return false;
+        const uint16_t vEmpty = (modelId == ModelID_LFP) ? VEmpty_LFP : VEmpty_Default;
+        if (!writeRegister(Register::VEmpty, vEmpty)) return false;
 
         uint16_t modelCfg = ModelCfgBit_Refresh;
-        modelCfg |= static_cast<uint16_t>((modelId & 0x7u) << 5);
-        if (config.data.capacity.chargeVoltageMv > ModelCfgHighVoltageThresholdMv)
+        modelCfg |= static_cast<uint16_t>((modelId & 0x7u) << ModelCfgShift_ModelID);
+        if (config.data.capacity.chargeVoltage > ModelCfgHighVoltageThreshold)
         {
             modelCfg |= ModelCfgBit_VChg;
         }
@@ -250,6 +264,63 @@ namespace PowerFeather
         if (!_waitForModelRefreshClear())
         {
             return false;
+        }
+
+        if (savedParameters)
+        {
+            if (!_writeAndVerify(Register::FullCapRep, savedParameters->fullCapRep)) return false;
+
+            const uint16_t dQAcc = static_cast<uint16_t>(savedParameters->fullCapNom / 2u);
+            constexpr uint16_t dPAcc = 0x0C80;
+            bool verified = false;
+            for (int attempt = 0; attempt < 3; ++attempt)
+            {
+                if (!writeRegister(Register::dQAcc, dQAcc)) return false;
+                if (!writeRegister(Register::dPAcc, dPAcc)) return false;
+                vTaskDelay(pdMS_TO_TICKS(10));
+                if (!writeRegister(Register::FullCapNom, savedParameters->fullCapNom)) return false;
+
+                uint16_t checkFullCapNom = 0;
+                uint16_t checkDQAcc = 0;
+                uint16_t checkDPAcc = 0;
+                if (!readRegister(Register::FullCapNom, checkFullCapNom) ||
+                    !readRegister(Register::dQAcc, checkDQAcc) ||
+                    !readRegister(Register::dPAcc, checkDPAcc))
+                {
+                    return false;
+                }
+
+                if (checkFullCapNom == savedParameters->fullCapNom &&
+                    checkDQAcc == dQAcc &&
+                    checkDPAcc == dPAcc)
+                {
+                    verified = true;
+                    break;
+                }
+            }
+
+            if (!verified)
+            {
+                return false;
+            }
+
+            uint16_t vfsoc = 0;
+            if (!readRegister(Register::VFSOC, vfsoc))
+            {
+                return false;
+            }
+
+            uint32_t updateCapacity =
+                (static_cast<uint32_t>(vfsoc) * savedParameters->fullCapNom) / 25600u;
+            uint16_t updateCapacity16 = static_cast<uint16_t>(std::min<uint32_t>(updateCapacity, 0xFFFFu));
+            if (!writeRegister(Register::MixCap, updateCapacity16)) return false;
+            if (!writeRegister(Register::AvCap, updateCapacity16)) return false;
+
+            vTaskDelay(pdMS_TO_TICKS(200));
+
+            if (!_writeAndVerify(Register::RComp0, savedParameters->rComp0)) return false;
+            if (!_writeAndVerify(Register::TempCo, savedParameters->tempCo)) return false;
+            if (!_writeAndVerify(Register::Cycles, savedParameters->cycles)) return false;
         }
 
         if (!writeRegister(Register::HibCfg, hibCfg))
@@ -291,7 +362,7 @@ namespace PowerFeather
         }
 
         cfg &= static_cast<uint16_t>(~ModelCfgMask_ModelID);
-        cfg |= static_cast<uint16_t>((modelId & 0x7u) << 5);
+        cfg |= static_cast<uint16_t>((modelId & 0x7u) << ModelCfgShift_ModelID);
         cfg |= ModelCfgBit_Refresh;
 
         if (!writeRegister(Register::ModelCfg, cfg))
@@ -587,13 +658,25 @@ namespace PowerFeather
         return false;
     }
 
-    bool MAX17260::getCellVoltage(uint16_t &voltage)
+    bool MAX17260::getCellVoltage(float &voltage)
     {
         uint16_t raw = 0;
         if (readRegister(Register::VCell, raw))
         {
-            uint32_t mv = static_cast<uint32_t>(raw) * 5u;
-            voltage = static_cast<uint16_t>((mv + 32u) >> 6); // divide by 64 with rounding
+            voltage = (static_cast<float>(raw) * 5.0f) / (64.0f * MillivoltsPerVolt);
+            return true;
+        }
+        return false;
+    }
+
+    bool MAX17260::getCurrent(float &current)
+    {
+        uint16_t raw = 0;
+        if (readRegister(Register::Current, raw))
+        {
+            int16_t signedRaw = static_cast<int16_t>(raw);
+            current = (static_cast<float>(signedRaw) * 25.0f) /
+                      (static_cast<float>(SenseResistorMilliohms) * 16.0f);
             return true;
         }
         return false;
@@ -703,6 +786,19 @@ namespace PowerFeather
         return false;
     }
 
+    bool MAX17260::getDesignCapacity(uint16_t &mah)
+    {
+        uint16_t raw = 0;
+        if (!readRegister(Register::DesignCap, raw))
+        {
+            return false;
+        }
+        // Inverse of _capacityMahToDesignCapRaw: mAh = raw * 5 / RSENSE_mΩ.
+        uint32_t scaled = static_cast<uint32_t>(raw) * 5u + (SenseResistorMilliohms / 2u);
+        mah = static_cast<uint16_t>(std::min<uint32_t>(scaled / SenseResistorMilliohms, 0xFFFFu));
+        return true;
+    }
+
     void MAX17260::setRestoreLearnedParameters(const LearnedParameters &parameters)
     {
         _restoreLearnedParameters = parameters;
@@ -797,7 +893,7 @@ namespace PowerFeather
         return writeRegister(Register::Config, newConfig);
     }
 
-    bool MAX17260::setLowVoltageAlarm(uint16_t voltage)
+    bool MAX17260::setLowVoltageAlarm(float voltage)
     {
         if (voltage != 0 && (voltage < MinVoltageAlarm || voltage > MaxVoltageAlarm))
         {
@@ -814,7 +910,7 @@ namespace PowerFeather
         uint8_t raw = 0;
         if (voltage != 0)
         {
-            uint32_t value = (static_cast<uint32_t>(voltage) + 10u) / 20u;
+            uint32_t value = static_cast<uint32_t>(std::lround((voltage * MillivoltsPerVolt) / 20.0f));
             raw = static_cast<uint8_t>(std::min<uint32_t>(value, 0xFFu));
         }
 
@@ -832,7 +928,7 @@ namespace PowerFeather
         return true;
     }
 
-    bool MAX17260::setHighVoltageAlarm(uint16_t voltage)
+    bool MAX17260::setHighVoltageAlarm(float voltage)
     {
         if (voltage != 0 && (voltage < MinVoltageAlarm || voltage > MaxVoltageAlarm))
         {
@@ -849,7 +945,7 @@ namespace PowerFeather
         uint8_t raw = 0xFF; // Writing 0xFF (5100 mV) effectively disables the alarm.
         if (voltage != 0)
         {
-            uint32_t value = (static_cast<uint32_t>(voltage) + 10u) / 20u;
+            uint32_t value = static_cast<uint32_t>(std::lround((voltage * MillivoltsPerVolt) / 20.0f));
             raw = static_cast<uint8_t>(std::min<uint32_t>(value, 0xFFu));
         }
 

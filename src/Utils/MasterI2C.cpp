@@ -126,7 +126,7 @@ namespace PowerFeather
         memcpy(&(buf2[sizeof(reg)]), buf, len);
         ESP_LOGV(TAG, "Write address: %02x, reg: %02x, buf: %p, len: %d.", address, reg, buf, len);
         ESP_LOG_BUFFER_HEX_LEVEL(TAG, buf, len, ESP_LOG_VERBOSE);
-        return i2c_master_transmit(device, buf2, sizeof(buf2), _transferTimeoutMs) == ESP_OK;
+        return i2c_master_transmit(device, buf2, sizeof(buf2), TransferTimeoutMs) == ESP_OK;
     }
 
     bool MasterI2C::read(uint8_t address, uint8_t reg, uint8_t *buf, size_t len)
@@ -138,7 +138,7 @@ namespace PowerFeather
         }
 
         ESP_LOGV(TAG, "Read address: %02x, reg: %02x, buf: %p, len: %d.", address, reg, buf, len);
-        esp_err_t res = i2c_master_transmit_receive(device, &reg, sizeof(reg), buf, len, _transferTimeoutMs);
+        esp_err_t res = i2c_master_transmit_receive(device, &reg, sizeof(reg), buf, len, TransferTimeoutMs);
         ESP_LOG_BUFFER_HEX_LEVEL(TAG, buf, len, ESP_LOG_VERBOSE);
         return res == ESP_OK;
     }

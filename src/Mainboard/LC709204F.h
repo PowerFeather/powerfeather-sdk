@@ -59,10 +59,10 @@ namespace PowerFeather
 
         bool probe() override;
         const char *getName() const override { return "LC709204F"; }
-        void getVoltageAlarmRange(uint16_t &minMv, uint16_t &maxMv) const override
+        void getVoltageAlarmRange(float &minV, float &maxV) const override
         {
-            minMv = MinVoltageAlarm;
-            maxMv = MaxVoltageAlarm;
+            minV = MinVoltageAlarm;
+            maxV = MaxVoltageAlarm;
         }
         void getTemperatureRange(float &minC, float &maxC) const override
         {
@@ -81,7 +81,7 @@ namespace PowerFeather
         }
 
         bool getEnabled(bool &enabled) override;
-        bool getCellVoltage(uint16_t &voltage) override;
+        bool getCellVoltage(float &voltage) override;
         bool getRSOC(uint8_t &percent) override;
         bool getTimeToEmpty(uint16_t &minutes) override;
         bool getTimeToFull(uint16_t &minutes) override;
@@ -94,8 +94,8 @@ namespace PowerFeather
         bool setChangeOfParameter(ChangeOfParameter changeOfParam);
         bool setCellTemperature(float temperature) override;
         bool enableTSENSE(bool enableTsense1, bool enableTsense2) override;
-        bool setLowVoltageAlarm(uint16_t voltage) override;
-        bool setHighVoltageAlarm(uint16_t voltage) override;
+        bool setLowVoltageAlarm(float voltage) override;
+        bool setHighVoltageAlarm(float voltage) override;
         bool setLowRSOCAlarm(uint8_t percent) override;
         bool setTerminationFactor(float factor);
         bool setInitialized();
@@ -106,8 +106,8 @@ namespace PowerFeather
     private:
         static constexpr uint16_t MaxBatteryCapacity = 6000;
         static constexpr uint16_t MinBatteryCapacity = 50;
-        static constexpr uint16_t MinVoltageAlarm = 2500;
-        static constexpr uint16_t MaxVoltageAlarm = 5000;
+        static constexpr float MinVoltageAlarm = 2.5f;
+        static constexpr float MaxVoltageAlarm = 5.0f;
         static constexpr float MaxTerminationFactor = 0.3f;
         static constexpr float MinTerminationFactor = 0.02f;
 
@@ -203,7 +203,7 @@ namespace PowerFeather
 
         uint8_t _computeCRC8(uint8_t *data, int len);
 
-        bool _setVoltageAlarm(Register reg, uint16_t voltage);
+        bool _setVoltageAlarm(Register reg, float voltage);
         bool _clearAlarm(const Field &alarmField);
         bool initImpl(const InitConfig &config) override;
     };
