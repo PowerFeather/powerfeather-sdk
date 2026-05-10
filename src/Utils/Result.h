@@ -39,12 +39,12 @@ namespace PowerFeather
 {
     enum class Result
     {
-        Ok = 0,            // Operation suceeded.
-        Failure = -1,      // Operation unspecified failure.
+        Ok = 0,            // Operation succeeded.
+        Failure = -1,      // Unspecified operation failure.
         InvalidState = -2, // Operation is not allowed given current internal state.
         Timeout = -3,      // Operation took longer than expected.
-        InvalidArg = -4,   // Operation argument out of range or invalid.
+        InvalidArg = -4,   // Operation argument is out of range or invalid.
         NotReady = -5,     // Unable to complete operation at this time.
-        LockFailed = -6,   // Exclusive resource lock acquisition by operation failed.
+        LockFailed = -6,   // Operation failed to acquire an exclusive resource lock.
     };
 }

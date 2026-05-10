@@ -54,7 +54,7 @@ void loop()
     printf("[Supply]  Voltage: %.3f V    Current: %.1f mA\n", supplyVoltage, supplyCurrent);
     printf("[Battery] Voltage: %.3f V    Current: %.1f mA    ", batteryVoltage, batteryCurrent);
 
-    // Check the result for getting battery charge.
+    // Check the result of getting battery charge.
     Result res = Board.getBatteryCharge(batteryCharge);
 
     if (res == Result::Ok)

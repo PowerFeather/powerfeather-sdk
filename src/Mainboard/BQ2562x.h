@@ -196,7 +196,7 @@ namespace PowerFeather
 
         BQ2562x(MasterI2C &i2c) : _i2c(i2c) {}
 
-        // Voltage APIs use volts (V). Current APIs use milliamps (mA).
+        // Voltage APIs use volts (V). Current APIs use milliamperes (mA).
         bool getWD(bool &enabled);
         bool getVBUS(float &voltage);
         bool getIBUS(float &current);
@@ -204,7 +204,7 @@ namespace PowerFeather
         bool getIBAT(float &current);
         bool getADCDone(bool &done);
         bool getTSEnabled(bool &enabled);
-        bool getTSBias(float &voltage);
+        bool getTSBias(float &bias);
         bool getVBUSStat(VBUSStat &stat);
         bool getChargeStat(ChargeStat &stat);
         bool getChargingEnabled(bool& enabled);

@@ -151,8 +151,8 @@ namespace PowerFeather
         static constexpr uint16_t MinBatteryCapacity = 1;
         static constexpr uint16_t MaxBatteryCapacity = static_cast<uint16_t>(MaxBatteryCapacityMah);
         static constexpr float MinVoltageAlarm = 0.02f;
-        // VAlrtTh is encoded in 20mV steps with an 8-bit field (0x00..0xFF).
-        // Effective max threshold is 255 * 20mV = 5.1V.
+        // VAlrtTh is encoded in 20 mV steps with an 8-bit field (0x00..0xFF).
+        // Effective max threshold is 255 * 20 mV = 5.1 V.
         static constexpr float MaxVoltageAlarm = 5.1f;
         static constexpr float MinTemperature = -128.0f;
         static constexpr float MaxTemperature = 127.996f;

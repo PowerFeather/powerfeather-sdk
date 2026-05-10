@@ -715,7 +715,7 @@ namespace PowerFeather
         return true;
     }
 
-    Result Mainboard::_udpateChargerADC()
+    Result Mainboard::_updateChargerADC()
     {
         RET_IF_ERR(_reapplyChargerConfig());
 
@@ -1100,8 +1100,8 @@ namespace PowerFeather
                 RET_IF_FALSE(getCharger().setChargeVoltageLimit(_chargeVoltage), Result::Failure);
             }
 
-            // If battery capacity is not 0, initialize the fuel gauge. This can fail if during
-            // startup no battery is connected, therefore failures are not checked here. Fuel guage
+            // If the battery capacity is not 0, initialize the fuel gauge. This can fail if no battery is
+            // connected during startup, so failures are not checked here. Fuel gauge
             // initialization attempts will be made later, during calls to member functions that
             // talk to the fuel gauge.
             if (_batteryCapacity)
@@ -1247,7 +1247,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
-        RET_IF_ERR(_udpateChargerADC());
+        RET_IF_ERR(_updateChargerADC());
         RET_IF_FALSE(getCharger().getVBUS(voltage), Result::Failure);
         ESP_LOGD(TAG, "Measured supply voltage: %f V.", voltage);
         return Result::Ok;
@@ -1258,7 +1258,7 @@ namespace PowerFeather
         TRY_LOCK(_mutex);
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
-        RET_IF_ERR(_udpateChargerADC());
+        RET_IF_ERR(_updateChargerADC());
         RET_IF_FALSE(getCharger().getIBUS(current), Result::Failure);
         ESP_LOGD(TAG, "Measured supply current: %f mA.", current);
         return Result::Ok;
@@ -1293,7 +1293,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShipMode), Result::Failure);
-        // If this executes, then charger did not enter ship mode. Return to normal operation
+        // If this executes, the charger did not enter ship mode. Return to normal operation
         // and return failure status.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::Normal), Result::Failure);
@@ -1307,8 +1307,8 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::ShutdownMode), Result::Failure);
-        // If this executes, then charger did not enter shutdown mode. According to the datasheet,
-        // charger automatically returns to normal mode, so just return failure.
+        // If this executes, the charger did not enter shutdown mode. According to the datasheet,
+        // the charger automatically returns to normal mode, so just return failure.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
         ESP_LOGD(TAG, "Failed to enter shutdown mode.");
         return Result::Failure;
@@ -1320,7 +1320,7 @@ namespace PowerFeather
         RET_IF_FALSE(_initDone, Result::InvalidState);
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(getCharger().setBATFETControl(BQ2562x::BATFETControl::SystemPowerReset), Result::Failure);
-        // If this executes, then charger did not perform power cycle.
+        // If this executes, the charger did not perform a power cycle.
         vTaskDelay(pdMS_TO_TICKS(_batfetCtrlWaitTime));
         ESP_LOGD(TAG, "Failed to do power cycle.");
         return Result::Failure;
@@ -1380,9 +1380,9 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         if (enable)
         {
-            // Do also initialization here, since it is possible that the system initialized
-            // with battery present, then battery is disconected, then battery is reconnected,
-            // the finally this function is called.
+            // Also initialize here, since it is possible that the system initialized
+            // with a battery present, then the battery is disconnected, then the battery is reconnected,
+            // and finally this function is called.
             RET_IF_ERR(_initFuelGauge());
         }
         RET_IF_FALSE(getFuelGauge().setEnabled(enable), Result::Failure);
@@ -1405,7 +1405,7 @@ namespace PowerFeather
 
         if (!usedFuelGauge)
         {
-            RET_IF_ERR(_udpateChargerADC());
+            RET_IF_ERR(_updateChargerADC());
             RET_IF_FALSE(getCharger().getVBAT(voltage), Result::Failure);
         }
         return Result::Ok;
@@ -1419,7 +1419,7 @@ namespace PowerFeather
         RET_IF_FALSE(static_cast<MAX17260 &>(getFuelGauge()).getCurrent(current), Result::Failure);
         ESP_LOGD(TAG, "Measured battery current from fuel gauge: %f mA.", current);
 #else
-        RET_IF_ERR(_udpateChargerADC());
+        RET_IF_ERR(_updateChargerADC());
         RET_IF_FALSE(getCharger().getIBAT(current), Result::Failure);
         bool chargingEnabled = false;
         RET_IF_FALSE(getCharger().getChargingEnabled(chargingEnabled), Result::Failure);
@@ -1508,7 +1508,7 @@ namespace PowerFeather
         }
 #endif
 
-        // Get the time-to-empty or time-to-full depending on battery is charging
+        // Get time-to-empty or time-to-full depending on whether the battery is charging
         // or discharging.
         uint16_t mins = 0;
         RET_IF_FALSE(discharging ? getFuelGauge().getTimeToEmpty(mins) : getFuelGauge().getTimeToFull(mins), Result::Failure);
@@ -1531,13 +1531,13 @@ namespace PowerFeather
         RET_IF_FALSE(_canAccessPowerI2C(), Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
 
-        // Temperature sensing must be enabled using enableBatteryTempSense(true), only
-        // then can the battery temperature be measured.
+        // Temperature sensing must be enabled using enableBatteryTempSense(true) before
+        // the battery temperature can be measured.
         bool enabled = false;
         RET_IF_FALSE(getCharger().getTSEnabled(enabled) && enabled, Result::InvalidState);
 
         float bias = 0;
-        RET_IF_ERR(_udpateChargerADC());
+        RET_IF_ERR(_updateChargerADC());
         RET_IF_FALSE(getCharger().getTSBias(bias), Result::Failure);
 
         // Check if bias is within plausible range for 103AT thermistor.
@@ -1634,7 +1634,7 @@ namespace PowerFeather
         }
 #endif
         RET_IF_FALSE(getFuelGauge().setCellTemperature(temperature), Result::Failure);
-        ESP_LOGD(TAG, "Fuel guage temperature updated to: %f °C.", temperature);
+        ESP_LOGD(TAG, "Fuel gauge temperature updated to: %f °C.", temperature);
         return Result::Ok;
     }
 

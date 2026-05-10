@@ -23,7 +23,7 @@ extern "C" void app_main()
     {
         printf("Board initialized successfully\n\n");
 
-        // Ship mode can't be entered into while external supply is present,
+        // Ship mode can't be entered while external supply is present,
         // loop here while that is the case.
         bool supplyGood = false;
         while (Board.checkSupplyGood(supplyGood) == Result::Ok && supplyGood)
