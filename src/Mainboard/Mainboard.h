@@ -197,7 +197,7 @@ namespace PowerFeather
         /**
          * @brief Set \a EN pin high or low.
          *
-         * This is useful for enabling or disabling connected Feather Wings to reduce power consumption.
+         * This is useful for enabling or disabling connected FeatherWings to reduce power consumption.
          *
          * @param[in] high If \c true, EN is set high; if \c false, EN is set low.
          *

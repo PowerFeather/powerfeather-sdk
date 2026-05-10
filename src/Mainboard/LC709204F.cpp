@@ -65,7 +65,7 @@ namespace PowerFeather
 
         if (crc != reply[5]) // crc failed
         {
-            ESP_LOGD(TAG, "CRC %02x different from expected %02x.", reply[5], crc);
+            ESP_LOGD(TAG, "CRC %02x differs from expected %02x.", reply[5], crc);
             return false;
         }
 

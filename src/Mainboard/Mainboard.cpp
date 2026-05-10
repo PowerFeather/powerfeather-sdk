@@ -419,7 +419,7 @@ namespace PowerFeather
 
     // Charger state the user has committed via public setters. Placed in RTC
     // slow memory so it survives deep sleep and can be re-applied to the chip
-    // in _reapplyChargerConfig. Valid iff first == firstMagic (warm boot).
+    // in _reapplyChargerConfig. Valid if and only if first == firstMagic (warm boot).
     struct PersistedChargerState
     {
         float chargingCurrentLimit;
@@ -720,7 +720,7 @@ namespace PowerFeather
         RET_IF_ERR(_reapplyChargerConfig());
 
         uint32_t now = esp_timer_get_time() / 1000;
-        // Since updating ADC values take a long time, only update it again after _chargerADCWaitTime has elapsed.
+        // Since updating ADC values takes a long time, only update them again after _chargerADCWaitTime has elapsed.
         if (_chargerADCTime == 0 || (now - _chargerADCTime) >= _chargerADCWaitTime)
         {
             bool done = false;
@@ -734,7 +734,7 @@ namespace PowerFeather
 
             RET_IF_FALSE(getCharger().getADCDone(done) && done, Result::Failure);
             // Record completion time (not entry time) so the throttle window measures
-            // idle time after the ADC settled, not entry-to-entry — otherwise back-to-back
+            // idle time after the ADC settles, not entry-to-entry — otherwise back-to-back
             // callers always satisfy (now - _chargerADCTime) >= _chargerADCWaitTime because
             // the vTaskDelay above guarantees at least _chargerADCWaitTime has elapsed.
             _chargerADCTime = esp_timer_get_time() / 1000;
@@ -855,7 +855,7 @@ namespace PowerFeather
 
         if (type == BatteryType::ICR18650_26H || type == BatteryType::UR18650ZY)
         {
-            // Ignore set capacity and set 2600 mAh for both ICR18650_26H and UR18650ZY.
+            // Ignore the supplied capacity and use 2600 mAh for both ICR18650_26H and UR18650ZY.
             capacity = 2600;
         }
 
@@ -875,7 +875,7 @@ namespace PowerFeather
         uint16_t minCapacity = 0;
         uint16_t maxCapacity = 0;
         _fuelGauge.getBatteryCapacityRange(minCapacity, maxCapacity);
-        // Capacity should either be 0 (from init()) to indicate no battery is expected,
+        // Capacity should be either 0 (from init()) to indicate no battery is expected,
         // or within range inclusive.
         RET_IF_FALSE(!capacity || (capacity >= minCapacity && capacity <= maxCapacity), Result::InvalidArg);
 
@@ -1002,7 +1002,7 @@ namespace PowerFeather
         {
             ESP_LOGI(TAG, "Cold boot: clearing retained charger/fuel-gauge signatures and learned state");
             // Cold boot: RTC_NOINIT_ATTR leaves persistedChargerState undefined.
-            // Seed it with the defaults above so that a warm boot prior to any
+            // Seed it with the defaults above so that a warm boot before any
             // setter call rehydrates known-good values instead of RTC garbage.
             persistedChargerState.chargingEnabled = _chargingEnabled;
             persistedChargerState.chargingCurrentLimit = _chargingCurrentLimit;
@@ -1035,7 +1035,7 @@ namespace PowerFeather
         {
             FuelGaugeProfileHelper<FuelGaugeImpl>::setProfile(_fuelGauge, profile);
         }
-        // On first boot VSQT, through EN_SQT, is always enabled. On wake from deep sleep try and maintain held state.
+        // On first boot, VSQT is always enabled through EN_SQT. On wake from deep sleep, try to maintain the held state.
         RET_IF_FALSE(_initInternalRTCPin(Pin::EN_SQT, RTC_GPIO_MODE_INPUT_OUTPUT), Result::Failure);
         bool sqtEnabled = _isFirst() ? true : rtc_gpio_get_level(Pin::EN_SQT);
         RET_IF_FALSE(_setRTCPin(Pin::EN_SQT, sqtEnabled), Result::Failure)
@@ -1513,7 +1513,7 @@ namespace PowerFeather
         uint16_t mins = 0;
         RET_IF_FALSE(discharging ? getFuelGauge().getTimeToEmpty(mins) : getFuelGauge().getTimeToFull(mins), Result::Failure);
 
-        if (mins != 0xFFFF) // check if already the required 10 % rise/drop in charge
+        if (mins != 0xFFFF) // check whether the required 10 % rise/drop in charge has already occurred
         {
             minutes = mins * (discharging ? -1 : 1); // return negative amount of time for discharging
             ESP_LOGD(TAG, "Estimated battery time left (%s): %d mins.", discharging ? "discharging" : "charging", abs(minutes));

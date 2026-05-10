@@ -45,7 +45,7 @@ extern "C" void app_main()
             // When charging is enabled, red CHG LED turns on.
             Board.enableBatteryCharging(gpio_get_level(Mainboard::Pin::BTN) == 0); // BTN is LOW when pressed
 
-            // Get information about supply and battery
+            // Get supply and battery information.
             float supplyVoltage = 0.0f, batteryVoltage = 0.0f;
             float supplyCurrent = 0.0f, batteryCurrent = 0.0f;
             uint8_t batteryCharge = 0;

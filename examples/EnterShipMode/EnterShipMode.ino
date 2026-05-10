@@ -18,8 +18,8 @@ void setup()
   {
     printf("Board initialized successfully\n\n");
 
-    // Ship mode can't be entered while external supply is present,
-    // loop here while that is the case.
+    // Ship mode can't be entered while an external supply is present.
+    // Stay in this loop while that is the case.
     bool supplyGood = false;
     while (Board.checkSupplyGood(supplyGood) == Result::Ok && supplyGood)
     {
@@ -31,7 +31,7 @@ void setup()
     Board.enterShipMode(); // after a 1 s delay, enter ship mode
     // Ship mode can be exited either by:
     //   - plugging in a supply
-    //   - pulling down QON for at least 800 ms
+    //   - pulling QON low for at least 800 ms
   }
 }
 
