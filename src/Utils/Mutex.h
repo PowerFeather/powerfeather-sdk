@@ -46,7 +46,13 @@ namespace PowerFeather
         {
         public:
             Lock(Mutex &mutex) : _mutex(mutex) { _locked = _mutex.lock(); }
-            ~Lock() { _mutex.unlock(); }
+            ~Lock()
+            {
+                if (_locked)
+                {
+                    _mutex.unlock();
+                }
+            }
 
             bool isLocked() { return _locked; }
 
@@ -55,10 +61,11 @@ namespace PowerFeather
             bool _locked;
         };
 
-        Mutex(uint32_t timeout) : _timeout(timeout) {}
+        Mutex(uint32_t timeout) : _sem(nullptr), _timeout(timeout) {}
 
         void init();
         bool lock();
+        bool lockBlocking();
         void unlock();
 
     private:

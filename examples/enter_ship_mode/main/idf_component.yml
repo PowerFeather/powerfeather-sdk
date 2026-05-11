@@ -1,4 +1,4 @@
-version: "1.0.0"
+version: "2.0.0"
 description: "PowerFeather SDK Enter Ship Mode Example"
 dependencies:
   powerfeather/powerfeather-sdk:

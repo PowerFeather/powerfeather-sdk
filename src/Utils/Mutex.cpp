@@ -42,8 +42,11 @@ namespace PowerFeather
 
     void Mutex::init()
     {
-        _sem = xSemaphoreCreateRecursiveMutex();
-        ESP_LOGD(TAG, "Mutex %p created.", this);
+        if (_sem == nullptr)
+        {
+            _sem = xSemaphoreCreateRecursiveMutex();
+            ESP_LOGD(TAG, "Mutex %p created.", this);
+        }
     }
 
     bool Mutex::lock()
@@ -54,6 +57,17 @@ namespace PowerFeather
             return true;
         }
         ESP_LOGD(TAG, "Failed to take mutex %p.", this);
+        return false;
+    }
+
+    bool Mutex::lockBlocking()
+    {
+        if (xSemaphoreTakeRecursive(_sem, portMAX_DELAY) == pdTRUE)
+        {
+            ESP_LOGD(TAG, "Mutex %p blocking take succeeded.", this);
+            return true;
+        }
+        ESP_LOGD(TAG, "Failed to take mutex %p (blocking).", this);
         return false;
     }
 

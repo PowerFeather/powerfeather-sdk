@@ -45,9 +45,9 @@ namespace PowerFeather
         static constexpr uint16_t MinChargingCurrent = 40;
         static constexpr uint16_t MaxChargingCurrent = 2000;
 
-        static constexpr uint16_t MinVINDPMVoltage = 4600;
-        static constexpr uint16_t MaxVINDPMVoltage = 16800;
-        static constexpr uint16_t ResetVINDPMVoltage = 4600;
+        static constexpr float MinVINDPMVoltage = 4.6f;
+        static constexpr float MaxVINDPMVoltage = 16.8f;
+        static constexpr float ResetVINDPMVoltage = 4.6f;
 
         static constexpr uint16_t MinIINDPMCurrent = 100;
         static constexpr uint16_t MaxIINDPMCurrent = 3200;
@@ -121,8 +121,15 @@ namespace PowerFeather
 
         enum class BATFETDelay : uint8_t
         {
-            Delay20ms = 0x00,
-            Delay10s = 0x01,
+            Delay25ms = 0x00,
+            Delay12_5s = 0x01,
+
+            // Backward-compatible alias for the old SDK spelling. The BQ2562x
+            // datasheets define this BATFET_DLY encoding as 25 ms.
+            Delay20ms = Delay25ms,
+            // Backward-compatible alias for the old SDK spelling. The BQ2562x
+            // datasheets define this BATFET_DLY encoding as 12.5 s.
+            Delay10s = Delay12_5s,
         };
 
         enum class Adc : uint8_t
@@ -153,10 +160,14 @@ namespace PowerFeather
 
         enum class IbatPkLimit : uint8_t
         {
-            Limit1_5A = 0x00,
-            Limit3A = 0x01,
+            Reserved00 = 0x00,
+            Reserved01 = 0x01,
             Limit6A = 0x02,
-            Limit12A = 0x03
+            Limit12A = 0x03,
+            // Backward-compatible aliases for legacy code. Current TI datasheets
+            // for both BQ25622E and BQ25628E mark these encodings as reserved.
+            Limit1_5A = Reserved00,
+            Limit3A = Reserved01
         };
 
         enum class TH456Setting : uint8_t
@@ -185,20 +196,22 @@ namespace PowerFeather
 
         BQ2562x(MasterI2C &i2c) : _i2c(i2c) {}
 
+        // Voltage APIs use volts (V). Current APIs use milliamperes (mA).
         bool getWD(bool &enabled);
-        bool getVBUS(uint16_t &voltage);
-        bool getIBUS(int16_t &current);
-        bool getVBAT(uint16_t &voltage);
-        bool getIBAT(int16_t &current);
+        bool getVBUS(float &voltage);
+        bool getIBUS(float &current);
+        bool getVBAT(float &voltage);
+        bool getIBAT(float &current);
         bool getADCDone(bool &done);
         bool getTSEnabled(bool &enabled);
-        bool getTSBias(float &voltage);
+        bool getTSBias(float &bias);
         bool getVBUSStat(VBUSStat &stat);
         bool getChargeStat(ChargeStat &stat);
         bool getChargingEnabled(bool& enabled);
         bool getSTATEnabled(bool& enabled);
-        bool getVINDPM(uint16_t& voltage);
-        bool getChargeCurrentLimit(uint16_t& current);
+        bool getVINDPM(float& voltage);
+        bool getChargeCurrentLimit(float& current);
+        bool getChargeVoltageLimit(float& voltage);
         bool getPartInformation(uint8_t &info);
 
         bool setWD(WatchdogTimer timer);
@@ -210,12 +223,13 @@ namespace PowerFeather
         bool enableWVBUS(bool enable);
         bool enableADC(Adc adc, bool enable);
         bool enableSTAT(bool enable);
-        bool setChargeCurrentLimit(uint16_t current);
+        bool setChargeCurrentLimit(float current);
+        bool setChargeVoltageLimit(float voltage);
         bool setBATFETControl(BATFETControl control);
         bool setBATFETDelay(BATFETDelay delay);
-        bool setVINDPM(uint16_t voltage);
-        bool setIINDPM(uint16_t current);
-        bool setITERM(uint16_t current);
+        bool setVINDPM(float voltage);
+        bool setIINDPM(float current);
+        bool setITERM(float current);
         bool setTopOff(TopOffTimer timer);
         bool setIbatPk(IbatPkLimit limit);
         bool setTH456(TH456Setting setting);
@@ -225,6 +239,7 @@ namespace PowerFeather
 
     private:
         const Register Charge_Current_Limit_ICHG =            { 0x02, 2, 5, 10 };
+        const Register Charge_Voltage_Limit_VREG =            { 0x04, 2, 3, 11 };
 
         const Register Input_Current_Limit_IINDPM =           { 0x06, 2, 4, 11 };
         const Register Input_Current_Limit_VINDPM =           { 0x08, 2, 5, 13 };
@@ -290,6 +305,11 @@ namespace PowerFeather
         const Register Part_Information_PN =                  { 0x38, 1, 3, 5 };
         const Register Part_Information_DEV_REV =             { 0x38, 1, 0, 2 };
 
+    public:
+        static constexpr uint8_t Charger_PN_BQ25622 = 0x03;
+        static constexpr uint8_t Charger_PN_BQ25628 = 0x04;
+
+    private:
         static constexpr uint8_t _i2cAddress = 0x6a;
 
         MasterI2C &_i2c;
