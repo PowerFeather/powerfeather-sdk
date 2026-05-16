@@ -41,12 +41,12 @@ namespace PowerFeather
 {
     namespace Util
     {
-        static float fromRaw(uint16_t raw, float step, uint16_t origin = 0)
+        inline float fromRaw(uint16_t raw, float step, uint16_t origin = 0)
         {
             return (raw - origin) * step;
         }
 
-        static uint16_t toRaw(float value, float step, uint16_t origin = 0)
+        inline uint16_t toRaw(float value, float step, uint16_t origin = 0)
         {
             return origin + (value * (1/step));
         }
