@@ -588,7 +588,7 @@ namespace PowerFeather
         bool forceReinit = !_hasFuelGaugeInitSignature || signatureMismatch;
         initDecisionState.lastInitFuelGaugeHadSignature = hadFuelGaugeInitSignature;
         initDecisionState.lastInitFuelGaugeForceReinit = forceReinit;
-        ESP_LOGI(TAG,
+        ESP_LOGD(TAG,
                  "Fuel gauge init decision: had_sig=%d curr[src=%u cap=%u term=%u cv=%.3f hash=%08lx] prev[src=%u cap=%u term=%u cv=%.3f hash=%08lx] force_reinit=%d",
                  hadFuelGaugeInitSignature,
                  static_cast<unsigned>(signature.source),
@@ -607,7 +607,7 @@ namespace PowerFeather
         FuelGaugeRestoreGuard<FuelGaugeImpl> restoreGuard(typedGauge);
         if (_hasFuelGaugeInitSignature && !forceReinit)
         {
-            ESP_LOGI(TAG,
+            ESP_LOGD(TAG,
                      "Fuel gauge retained fast path: using_external_temp=%d learned_state_present=%d profile_source=%d",
                      _fuelGaugeUsingExternalTemp,
                      persistedFuelGaugeLearnedState.hasState,
@@ -627,7 +627,7 @@ namespace PowerFeather
             // signature, should return to the documented default internal-
             // temperature mode. Preserve external-temperature mode only on the
             // retained fast path where the battery/profile inputs still match.
-            ESP_LOGI(TAG,
+            ESP_LOGD(TAG,
                      "Fuel gauge reset path: had_sig=%d force_reinit=%d clearing_external_temp_mode learned_state_present=%d",
                      _hasFuelGaugeInitSignature,
                      forceReinit,
