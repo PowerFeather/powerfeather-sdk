@@ -70,16 +70,23 @@ namespace PowerFeather
             "last_fg_src=%u last_fg_cap=%u last_fg_term=%u last_fg_cv=%.3f last_fg_hash=%lu last_fg_has_sig=%d "
             "persisted_fg_src=%u persisted_fg_cap=%u persisted_fg_term=%u persisted_fg_cv=%.3f persisted_fg_hash=%lu persisted_fg_has_sig=%d";
 
+#if POWERFEATHER_ENABLE_PF_STATE_STREAM
         template <typename... Args>
         static void emitPfStateSnapshot(Args... args)
         {
             char line[1024];
             snprintf(line, sizeof(line), kPfStateFormat, args...);
-            ESP_LOGI("PF_STATE", "%s", line);
-#if POWERFEATHER_ENABLE_PF_STATE_STREAM && defined(ARDUINO)
+            ESP_LOGD("PF_STATE", "%s", line);
+#if defined(ARDUINO)
             Serial.printf("PF_STATE %s\n", line);
 #endif
         }
+#else
+        template <typename... Args>
+        static void emitPfStateSnapshot(Args...)
+        {
+        }
+#endif
 
         static uint32_t fnv1aAppendByte(uint32_t hash, uint8_t byte)
         {
@@ -898,7 +905,7 @@ namespace PowerFeather
             _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
             _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
         }
-        ESP_LOGI(TAG, "Termination current set to %d mA.", _terminationCurrent);
+        ESP_LOGD(TAG, "Termination current set to %d mA.", _terminationCurrent);
 
         float chargeVoltage = 4.2f;
         if (useProfile && profile->chargeVoltage)
@@ -927,7 +934,7 @@ namespace PowerFeather
         const bool firstBoot = _isFirst();
         initDecisionState.lastInitFuelGaugeHadSignature = false;
         initDecisionState.lastInitFuelGaugeForceReinit = false;
-        ESP_LOGI(TAG,
+        ESP_LOGD(TAG,
                  "Init context: first=%d rtc_version=0x%08lx battery_type=%d cap=%u term=%u cv=%.3f use_profile=%d profile_hash=%08lx charging_supported=%d",
                  firstBoot,
                  static_cast<unsigned long>(rtcStateVersion),
@@ -947,7 +954,7 @@ namespace PowerFeather
                                     persistedChargerInitSignature.chargeVoltage == currentChargerInitSignature.chargeVoltage &&
                                     persistedChargerInitSignature.profileHash == currentChargerInitSignature.profileHash &&
                                     persistedChargerInitSignature.batteryExpected == currentChargerInitSignature.batteryExpected;
-            ESP_LOGI(TAG,
+            ESP_LOGV(TAG,
                      "Charger signature: match=%d persisted[src=%u cap=%u term=%u cv=%.3f hash=%08lx battery_expected=%d has_sig=%d] current[src=%u cap=%u term=%u cv=%.3f hash=%08lx battery_expected=%d] persisted_state[chg_en=%d ichg=%.1f ts=%d vindpm=%.3f]",
                      chargerSignatureMatch,
                      static_cast<unsigned>(persistedChargerInitSignature.source),
@@ -975,7 +982,7 @@ namespace PowerFeather
                 _chargingCurrentLimit = persistedChargerState.chargingCurrentLimit;
                 _tsEnabled = persistedChargerState.tsEnabled;
                 _vindpm = persistedChargerState.vindpm;
-                ESP_LOGI(TAG,
+                ESP_LOGD(TAG,
                          "Rehydrated charger state from RTC: chg_en=%d ichg=%.1f ts=%d vindpm=%.3f",
                          _chargingEnabled,
                          _chargingCurrentLimit,
@@ -984,7 +991,7 @@ namespace PowerFeather
             }
             else
             {
-                ESP_LOGI(TAG,
+                ESP_LOGD(TAG,
                          "Warm boot with signature mismatch: keeping safe defaults chg_en=%d ichg=%.1f ts=%d vindpm=%.3f",
                          _chargingEnabled,
                          _chargingCurrentLimit,
@@ -1000,7 +1007,7 @@ namespace PowerFeather
         }
         else
         {
-            ESP_LOGI(TAG, "Cold boot: clearing retained charger/fuel-gauge signatures and learned state");
+            ESP_LOGD(TAG, "Cold boot: clearing retained charger/fuel-gauge signatures and learned state");
             // Cold boot: RTC_NOINIT_ATTR leaves persistedChargerState undefined.
             // Seed it with the defaults above so that a warm boot before any
             // setter call rehydrates known-good values instead of RTC garbage.
@@ -1050,7 +1057,7 @@ namespace PowerFeather
 
             RET_IF_FALSE(verifyChargerPart(getCharger()), Result::Failure);
 
-            ESP_LOGI(TAG,
+            ESP_LOGD(TAG,
                      "Applying charger init state: first=%d sig_match=%d chosen_state[chg_en=%d ichg=%.1f ts=%d vindpm=%.3f cv=%.3f]",
                      firstBoot,
                      chargerSignatureMatch,
@@ -1075,7 +1082,7 @@ namespace PowerFeather
 
             if (firstBoot || !chargerSignatureMatch)
             {
-                ESP_LOGI(TAG,
+                ESP_LOGD(TAG,
                          "%s: pushing software charger state into retained charger hardware chg_en=%d ichg=%.1f ts=%d vindpm=%.3f",
                          firstBoot ? "Cold boot" : "Warm boot signature mismatch",
                          _chargingEnabled,
