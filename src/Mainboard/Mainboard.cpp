@@ -559,6 +559,9 @@ namespace PowerFeather
             config.source = FuelGauge::InitSource::Profile_Max17260;
             config.data.profile.model = nullptr;
             signature.source = config.source;
+            signature.capacityMah = _batteryCapacity;
+            signature.terminationCurrentMa = _terminationCurrent;
+            signature.chargeVoltage = _chargeVoltage;
             signature.profileHash = _profileHash;
         }
         else
@@ -647,6 +650,23 @@ namespace PowerFeather
         config.tsenseEnabled = !_fuelGaugeUsingExternalTemp;
 #endif
         RET_IF_FALSE(gauge.init(config, forceReinit), Result::Failure);
+        if (_usesProfile)
+        {
+            float minFactor = 0.0f;
+            float maxFactor = 0.0f;
+            gauge.getTerminationFactorRange(minFactor, maxFactor);
+            float terminationFactor = static_cast<float>(_terminationCurrent) /
+                                      static_cast<float>(_batteryCapacity);
+            if (minFactor > 0.0f)
+            {
+                terminationFactor = std::max(terminationFactor, minFactor);
+            }
+            if (maxFactor > 0.0f)
+            {
+                terminationFactor = std::min(terminationFactor, maxFactor);
+            }
+            RET_IF_FALSE(gauge.setTerminationFactor(terminationFactor), Result::Failure);
+        }
 #if defined(CONFIG_ESP32S3_POWERFEATHER_V2) || defined(POWERFEATHER_BOARD_V2)
         RET_IF_FALSE(FuelGaugeLearnedStateHelper<FuelGaugeImpl>::captureAfterInit(
                          typedGauge, persistedFuelGaugeLearnedState),
@@ -854,6 +874,27 @@ namespace PowerFeather
         return designCapToMah(profile.designCap, maxMah);
     }
 
+    float Mainboard::_programmedChargingCurrentLimit(float current) const
+    {
+        constexpr float chargerCurrentStepMa = 40.0f;
+        return static_cast<float>(static_cast<uint16_t>(current / chargerCurrentStepMa) *
+                                  static_cast<uint16_t>(chargerCurrentStepMa));
+    }
+
+    uint16_t Mainboard::_calculateTerminationCurrent(float chargingCurrentLimit) const
+    {
+        constexpr uint16_t chargerTerminationStepMa = 5;
+        uint16_t terminationCurrent =
+            static_cast<uint16_t>(_programmedChargingCurrentLimit(chargingCurrentLimit) / 10.0f);
+        terminationCurrent = static_cast<uint16_t>(((terminationCurrent + (chargerTerminationStepMa / 2u)) /
+                                                    chargerTerminationStepMa) *
+                                                   chargerTerminationStepMa);
+        terminationCurrent = std::min(terminationCurrent, _recommendedTerminationCurrent);
+        terminationCurrent = std::min<uint16_t>(std::max<uint16_t>(terminationCurrent, BQ2562x::MinITERMCurrent),
+                                                BQ2562x::MaxITERMCurrent);
+        return terminationCurrent;
+    }
+
     Result Mainboard::_initInternal(uint16_t capacity, BatteryType type, const MAX17260::Model *profile)
     {
         _mutex.init();
@@ -890,22 +931,32 @@ namespace PowerFeather
         _batteryType = type;
         _usesProfile = useProfile;
         _profileHash = useProfile ? hashFuelGaugeProfile(*profile) : 0;
+        _chargingCurrentLimit = _defaultMaxChargingCurrent;
 
-        // Set termination current to C / 10 for built-in profiles, or to the
-        // characterized fuel-gauge value for custom MAX17260 profiles.
+        // Use C / 10 for built-in profiles, or the characterized fuel-gauge
+        // value for custom MAX17260 profiles, as the upper termination target.
+        // The active termination current is capped by the configured charge
+        // current limit so the charger and fuel gauge stay internally
+        // consistent when charging slowly.
         uint16_t minCurrent = BQ2562x::MinITERMCurrent;
         uint16_t maxCurrent = BQ2562x::MaxITERMCurrent;
         if (useProfile)
         {
-            _terminationCurrent = MAX17260::ichgTermRawToMa(profile->ichgTerm);
-            RET_IF_FALSE(_terminationCurrent >= minCurrent && _terminationCurrent <= maxCurrent, Result::InvalidArg);
+            _recommendedTerminationCurrent = MAX17260::ichgTermRawToMa(profile->ichgTerm);
+            RET_IF_FALSE(_recommendedTerminationCurrent >= minCurrent &&
+                             _recommendedTerminationCurrent <= maxCurrent,
+                         Result::InvalidArg);
         }
         else
         {
-            _terminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
-            _terminationCurrent = std::min(std::max(_terminationCurrent, minCurrent), maxCurrent);
+            _recommendedTerminationCurrent = static_cast<uint16_t>(_batteryCapacity / 10);
+            _recommendedTerminationCurrent =
+                std::min(std::max(_recommendedTerminationCurrent, minCurrent), maxCurrent);
         }
-        ESP_LOGD(TAG, "Termination current set to %d mA.", _terminationCurrent);
+        _terminationCurrent = _calculateTerminationCurrent(_chargingCurrentLimit);
+        ESP_LOGD(TAG,
+                 "Recommended termination current set to %u mA.",
+                 static_cast<unsigned>(_recommendedTerminationCurrent));
 
         float chargeVoltage = 4.2f;
         if (useProfile && profile->chargeVoltage)
@@ -927,7 +978,6 @@ namespace PowerFeather
         const bool chargingSupported = (_batteryCapacity == 0) || (_batteryCapacity >= _minChargeableBatteryCapacity);
 
         _chargingEnabled = false;
-        _chargingCurrentLimit = _defaultMaxChargingCurrent;
         _tsEnabled = false;
         _vindpm = _minSupplyMaintainVoltage;
         bool chargerSignatureMatch = false;
@@ -950,7 +1000,6 @@ namespace PowerFeather
             chargerSignatureMatch = persistedChargerInitSignature.hasSignature &&
                                     persistedChargerInitSignature.source == currentChargerInitSignature.source &&
                                     persistedChargerInitSignature.capacityMah == currentChargerInitSignature.capacityMah &&
-                                    persistedChargerInitSignature.terminationCurrentMa == currentChargerInitSignature.terminationCurrentMa &&
                                     persistedChargerInitSignature.chargeVoltage == currentChargerInitSignature.chargeVoltage &&
                                     persistedChargerInitSignature.profileHash == currentChargerInitSignature.profileHash &&
                                     persistedChargerInitSignature.batteryExpected == currentChargerInitSignature.batteryExpected;
@@ -1026,6 +1075,13 @@ namespace PowerFeather
             _lastFuelGaugeInitSignature = {};
             _hasFuelGaugeInitSignature = false;
         }
+        _terminationCurrent = _calculateTerminationCurrent(_chargingCurrentLimit);
+        currentChargerInitSignature.terminationCurrentMa = _terminationCurrent;
+        ESP_LOGD(TAG,
+                 "Termination current selected as %u mA (recommended %u mA, charge limit %.1f mA).",
+                 static_cast<unsigned>(_terminationCurrent),
+                 static_cast<unsigned>(_recommendedTerminationCurrent),
+                 _chargingCurrentLimit);
         if (_batteryCapacity && !chargingSupported)
         {
             // Tiny V2 packs are supported for monitoring only. Reset any
@@ -1356,10 +1412,23 @@ namespace PowerFeather
         RET_IF_FALSE(_batteryCapacity, Result::InvalidState);
         RET_IF_FALSE(_batteryCapacity >= _minChargeableBatteryCapacity, Result::InvalidState);
         RET_IF_ERR(_reapplyChargerConfig());
-        RET_IF_FALSE(current >= BQ2562x::MinChargingCurrent && current <= BQ2562x::MaxChargingCurrent, Result::InvalidArg);
+        RET_IF_FALSE(current >= BQ2562x::MinChargingCurrent &&
+                         current <= BQ2562x::MaxChargingCurrent,
+                     Result::InvalidArg);
+        uint16_t terminationCurrent = _calculateTerminationCurrent(current);
         RET_IF_FALSE(getCharger().setChargeCurrentLimit(current), Result::Failure);
+        RET_IF_FALSE(getCharger().setITERM(terminationCurrent), Result::Failure);
         _chargingCurrentLimit = current;
+        _terminationCurrent = terminationCurrent;
         persistedChargerState.chargingCurrentLimit = current;
+        if (persistedChargerInitSignature.hasSignature)
+        {
+            persistedChargerInitSignature.terminationCurrentMa = terminationCurrent;
+        }
+        if (_isFuelGaugeEnabled())
+        {
+            RET_IF_ERR(_initFuelGauge());
+        }
         ESP_LOGD(TAG, "Max charging current set to: %f mA.", current);
         return Result::Ok;
     }
