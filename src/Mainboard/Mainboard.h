@@ -419,6 +419,8 @@ namespace PowerFeather
          * recommended. That current limit of 550 mA can be specified using this function.
          * The charger encodes this limit in 40 mA steps; values between steps are rounded down so the programmed
          * charger limit does not exceed the requested maximum.
+         * The SDK also recalculates the charge-termination current from the programmed charge-current limit
+         * and reapplies it to the charger and, when enabled, the fuel gauge.
          *
          * On V1, \a VSQT must be enabled before calling this function, else \c Result::InvalidState is returned.
          * On V2, power-management I2C remains usable with \a VSQT disabled.
@@ -842,6 +844,7 @@ namespace PowerFeather
         bool _initDone{false};
         uint32_t _chargerADCTime{0};
         uint16_t _batteryCapacity{0};
+        uint16_t _recommendedTerminationCurrent{0};
         uint16_t _terminationCurrent{0};
         float _chargeVoltage{4.2f};
         float _chargingCurrentLimit{_defaultMaxChargingCurrent};
@@ -865,6 +868,8 @@ namespace PowerFeather
         bool _initInternalRTCPin(gpio_num_t pin, rtc_gpio_mode_t mode);
         bool _setRTCPin(gpio_num_t pin, bool value);
         uint16_t _capacityFromProfile(const MAX17260::Model &profile) const;
+        float _programmedChargingCurrentLimit(float current) const;
+        uint16_t _calculateTerminationCurrent(float chargingCurrentLimit) const;
         Result _initInternal(uint16_t capacity, BatteryType type, const MAX17260::Model *profile);
         Result _updateChargerADC();
         Result _applyChargerConfig();

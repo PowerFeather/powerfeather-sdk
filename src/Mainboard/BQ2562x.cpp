@@ -227,11 +227,11 @@ namespace PowerFeather
         {
             switch (value)
             {
-            case static_cast<uint8_t>(ChargeStat::Trickle):
-                stat = ChargeStat::Trickle;
+            case static_cast<uint8_t>(ChargeStat::ConstantCurrent):
+                stat = ChargeStat::ConstantCurrent;
                 break;
-            case static_cast<uint8_t>(ChargeStat::Taper):
-                stat = ChargeStat::Taper;
+            case static_cast<uint8_t>(ChargeStat::ConstantVoltage):
+                stat = ChargeStat::ConstantVoltage;
                 break;
             case static_cast<uint8_t>(ChargeStat::TopOff):
                 stat = ChargeStat::TopOff;
