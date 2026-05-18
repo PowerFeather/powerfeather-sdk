@@ -71,11 +71,22 @@ namespace PowerFeather
 
         enum class ChargeStat : uint8_t
         {
+            // REG0x1E CHG_STAT[4:3], BQ25628E: not charging or charge terminated.
             Terminated = 0x00,
-            Trickle = 0x01,
-            Taper = 0x02,
-            TopOff = 0x03
+            // REG0x1E CHG_STAT[4:3], BQ25628E: trickle, pre-charge, or fast charge in CC mode.
+            ConstantCurrent = 0x01,
+            // REG0x1E CHG_STAT[4:3], BQ25628E: taper charge in CV mode.
+            ConstantVoltage = 0x02,
+            // REG0x1E CHG_STAT[4:3], BQ25628E: top-off timer active charging.
+            TopOff = 0x03,
+            // Backward-compatible aliases. Prefer ConstantCurrent/ConstantVoltage in new code.
+            Trickle = ConstantCurrent,
+            Taper = ConstantVoltage
         };
+        static_assert(static_cast<uint8_t>(ChargeStat::Terminated) == 0x00);
+        static_assert(static_cast<uint8_t>(ChargeStat::ConstantCurrent) == 0x01);
+        static_assert(static_cast<uint8_t>(ChargeStat::ConstantVoltage) == 0x02);
+        static_assert(static_cast<uint8_t>(ChargeStat::TopOff) == 0x03);
 
         enum class WatchdogTimer : uint8_t
         {
@@ -206,6 +217,8 @@ namespace PowerFeather
         bool getTSEnabled(bool &enabled);
         bool getTSBias(float &bias);
         bool getVBUSStat(VBUSStat &stat);
+        // Reads REG0x1E CHG_STAT[4:3]. The ConstantCurrent bucket includes
+        // trickle charge, pre-charge, and fast charge in CC mode.
         bool getChargeStat(ChargeStat &stat);
         bool getChargingEnabled(bool& enabled);
         bool getSTATEnabled(bool& enabled);
