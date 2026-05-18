@@ -5,6 +5,7 @@ The following boards are supported:
 | Board                 | Arduino Support | ESP-IDF Support   |
 |-----------------------|-----------------|-------------------|
 | ESP32-S3 PowerFeather | Yes             | Yes               |
+| ESP32-S3 PowerFeather V2   | Yes             | Yes               |
 
 ## Setup
 
