@@ -698,6 +698,12 @@ namespace PowerFeather
         uint16_t raw = 0;
         if (readRegister(Register::TTE, raw))
         {
+            if (raw == 0xFFFFu)
+            {
+                minutes = 0xFFFFu;
+                return true;
+            }
+
             uint32_t value = (static_cast<uint32_t>(raw) * 3u + 16u) >> 5;
             minutes = static_cast<uint16_t>(std::min<uint32_t>(value, 0xFFFFu));
             return true;
@@ -710,6 +716,12 @@ namespace PowerFeather
         uint16_t raw = 0;
         if (readRegister(Register::TTF, raw))
         {
+            if (raw == 0xFFFFu)
+            {
+                minutes = 0xFFFFu;
+                return true;
+            }
+
             uint32_t value = (static_cast<uint32_t>(raw) * 3u + 16u) >> 5;
             minutes = static_cast<uint16_t>(std::min<uint32_t>(value, 0xFFFFu));
             return true;
