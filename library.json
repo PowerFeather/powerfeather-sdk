@@ -53,12 +53,5 @@
             ]
         }
     ],
-    "dependencies": [
-        {
-            "name": "Wire",
-            "version": "*",
-            "frameworks": "arduino"
-        }
-    ],
     "platforms": "espressif32"
 }
