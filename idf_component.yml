@@ -1,7 +1,7 @@
 version: "2.1.2"
 description: "Software development kit for PowerFeather boards"
 url: "https://github.com/PowerFeather/powerfeather-sdk"
-documentation: "https://docs.powerfeather.dev/category/sdk"
+documentation: "https://docs.powerfeather.dev/sdk/setup/"
 discussion: "https://forum.powerfeather.dev/t/firmware-sdk"
 repository: "https://github.com/PowerFeather/powerfeather-sdk.git"
 issues: "https://github.com/PowerFeather/powerfeather-sdk/issues"
