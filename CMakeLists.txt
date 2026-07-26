@@ -1,12 +1,14 @@
 set(powerfeather_sdk_requires driver esp_timer)
+set(powerfeather_sdk_compile_definitions)
 
 # ESPHome builds Arduino projects with ESP-IDF's component manager.  The SDK's
 # public Mainboard header has Arduino-dependent member layouts, so the SDK
 # component itself must be compiled with the same definition as its consumer.
 # ESPHome enables the Arduino component as a dependency, without enabling its
 # Arduino sketch autostart option.
-if(CONFIG_ENABLE_ARDUINO_DEPENDS)
+if(DEFINED CONFIG_ENABLE_ARDUINO_DEPENDS AND CONFIG_ENABLE_ARDUINO_DEPENDS)
     list(APPEND powerfeather_sdk_requires espressif__arduino-esp32)
+    list(APPEND powerfeather_sdk_compile_definitions ARDUINO)
 endif()
 
 idf_component_register(SRCS "${CMAKE_CURRENT_LIST_DIR}/src/Mainboard/Mainboard.cpp"
@@ -20,6 +22,4 @@ idf_component_register(SRCS "${CMAKE_CURRENT_LIST_DIR}/src/Mainboard/Mainboard.c
                        PRIV_REQUIRES spi_flash nvs_flash
                        REQUIRES ${powerfeather_sdk_requires})
 
-if(CONFIG_ENABLE_ARDUINO_DEPENDS)
-    target_compile_definitions(${COMPONENT_LIB} PRIVATE ARDUINO)
-endif()
+target_compile_definitions(${COMPONENT_LIB} PRIVATE ${powerfeather_sdk_compile_definitions})
